@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
     lib/dtext/version.rb
   ]
 
-  spec.add_development_dependency("minitest", ["~> 5.15"])
+  spec.add_development_dependency("minitest", ["~> 5.25.4"])
   spec.add_development_dependency("rake", ["~> 13"])
   spec.add_development_dependency("rake-compiler", ["~> 1.1"])
   spec.add_development_dependency("cgi", ["~> 0.3"])

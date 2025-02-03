@@ -32,7 +32,7 @@ module TagCategory
 
   GENERAL = Category.new(0, "general", %w[gen])
   CREATOR = Category.new(1, "creator", %w[create cr], header: "Creators", formatstr: "created by %s")
-  CONTRIBUTOR = Category.new(2, "contributor", %w[cont], header: "Contributors")
+  FETISH = Category.new(2, "fetish", %w[fet], header: "Fetishes")
   COPYRIGHT = Category.new(3, "copyright", %w[copy co], header: "Copyrights", limit: 1, formatstr: "(%s)")
   CHARACTER = Category.new(4, "character", %w[char ch oc], header: "Characters", limit: 5, regex: /^(.+?)(?:_\(.+\))?$/)
   SPECIES = Category.new(5, "species", %w[spec])
@@ -96,7 +96,7 @@ module TagCategory
     end
   end
 
-  SPLIT_HEADER_LIST = %w[invalid creator contributor copyright character species gender general meta lore].freeze
-  CATEGORIZED_LIST = %w[invalid creator contributor copyright character species gender meta general lore].freeze
+  SPLIT_HEADER_LIST = %w[invalid creator fetish copyright character species gender general meta lore].freeze
+  CATEGORIZED_LIST = %w[invalid creator fetish copyright character species gender meta general lore].freeze
   HUMANIZED_LIST = %w[character copyright creator].freeze
 end

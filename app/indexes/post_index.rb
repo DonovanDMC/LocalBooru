@@ -28,7 +28,7 @@ module PostIndex
           tag_count_species:        { type: "integer" },
           tag_count_invalid:        { type: "integer" },
           tag_count_lore:           { type: "integer" },
-          tag_count_contributor:    { type: "integer" },
+          tag_count_fetish:         { type: "integer" },
           tag_count_gender:         { type: "integer" },
 
           file_size:                { type: "integer" },
@@ -148,7 +148,7 @@ module PostIndex
       tag_count_species:        tag_count_species,
       tag_count_lore:           tag_count_lore,
       tag_count_invalid:        tag_count_invalid,
-      tag_count_contributor:    tag_count_contributor,
+      tag_count_fetish:         tag_count_fetish,
       tag_count_gender:         tag_count_gender,
 
       file_size:                file_size,

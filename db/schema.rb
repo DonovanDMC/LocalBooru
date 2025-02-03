@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_02_03_203800) do
+ActiveRecord::Schema[7.1].define(version: 2025_02_03_220408) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -219,7 +219,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_03_203800) do
     t.integer "thumbnail_frame"
     t.string "deletion_reason"
     t.integer "tag_count_creator", default: 0, null: false
-    t.integer "tag_count_contributor", default: 0, null: false
+    t.integer "tag_count_fetish", default: 0, null: false
     t.index "string_to_array(tag_string, ' '::text)", name: "index_posts_on_string_to_array_tag_string", using: :gin
     t.index ["change_seq"], name: "index_posts_on_change_seq", unique: true
     t.index ["created_at"], name: "index_posts_on_created_at"

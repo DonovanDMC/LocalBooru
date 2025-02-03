@@ -9,12 +9,12 @@ GEM
     benchmark-ips (2.10.0)
     cgi (0.3.6)
     mini_portile2 (2.8.1)
-    minitest (5.17.0)
+    minitest (5.25.4)
     nokogiri (1.13.10)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
     racc (1.6.2)
-    rake (13.0.6)
+    rake (13.2.1)
     rake-compiler (1.2.1)
       rake
 
@@ -25,7 +25,7 @@ DEPENDENCIES
   benchmark-ips (~> 2.10)
   cgi (~> 0.3)
   dtext_rb!
-  minitest (~> 5.15)
+  minitest (~> 5.25.4)
   nokogiri (~> 1)
   rake (~> 13)
   rake-compiler (~> 1.1)
