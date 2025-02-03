@@ -636,9 +636,6 @@ class Post < ApplicationRecord
       if invalid_source?
         tags << "invalid_source"
       end
-
-      if bad_source?
-        tags << "bad_source"
       end
 
       tags
@@ -647,10 +644,6 @@ class Post < ApplicationRecord
     # should_process_tags?
     def invalid_source?
       source_array.any? { |source| !%r{^-?https?://}.match(source) }
-    end
-
-    def bad_source?
-      Sources::Bad.has_bad_source?(source_array)
     end
 
     def apply_casesensitive_metatags(tags)

@@ -54,20 +54,11 @@
         <div class="col">
           <label class="section-label" for="post_tags">Other Tags</label>
           <div>
-            Separate tags with spaces. (<a href="/help/tags" target="_blank">help</a>)
-          </div>
-          <div>
-            Ensure you've reviewed our <a href="/wiki_pages/show_or_new?title=tag_what_you_see">
-            Tag What You See
-          </a> policy.
+            Separate tags with spaces.
           </div>
         </div>
         <div class="col2">
           <file-preview classes="box-section in-editor" :data="previewData"></file-preview>
-          <div class="box-section background-red" v-show="showErrors && notEnoughTags">
-            You must provide at least <b>{{4 - tagCount}}</b> more tags. Tags in other sections count
-            towards this total.
-          </div>
           <div v-show="!tagPreview.show">
                         <textarea class="tag-textarea" id="post_tags" v-model="tagEntries.other" rows="5"
                                   ref="otherTags" data-autocomplete="tag-edit"></textarea>
