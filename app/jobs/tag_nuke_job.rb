@@ -15,7 +15,6 @@ class TagNukeJob < ApplicationJob
     return if tag.nil?
 
     CurrentUser.scoped(user: updater) do
-      create_undo_information(tag)
       CurrentUser.as_system { migrate_posts(tag.name) }
       ModAction.log!(:nuke_tag, Tag.find_by(name: tag_name), tag_name: tag_name)
     end

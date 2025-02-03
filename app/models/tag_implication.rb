@@ -139,18 +139,6 @@ class TagImplication < TagRelationship
       end
     end
 
-    def create_undo_information
-      Post.without_timeout do
-        Post.sql_raw_tag_match(antecedent_name).find_in_batches do |posts|
-          post_info = {}
-          posts.each do |p|
-            post_info[p.id] = p.tag_string
-          end
-          tag_rel_undos.create!(undo_data: post_info)
-        end
-      end
-    end
-
     def approve!(approver = CurrentUser.user)
       update(status: "queued", approver_ip_addr: approver.ip_addr)
       invalidate_cached_descendants
