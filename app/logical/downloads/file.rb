@@ -20,7 +20,7 @@ module Downloads
       validate!
     end
 
-    def download!(max_size: FemboyFans.config.max_file_size)
+    def download!
       file = Tempfile.new(binmode: true)
       conn = Faraday.new(FemboyFans.config.faraday_options) do |f|
         f.response(:follow_redirects, callback: ->(_old_env, new_env) { validate_uri_allowed!(new_env.url) })
@@ -28,10 +28,9 @@ module Downloads
       end
 
       res = conn.get(uncached_url, nil, strategy.headers) do |req|
-        req.options.on_data = ->(chunk, overall_recieved_bytes, env) do
+        req.options.on_data = ->(chunk, _bytes, env) do
           next if [301, 302].include?(env.status)
 
-          raise(Error, "File is too large (max size: #{max_size})") if overall_recieved_bytes > max_size
           file.write(chunk)
         end
       end
@@ -74,11 +73,6 @@ module Downloads
       ip_addr = IPAddr.new(Resolv.getaddress(uri.hostname))
       if ip_addr.private? || ip_addr.loopback? || ip_addr.link_local?
         raise(Downloads::File::Error, "Downloads from #{ip_addr} are not allowed")
-      end
-
-      valid, _reason = UploadWhitelist.is_whitelisted?(uri)
-      unless valid
-        raise(Downloads::File::Error, "'#{uri}' is not whitelisted and can't be direct downloaded")
       end
     end
   end
