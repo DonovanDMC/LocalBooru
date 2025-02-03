@@ -22,6 +22,7 @@ Bundler.require(*Rails.groups)
 
 require_relative "default_config"
 require_relative "local_config"
+require_relative "../app/logical/user_serializer"
 require_relative "../lib/middleware/silence_healthcheck_logging"
 
 module FemboyFans
@@ -31,6 +32,8 @@ module FemboyFans
 
     # https://github.com/rails/rails/issues/50897
     config.active_record.raise_on_assign_to_attr_readonly = false
+
+    Rails.application.config.active_job.custom_serializers << UserSerializer
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.

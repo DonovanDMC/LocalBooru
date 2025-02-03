@@ -636,7 +636,6 @@ class Post < ApplicationRecord
       if invalid_source?
         tags << "invalid_source"
       end
-      end
 
       tags
     end
