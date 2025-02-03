@@ -21,6 +21,6 @@ module TagsHelper
   end
 
   def multiple_link_to_tag(tags)
-    safe_join(tags.map { |tag| link_to(tag, tag_path(tag), class: tag_class(tag)) }, ", ")
+    safe_join(tags.map { |tag| link_to_tag(tag) }, ", ")
   end
 end
