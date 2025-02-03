@@ -34,7 +34,7 @@ module PostSets
       public_tag_array.slice(0, 25).join(" ").tr("_", " ")
     end
 
-    def has_explicit?
+    def has_adult?
       true
     end
 
@@ -44,10 +44,6 @@ module PostSets
 
     def login_blocked_posts
       @login_blocked_posts ||= posts.select(&:loginblocked?)
-    end
-
-    def safe_posts
-      @safe_posts ||= posts.select { |p| p.safeblocked? && !p.deleteblocked? }
     end
 
     def is_random?

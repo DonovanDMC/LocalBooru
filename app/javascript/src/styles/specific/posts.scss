@@ -33,16 +33,12 @@ article.post-preview {
     margin-left: 0.5em;
   }
 
-  &.post-rating-explicit .post-score-rating {
+  &.post-rating-adult .post-score-rating {
     color: palette("text-red");
   }
 
-  &.post-rating-safe .post-score-rating {
+  &.post-rating-general .post-score-rating {
     color: palette("text-green");
-  }
-
-  &.post-rating-questionable .post-score-rating {
-    color: palette("text-yellow");
   }
 
   img {
@@ -509,16 +505,12 @@ div#c-posts {
         width: 100%;
       }
 
-      #post_rating_e:checked + label {
-        background-color: themed("color-rating-explicit");
+      #post_rating_a:checked + label {
+        background-color: themed("color-rating-adult");
       }
 
-      #post_rating_q:checked + label {
-        background-color: themed("color-rating-questionable");
-      }
-
-      #post_rating_s:checked + label {
-        background-color: themed("color-rating-safe");
+      #post_rating_g:checked + label {
+        background-color: themed("color-rating-general");
       }
     }
 

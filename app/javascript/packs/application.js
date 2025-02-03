@@ -11,7 +11,7 @@ export {default as $} from "jquery";
 import Rails from "@rails/ujs";
 
 Rails.start();
-var iMadeAMistakeAndNeedToFixIt = 0;
+var iMadeAMistakeAndNeedToFixIt = 1;
 
 require("jquery-hotkeys");
 

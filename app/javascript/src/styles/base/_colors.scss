@@ -106,9 +106,8 @@ $post-version-grid-border: black;
 $post-version-content-background: inherit;
 
 // Posts
-$post-rating-explicit-color: $red-color;
-$post-rating-questionable-color: hsl(50, 100%, 70%);
-$post-rating-safe-color: $green-color;
+$post-rating-adult-color: $red-color;
+$post-rating-general-color: $green-color;
 $post-preview-highlight-background: rgba(0, 0, 0, 0.1);
 $post-tag-low-count-color: red;
 
@@ -121,9 +120,8 @@ $post-mode-vote-up: palette("background-green");
 $post-mode-vote-down: palette("background-red");
 $post-mode-add-pool: #104b57;
 $post-mode-delete: #4e1010;
-$post-mode-rating-s: darken($post-rating-safe-color, 25%);
-$post-mode-rating-q: darken($post-rating-questionable-color, 50%);
-$post-mode-rating-e: darken($post-rating-explicit-color, 25%);
+$post-mode-rating-g: darken($post-rating-general-color, 25%);
+$post-mode-rating-a: darken($post-rating-adult-color, 25%);
 $post-mode-remove-parent: #38F;
 $post-mode-undelete: #818;
 
@@ -157,7 +155,6 @@ $tag-categories-short: (
 );
 
 $ratings: (
-  "s": "safe",
-  "q": "questionable",
-  "e": "explicit"
+  "g": "general",
+  "a": "adult"
 );

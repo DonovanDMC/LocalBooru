@@ -2,14 +2,10 @@
   font-weight: 700;
 }
 
-.post-rating-text-safe {
+.post-rating-text-general {
   color: palette("text-green");
 }
 
-.post-rating-text-questionable {
-  color: palette("text-yellow");
-}
-
-.post-rating-text-explicit {
+.post-rating-text-adult {
   color: palette("text-red");
 }

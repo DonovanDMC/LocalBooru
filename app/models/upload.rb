@@ -12,7 +12,7 @@ class Upload < ApplicationRecord
 
   before_validation :assign_rating_from_tags
   before_validation :normalize_direct_url, on: :create
-  validates :rating, inclusion: { in: %w[q e s] }, allow_nil: false
+  validates :rating, inclusion: { in: %w[g a] }, allow_nil: false
   validate :md5_is_unique, on: :file
   validate on: :file do |upload|
     FileValidator.new(upload, file.path).validate

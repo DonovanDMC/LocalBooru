@@ -90,9 +90,8 @@ class PostPresenter < Presenter
     klass << "post-status-deleted" if post.is_deleted?
     klass << "post-status-has-parent" if post.parent_id
     klass << "post-status-has-children" if post.has_visible_children?
-    klass << "post-rating-safe" if post.rating == "s"
-    klass << "post-rating-questionable" if post.rating == "q"
-    klass << "post-rating-explicit" if post.rating == "e"
+    klass << "post-rating-general" if post.rating == "g"
+    klass << "post-rating-adult" if post.rating == "a"
     klass
   end
 

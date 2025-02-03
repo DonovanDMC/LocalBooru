@@ -184,9 +184,8 @@ HoverZoom.init_functionality = function () {
 
     if (post.rating) {
       const ratingClass = {
-        e: "explicit",
-        q: "questionable",
-        s: "safe",
+        g: "general",
+        a: "adult",
       }[post.rating];
 
       $("<span>")

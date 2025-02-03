@@ -23,16 +23,12 @@ div#c-uploads {
       background-color: themed("color-button-active");
     }
 
-    .rating-e.active {
-      background-color: themed("color-rating-explicit");
+    .rating-a.active {
+      background-color: themed("color-rating-adult");
     }
 
-    .rating-q.active {
-      background-color: themed("color-rating-questionable");
-    }
-
-    .rating-s.active {
-      background-color: themed("color-rating-safe");
+    .rating-g.active {
+      background-color: themed("color-rating-general");
     }
 
     .flex-grid-outer {

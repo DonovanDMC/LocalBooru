@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_02_02_024009) do
+ActiveRecord::Schema[7.1].define(version: 2025_02_03_203800) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -184,7 +184,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_02_02_024009) do
     t.datetime "updated_at", precision: nil
     t.string "source", null: false
     t.string "md5", null: false
-    t.string "rating", limit: 1, default: "q", null: false
+    t.string "rating", limit: 1, default: "a", null: false
     t.boolean "is_deleted", default: false, null: false
     t.inet "uploader_ip_addr", null: false
     t.text "pool_string", default: "", null: false

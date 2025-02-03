@@ -157,14 +157,11 @@ PostModeMenu.click = function (e) {
     case "edit":
       PostModeMenu.open_edit(post_id);
       break;
-    case "rating-s":
-      Post.update(post_id, {"post[rating]": "s"});
+    case "rating-g":
+      Post.update(post_id, {"post[rating]": "g"});
       break;
-    case "rating-q":
-      Post.update(post_id, {"post[rating]": "q"});
-      break;
-    case "rating-e":
-      Post.update(post_id, {"post[rating]": "e"});
+    case "rating-a":
+      Post.update(post_id, {"post[rating]": "a"});
       break;
     case "delete":
       Post.delete_with_reason(post_id, $("#quick-mode-reason").val(), false);

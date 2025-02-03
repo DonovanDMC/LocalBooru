@@ -23,9 +23,8 @@ module StatsUpdater
 
     stats[:average_posts_per_pool] = Pool.average(Arel.sql("cardinality(post_ids)")) || 0
 
-    stats[:safe_posts] = Post.tag_match("status:any rating:s").count_only
-    stats[:questionable_posts] = Post.tag_match("status:any rating:q").count_only
-    stats[:explicit_posts] = Post.tag_match("status:any rating:e").count_only
+    stats[:general_posts] = Post.tag_match("status:any rating:g").count_only
+    stats[:adult_posts] = Post.tag_match("status:any rating:a").count_only
     stats[:jpg_posts] = Post.tag_match("status:any type:jpg").count_only
     stats[:png_posts] = Post.tag_match("status:any type:png").count_only
     stats[:gif_posts] = Post.tag_match("status:any type:gif").count_only
