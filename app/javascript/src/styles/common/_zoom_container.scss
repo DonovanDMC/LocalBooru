@@ -51,7 +51,10 @@ div#zoom-container {
     color: white;
   }
 
-  &[status=waiting] { display: none; }
+  &[status=waiting] {
+    display: none;
+  }
+
   &[status=loading] {
     &::after {
       content: unicode("f1ce");

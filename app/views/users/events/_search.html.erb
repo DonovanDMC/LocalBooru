@@ -1,7 +1,0 @@
-<%= form_search(path: user_events_path) do |f| %>
-  <%= f.user(:user) %>
-  <%= f.input(:ip_addr, label: "IP Address") %>
-  <%= f.input(:user_agent, label: "User Agent") %>
-  <%= f.input(:session_id, label: "Session ID") %>
-  <%= f.input(:category, collection: UserEvent.categories.transform_keys(&:humanize), include_blank: true) %>
-<% end %>

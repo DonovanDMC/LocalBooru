@@ -22,9 +22,7 @@ module PostsHelper
     if source =~ %r{\Ahttps?://}i
       source_link = decorated_link_to(source.sub(%r{\Ahttps?://(?:www\.)?}i, ""), source, target: "_blank", rel: "nofollow noreferrer noopener")
 
-      if CurrentUser.is_janitor?
-        source_link += " ".html_safe + link_to("»", posts_path(tags: "source:#{source.sub(%r{[^/]*$}, '')}"), rel: "nofollow")
-      end
+      source_link += " ".html_safe + link_to("»", posts_path(tags: "source:#{source.sub(%r{[^/]*$}, '')}"), rel: "nofollow")
 
       source_link
     elsif source.start_with?("-")
@@ -48,8 +46,6 @@ module PostsHelper
       html += link_to(text, posts_path(tags: "parent:#{post.parent_id}"))
     end
 
-    html += " (#{link_to('learn more', help_page_path(id: 'post_relationships'))}) "
-
     html += link_to("show »", "#", id: "has-parent-relationship-preview-link")
 
     html.html_safe
@@ -61,8 +57,6 @@ module PostsHelper
     html += "Children: "
     text = children_post_set.children.count == 1 ? "1 child" : "#{children_post_set.children.count} children"
     html += link_to(text, posts_path(tags: "parent:#{post.id}"))
-
-    html += " (#{link_to('learn more', help_page_path(id: 'post_relationships'))}) "
 
     html += link_to("show »", "#", id: "has-children-relationship-preview-link")
 
@@ -76,52 +70,14 @@ module PostsHelper
     params[:pool_id].to_i == pool.id
   end
 
-  def is_post_set_selected?(post_set)
-    return false if params.key?(:q)
-    return false if params.key?(:pool_id)
-    return false unless params.key?(:post_set_id)
-    params[:post_set_id].to_i == post_set.id
-  end
-
-  def post_stats_section(post, views: nil)
-    post_score_icon_positive = "↑"
-    post_score_icon_negative = "↓"
-    post_score_icon_neutral = "↕"
-    post_score_icon = "#{post_score_icon_positive if post.score > 0}#{post_score_icon_negative if post.score < 0}#{post_score_icon_neutral if post.score == 0}"
-    score = tag.span(class: "post-score-score post-score-classes-#{post.id} #{score_class(post.score)}") do
-      icon = tag.span(post_score_icon, class: "post-score-icon-#{post.id}", data: { "icon-positive": post_score_icon_positive, "icon-negative": post_score_icon_negative, "icon-neutral": post_score_icon_neutral })
-      amount = tag.span(post.score, class: "post-score-score-#{post.id}")
-      icon + amount
-    end
+  def post_stats_section(post)
     favs = tag.span(class: "post-score-faves post-score-faves-classes-#{post.id}") do
       icon = tag.span("♥", class: "post-score-faves-icon-#{post.id}")
-      amount = tag.span(post.fav_count, class: "post-score-faves-faves-#{post.id}")
+      amount = tag.span(post.is_favorited? ? "Y" : "N", class: "post-score-faves-faves-#{post.id}")
       icon + amount
     end
-    comments = tag.span("C#{post.visible_comment_count(CurrentUser)}", class: "post-score-comments")
     rating = tag.span(post.rating.upcase, class: "post-score-rating")
-    views = tag.span(class: "post-score-views post-score-views-classes-#{post.id}") do
-      icon = tag.i("", class: "fa-regular fa-eye")
-      amount = tag.span(" #{views == :daily ? 'D' : 'T'}#{'U' if CurrentUser.user.unique_views?}#{(views == :daily ? post.daily_views : post.total_views) || 0}", class: "post-score-views-views-#{post.id}")
-      icon + amount
-    end
-    tag.div(score + favs + comments + views + rating, class: "post-score", id: "post-score-#{post.id}")
-  end
-
-  def user_record_meta(user)
-    positive = user.positive_feedback_count
-    neutral = user.neutral_feedback_count
-    negative = user.negative_feedback_count
-    deleted = CurrentUser.user.is_staff? ? user.deleted_feedback_count : 0
-
-    return "" if (positive + neutral + negative + deleted) == 0
-    positive_html = %(<span class="user-feedback-positive">#{positive}</span>).html_safe if positive > 0
-    neutral_html = %(<span class="user-feedback-neutral">#{neutral}</span>).html_safe if neutral > 0
-    negative_html = %(<span class="user-feedback-negative">#{negative}</span>).html_safe if negative > 0
-    deleted_html = %(<span class="user-feedback-deleted">#{deleted}</span>).html_safe if deleted > 0
-    list_html = "#{positive_html} #{neutral_html} #{negative_html} #{deleted_html}".strip
-
-    link_to(%{(#{list_html})}.html_safe, user_feedbacks_path(search: { user_id: user.id }))
+    tag.div(favs + rating, class: "post-score", id: "post-score-#{post.id}")
   end
 
   private
@@ -137,41 +93,6 @@ module PostsHelper
     tag.span(rating_text, id: "post-rating-text", class: rating_class)
   end
 
-  def post_vote_block(post, vote, buttons: false)
-    vote_score = vote || 0
-    post_score = post.score
-
-    up_tag = tag.a(
-      tag.span("▲", class: "post-vote-up-#{post.id} " + confirm_score_class(vote_score, 1, buttons)),
-      class: "post-vote-up-link",
-      data:  { id: post.id },
-    )
-    down_tag = tag.a(
-      tag.span("▼", class: "post-vote-down-#{post.id} " + confirm_score_class(vote_score, -1, buttons)),
-      class: "post-vote-down-link",
-      data:  { id: post.id },
-    )
-    if buttons
-      score_tag = tag.span(post.score, class: "post-score-#{post.id} post-score #{score_class(post_score)}", title: "#{post.up_score} up/#{post.down_score} down")
-      CurrentUser.user.can_post_vote? ? up_tag + score_tag + down_tag : ""
-    else
-      vote_block = tag.span(" (#{up_tag} vote #{down_tag})".html_safe)
-      score_tag = tag.span(post.score, class: "post-score-#{post.id} post-score #{score_class(post_score)}", title: "#{post.up_score} up/#{post.down_score} down")
-      score_tag + (CurrentUser.user.can_post_vote? ? vote_block : "")
-    end
-  end
-
-  def score_class(score)
-    return "score-neutral" if score == 0
-    score > 0 ? "score-positive" : "score-negative"
-  end
-
-  def confirm_score_class(score, want, buttons)
-    base = buttons ? "button " : ""
-    return "#{base}score-neutral" if score != want || score == 0
-    base + score_class(score)
-  end
-
   def rating_collection
     [
       %w[Safe s],
@@ -180,27 +101,8 @@ module PostsHelper
     ]
   end
 
-  def generate_report_signature(purpose:, **values)
-    Reports.generate_body_signature(purpose: purpose, ip_address: request.remote_ip, **values)
-  end
-
-  def view_count_js(post)
-    sig = generate_report_signature(purpose: "view", post_id: post.id)
-    render(partial: "posts/partials/common/report_js", locals: { sig: sig, url: "/views" })
-  end
-
-  def missed_post_search_count_js(tags, page)
-    sig = generate_report_signature(purpose: "missed-search", tags: tags, page: page)
-    render(partial: "posts/partials/common/report_js", locals: { sig: sig, url: "/searches/missed" })
-  end
-
-  def post_search_count_js(tags, page)
-    sig = generate_report_signature(purpose: "search", tags: tags, page: page)
-    render(partial: "posts/partials/common/report_js", locals: { sig: sig, url: "/searches" })
-  end
-
   def post_ribbons(post)
-    tag.div(class: "ribbons") do # rubocop:disable Metrics/BlockLength
+    tag.div(class: "ribbons") do
       [if post.parent_id.present?
          if post.has_visible_children?
            tag.div(class: "ribbon left has-parent has-children", title: "Has Parent\nHas Children") do
@@ -216,18 +118,8 @@ module PostsHelper
            tag.span
          end
        end,
-       if post.is_flagged?
-         if post.is_pending?
-           tag.div(class: "ribbon right is-flagged is-pending", title: "Flagged\nPending") do
-             tag.span
-           end
-         else
-           tag.div(class: "ribbon right is-flagged", title: "Flagged") do
-             tag.span
-           end
-         end
-       elsif post.is_pending?
-         tag.div(class: "ribbon right is-pending", title: "Pending") do
+       if post.is_deleted?
+         tag.div(class: "ribbon right is-deleted", title: "Pending") do
            tag.span
          end
        end,].join.html_safe
@@ -236,15 +128,9 @@ module PostsHelper
 
   def post_vote_buttons(post)
     tag.div(id: "vote-buttons") do
-      tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?, data: { action: "up" }) do
-        tag.span(class: "post-vote-up-#{post.id} score-#{post.is_voted_up? ? 'positive' : 'neutral'}")
-      end +
-        tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?, data: { action: "down" }) do
-          tag.span(class: "post-vote-down-#{post.id} score-#{post.is_voted_down? ? 'negative' : 'neutral'}")
-        end +
-        tag.button("", class: "button vote-button fav score-neutral", data: { action: "fav", state: post.is_favorited? }) do
-          tag.span(class: "post-favorite-#{post.id} score-neutral#{post.is_favorited? ? ' is-favorited' : ''}")
-        end
+      tag.button("", class: "button vote-button fav score-neutral", data: { action: "fav", state: post.is_favorited? }) do
+        tag.span(class: "post-favorite-#{post.id} score-neutral#{post.is_favorited? ? ' is-favorited' : ''}")
+      end
     end
   end
 end

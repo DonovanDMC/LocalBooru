@@ -11,7 +11,7 @@ class PostEventDecorator < ApplicationDecorator
     vals = object.extra_data
 
     case object.action
-    when "deleted", "flag_created"
+    when "deleted"
       (vals["reason"]).to_s
     when "favorites_moved"
       "Target: post ##{vals['parent_id']}"
@@ -23,10 +23,6 @@ class PostEventDecorator < ApplicationDecorator
       "To: #{vals['bg_color'] || 'None'}"
     when "changed_thumbnail_frame"
       "#{vals['old_thumbnail_frame'] || 'Default'} -> #{vals['new_thumbnail_frame'] || 'Default'}"
-    when "copied_notes"
-      "Copied #{vals['note_count']} #{'note'.pluralize(vals['note_count'])} from post ##{vals['source_post_id']}"
-    when "appeal_accepted", "appeal_rejected", "appeal_created"
-      "\"appeal ##{vals['post_appeal_id']}\":/posts/appeals?search[id]=#{vals['post_appeal_id']}"
     when "replacement_accepted", "replacement_rejected"
       "\"replacement ##{vals['post_replacement_id']}\":/posts/replacements?search[id]=#{vals['post_replacement_id']}"
     end

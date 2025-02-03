@@ -15,7 +15,6 @@ module PostVersionIndex
           id:                  { type: "integer" },
           post_id:             { type: "integer" },
           version:             { type: "integer" },
-          updater_id:          { type: "integer" },
           parent_id:           { type: "integer" },
           rating:              { type: "keyword" },
           source:              { type: "keyword" },
@@ -32,10 +31,6 @@ module PostVersionIndex
           tags:                { type: "keyword" },
 
           updated_at:          { type: "date" },
-
-          locked_tags_added:   { type: "keyword" },
-          locked_tags_removed: { type: "keyword" },
-          locked_tags:         { type: "keyword" },
         },
       },
     }
@@ -73,7 +68,6 @@ module PostVersionIndex
       post_id:             post_id,
       updated_at:          updated_at,
       version:             version,
-      updater_id:          updater_id,
       parent_id:           parent_id,
       rating:              rating,
       source:              source,
@@ -88,10 +82,6 @@ module PostVersionIndex
       tags_added:          added_tags,
       tags_removed:        removed_tags,
       tags:                tag_array,
-
-      locked_tags_added:   added_locked_tags,
-      locked_tags_removed: removed_locked_tags,
-      locked_tags:         locked_tag_array,
     }
   end
 end

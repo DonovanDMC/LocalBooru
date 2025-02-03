@@ -8,12 +8,6 @@ class ElasticPostVersionQueryBuilder < ElasticQueryBuilder
   def build
     add_range_relation(:id, :id)
 
-    if q[:updater_name].present?
-      user_id = User.name_to_id(q[:updater_name])
-      must.push({ term: { updater_id: user_id } }) if user_id
-    end
-
-    add_range_relation(:updater_id, :updater_id)
     add_range_relation(:post_id, :post_id)
 
     if q[:rating].present?
@@ -38,7 +32,7 @@ class ElasticPostVersionQueryBuilder < ElasticQueryBuilder
       must.push({ term: { parent_id_changed: true } })
     end
 
-    %i[tags tags_removed tags_added locked_tags locked_tags_removed locked_tags_added].each do |tag_field|
+    %i[tags tags_removed tags_added].each do |tag_field|
       tags = q[tag_field]
       if tags
         must.concat(TagQuery.scan(tags.downcase).map { |tag| { term: { tag_field => tag } } })

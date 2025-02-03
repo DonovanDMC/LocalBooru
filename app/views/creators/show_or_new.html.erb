@@ -1,0 +1,5 @@
+<%= render layout: "show" do %>
+  <div>
+    <p>This creator entry does not exist. <%= link_to "Create new creator entry", new_creator_path(creator: { name: params[:name] }) %>.</p>
+  </div>
+<% end %>

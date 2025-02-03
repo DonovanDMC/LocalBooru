@@ -2,82 +2,35 @@ User-agent: *
 Crawl-delay: 1
 Disallow: /admin
 Disallow: /moderator
-Disallow: <%= artist_urls_path %>
-Disallow: <%= artist_versions_path %>
-Disallow: <%= avoid_postings_path %>
-Disallow: <%= avoid_posting_versions_path %>
-Disallow: <%= api_keys_path %>
-Disallow: <%= show_or_new_artists_path %>
-Disallow: <%= bans_path %>
-Disallow: <%= bulk_update_requests_path %>
-Disallow: <%= comment_votes_path(comment_id: "*") %>
-Disallow: <%= url_for(controller: "comments/votes", action: "index") %>
-Disallow: <%= dmails_path %>
-Disallow: <%= dtext_links_path %>
+Disallow: <%= creator_urls_path %>
+Disallow: <%= creator_versions_path %>
+Disallow: <%= show_or_new_creators_path %>
 Disallow: <%= dtext_preview_path %>
-Disallow: <%= edit_histories_path %>
-Disallow: <%= email_blacklists_path %>
-Disallow: /email
 Disallow: <%= favorites_path %>
-Disallow: <%= forum_categories_path %>
-Disallow: <%= forum_post_votes_path(forum_post_id: "*") %>
-Disallow: <%= url_for(controller: "forums/posts/votes", action: "index") %>
-Disallow: <%= ip_bans_path %>
-Disallow: <%= mascots_path %>
 Disallow: <%= mod_actions_path %>
-Disallow: <%= notes_path %>
 Disallow: <%= edit_pool_order_path(pool_id: "*") %>
 Disallow: <%= pool_versions_path %>
-Disallow: <%= post_sets_path %>
-Disallow: <%= post_approvals_path %>
-Disallow: <%= deleted_posts_path %>
-Disallow: <%= post_deletion_reasons_path %>
-Disallow: <%= post_disapprovals_path %>
 Disallow: <%= post_events_path %>
-Disallow: <%= post_flags_path %>
 Disallow: <%= posts_iqdb_path %>
-Disallow: <%= post_recommendations_path %>
 Disallow: <%= post_replacements_path %>
 Disallow: <%= post_versions_path %>
-Disallow: <%= url_for(controller: "posts/votes", action: "index") %>
 Disallow: <%= random_posts_path %>
-Disallow: <%= uploaders_posts_path %>
-Disallow: <%= posts_path(format: "atom") %>
 Disallow: /posts*?*tags=*
 Disallow: /posts*?*q=*
 Disallow: /posts*?*md5*
 Disallow: /posts*?*limit*
 Disallow: /posts*?*random*
 Disallow: /posts*?*pool_id*
-Disallow: /posts*?*post_set_id*
-Disallow: <%= post_recommended_path(post_id: "*") %>
 Disallow: <%= post_similar_path(post_id: "*") %>
-Disallow: <%= post_votes_path(post_id: "*") %>
-Disallow: <%= post_flag_path(post_id: "*") %>
-Disallow: <%= move_favorites_post_path(id: "*") %>
-Disallow: <%= comments_post_path(id: "*") %>
-<% %w[update_iqdb revert copy_notes show_seq mark_as_translated favorites expunge delete undelete regenerate_thumbnails regenerate_videos add_to_pool remove_from_pool].each do |action| %>
+<% %w[update_iqdb revert show_seq favorites expunge delete undelete regenerate_thumbnails regenerate_videos add_to_pool remove_from_pool].each do |action| %>
 Disallow: <%= url_for(controller: "posts", action: action, id: "*") %>
 <% end %>
-Disallow: /popular
-Disallow: <%= post_sets_path %>
-Disallow: /sessions
 Disallow: <%= tags_path %>
-Disallow: <%= takedowns_path %>
-Disallow: <%= tickets_path %>
-Disallow: <%= upload_whitelists_path %>
 Disallow: <%= uploads_path %>
-Disallow: <%= users_path %>
-Disallow: <%= wiki_page_versions_path %>
-Disallow: <%= search_wiki_pages_path %>
-Disallow: <%= show_or_new_wiki_pages_path %>
-Disallow: <%= revert_wiki_page_path(id: "*") %>
 Disallow: <%= keyboard_shortcuts_path %>
-Disallow: <%= discord_get_path %>
 Disallow: <%= toggle_mobile_mode_path %>
 Disallow: <%= theme_path %>
 Disallow: <%= qtag_path(id: "*") %>
-Disallow: <%= rules_path %>
 
 User-agent: MJ12bot
 User-agent: dotbot

@@ -6,31 +6,15 @@
       <option value="edit">Edit</option>
       <option value="add-fav">Favorite</option>
       <option value="remove-fav">Unfavorite</option>
-      <option value="vote-up">Vote up</option>
-      <option value="vote-down">Vote down</option>
-      <option value="remove-vote">Remove vote</option>
-      <option value="add-to-set">Add To Set</option>
-      <option value="remove-from-set">Remove From Set</option>
-      <% if CurrentUser.user.is_trusted? %>
-        <option value="rating-s">Rate Safe</option>
-        <option value="rating-q">Rate Questionable</option>
-        <option value="rating-e">Rate Explicit</option>
-        <option value="tag-script">Tag script</option>
-        <option value="lock-rating">Lock rating</option>
-      <% end %>
-      <% if CurrentUser.user.is_janitor? %>
-        <option value="remove-parent">Remove Parent</option>
-        <option value="lock-note">Lock notes</option>
-      <% end %>
-      <% if CurrentUser.user.is_approver? %>
-        <option value="approve">Approve</option>
-        <option value="delete">Delete</option>
-        <option value="undelete">Undelete</option>
-        <option value="unflag">Unflag</option>
-      <% end %>
+      <option value="rating-s">Rate Safe</option>
+      <option value="rating-q">Rate Questionable</option>
+      <option value="rating-e">Rate Explicit</option>
+      <option value="tag-script">Tag script</option>
+      <option value="remove-parent">Remove Parent</option>
+      <option value="delete">Delete</option>
+      <option value="undelete">Undelete</option>
     </select>
   </form>
-  <select id="set-id" style="display: none; margin-top: 0.5em;"></select>
   <% if FemboyFans.config.show_tag_scripting?(CurrentUser.user) %>
     <span id="tag-script-ui" style="display: none;">
       <input id="tag-script-field" data-autocomplete="tag-edit" placeholder="Enter tag script" style="display: none;"/>

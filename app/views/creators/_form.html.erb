@@ -1,0 +1,7 @@
+<%= custom_form_for(@creator) do |f| %>
+  <%= f.input(:name, as: :string, autocomplete: "tag") %>
+  <%= f.input(:other_names_string, label: "Other names", hint: "Separate names with spaces, not commas. Use underscores for spaces inside names. Limit 25.", input_html: { size: "80" }) %>
+  <%= f.input(:url_string, label: "URLs", as: :text, input_html: { size: "80x10", value: params.dig(:creator, :url_string) || @creator.urls.join("\n") }, hint: "You can prefix a URL with - to mark it as dead.") %>
+  <%= f.input(:notes, as: :dtext) %>
+  <%= f.button(:submit, "Submit") %>
+<% end %>

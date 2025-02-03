@@ -1,23 +1,39 @@
 <div align="center">
   <img src="public/images/github-logo.png" width="150" height="150" align="left">
   <div align="left">
-    <h3>Femboy Fans</h3>
-    <a href="https://github.com/FemboyFans/FemboyFans/releases">
-      <img src="https://img.shields.io/github/v/release/FemboyFans/FemboyFans?label=version&style=flat-square" alt="Releases" />
+    <h3>LocalBooru</h3>
+    <a href="https://github.com/DonovanDMC/LocalBooru/releases">
+      <img src="https://img.shields.io/github/v/release/DonovanDMC/LocalBooru?label=version&style=flat-square" alt="Releases" />
     </a><br />
-    <a href="https://github.com/FemboyFans/FemboyFans/issues">
-      <img src="https://img.shields.io/github/issues/FemboyFans/FemboyFans?label=open issues&style=flat-square" alt="Issues" />
+    <a href="https://github.com/DonovanDMC/LocalBooru/issues">
+      <img src="https://img.shields.io/github/issues/DonovanDMC/LocalBooru?label=open issues&style=flat-square" alt="Issues" />
     </a><br />
-    <a href="https://github.com/FemboyFans/FemboyFans/pulls">
-      <img src="https://img.shields.io/github/issues-pr/FemboyFans/FemboyFans?style=flat-square" alt="Pull Requests" />
+    <a href="https://github.com/DonovanDMC/LocalBooru/pulls">
+      <img src="https://img.shields.io/github/issues-pr/DonovanDMC/LocalBooru?style=flat-square" alt="Pull Requests" />
     </a><br />
-    <a href="https://github.com/FemboyFans/FemboyFans/commits/master/">
-      <img src="https://img.shields.io/github/check-runs/FemboyFans/FemboyFans/master?style=flat-square" alt="GitHub branch check runs" />
+    <a href="https://github.com/DonovanDMC/LocalBooru/commits/master/">
+      <img src="https://img.shields.io/github/check-runs/DonovanDMC/LocalBooru/master?style=flat-square" alt="GitHub branch check runs" />
     </a><br />
   </div>
 </div>
 <br />
 
+# What is this
+
+This is a VERY trimmed down version of [FemboyFans](https://github.com/FemboyFans/FemboyFans), leaving only bare essentials:
+* aliases/implications
+* posts
+* tags
+* artists (renamed creators)
+* favorites
+* posts
+* replacements
+* tags
+
+Anything outside of this (including users, authentication, permissions, comments, forums, etc) has been completely stripped out and thrown away.
+You can fully see what was stripped out in the [migration](db/migrate/20250202024009_reorganize_database.rb).
+
+The only semblance of user tracking is ip addresses, which are visible to any viewers. Anyone that can view the site can do absolutely anything, so keep it behind lock and key.
 
 ## Installation (Easy mode - For development environments)
 
@@ -33,18 +49,17 @@
 ### Installation
 
 1. Download and install the [prerequisites](#prerequisites).
-2. Clone the repo with `git clone https://github.com/FemboyFans/FemboyFans.git`.
+2. Clone the repo with `git clone https://github.com/DonovanDMC/LocalBooru.git`.
 3. `cd` into the repo.
 4. Copy the sample environment file with `cp .env.sample .env`.
 5. Run the following commands:
     ```
-    docker compose run --rm --no-deps femboyfans /app/bin/presetup
-    docker compose run --rm -e SEED_POST_COUNT=100 femboyfans /app/bin/setup
-    docker compose run --rm reports npm run migrate
+    docker compose run --rm --no-deps localbooru /app/bin/presetup
+    docker compose run --rm -e SEED_POST_COUNT=0 localbooru /app/bin/setup
     docker compose up
     ```
     After running the commands once only `docker compose up` is needed to bring up the containers.
-6. To confirm the installation worked, open the web browser of your choice and enter `http://localhost:4000` into the address bar and see if the website loads correctly. Create an account via http://localhost:4000/users/new. The first created user will automatically be promoted to the "Owner" level.
+6. To confirm the installation worked, open the web browser of your choice and enter `http://localhost:5000` into the address bar and see if the website loads correctly.
 
 Note: When gems or js packages are updated you need to execute `docker compose build` to reflect them in the container.
 
@@ -64,8 +79,6 @@ You're most likely using Windows. Give this a shot, it tells Git to stop trackin
 
 #### <a id="development-tools"></a>Things to aid you during development
 
-`docker compose run --rm tests` to execute the test suite.
-
 `docker compose run --rm rubocop` to run the linter.
 
 The postgres server accepts outside connections which you can use to access it with a local client. Use `localhost:34518` to connect to a database named `femboyfans_development` with the user `femboyfans`. Leave the password blank, anything will work.
@@ -77,61 +90,6 @@ There is no script that performs these steps for you, as you need to split them 
 Running a single machine install in production is possible, but is likely to be somewhat sluggish due to contention in disk between postgresql and opensearch.
 Minimum RAM is 4GB. You will need to adjust values in config files to match how much RAM is available.
 If you are targeting more than a hundred thousand posts and reasonable user volumes, you probably want to procure yourself a database server. See tuning guides for postgresql and opensearch for help planning these requirements.
-
-### Help & Wiki Pages
-These wik/help pages are expected to exist, as they are linked to or used in various places.
-#### Wiki Pages
-* help:contact
-* help:home
-* help:privacy_policy
-* help:staff
-* help:takedown
-* help:takedown_verification
-* help:terms_of_service
-* internal:rules_body
-* internal:flag_notice
-* internal:replacement_notice
-* internal:avoid_posting_notice
-* internal:discord_notice
-* internal:ban_notice (sub: %BAN_REASON%, %BAN_USER%)
-* internal:restricted_notice
-* internal:rejected_notice
-* howto:sites_and_sources
-* howto:tag_genders
-
-#### Help Pages
-* accounts
-* api
-* artists
-* avoid_posting
-* blacklisting
-* blocking
-* cheatsheet
-* commenting
-* dmails
-* flagging
-* forums
-* global_blacklist
-* modqueue
-* notes
-* pools
-* post_relationships
-* posts
-* privacy_policy
-* replacements
-* reporting
-* sets
-* staff
-* tag_aliases
-* tag_implications
-* tagging_checklist
-* tags
-* terms_of_service
-* uploading
-* upload_whitelist
-* uploading_guidelines
-* user_name_change_requests
-* wiki
 
 ### Production Troubleshooting
 These instructions won't work for everyone. If your setup is not
@@ -151,10 +109,3 @@ correct.
 debug your Nginx configuration file.
 
 4) Check all log files.
-
-### Recommender
-To have recommendations, a user must have at least 50 favorites. A post must have at least 5 favorites to have recommendations.
-There are some scripts in `db/seeds` to generate both users and favorites.
-
-To train the model, simply run:
-`docker compose run --rm recommender python -m poetry run python train`

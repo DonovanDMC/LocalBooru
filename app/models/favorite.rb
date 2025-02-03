@@ -2,13 +2,13 @@
 
 class Favorite < ApplicationRecord
   class Error < StandardError; end
+  belongs_to_creator
 
   belongs_to :post
-  belongs_to :user, counter_cache: "favorite_count"
-  scope :for_user, ->(user_id) { where(user_id: user_id.to_i) }
   scope :for_posts, ->(post_ids) { where(post_id: post_ids) }
+  after_commit -> { post.update_index }
 
   def self.available_includes
-    %i[posts user]
+    %i[post]
   end
 end

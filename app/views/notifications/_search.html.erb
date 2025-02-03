@@ -1,3 +1,0 @@
-<%= form_search(path: notifications_path) do |f| %>
-  <%= f.input(:action, collection: Notification.categories.keys[1..].index_by(&:humanize)) %>
-<% end %>

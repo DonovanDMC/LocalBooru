@@ -6,15 +6,16 @@
     <div v-if="!failed">
       <div class="upload_preview_dims">{{ previewDimensions }}</div>
       <video v-if="data.isVideo" class="upload_preview_img" controls :src="finalPreviewUrl"
-        v-on:loadeddata="updateDimensions($event)" v-on:error="previewFailed()">
+             v-on:loadeddata="updateDimensions($event)" v-on:error="previewFailed()">
       </video>
       <img v-else class="upload_preview_img" :src="finalPreviewUrl"
-        referrerpolicy="no-referrer"
-        v-on:load="updateDimensions($event)" v-on:error="previewFailed()"/>
+           referrerpolicy="no-referrer"
+           v-on:load="updateDimensions($event)" v-on:error="previewFailed()"/>
     </div>
     <div v-else class="preview-fail box-section background-yellow">
       <p>The preview for this file failed to load. Please, double check that the URL you provided is correct.</p>
-      Note that some sites intentionally prevent images they host from being displayed on other sites. The file can still be uploaded despite that.
+      Note that some sites intentionally prevent images they host from being displayed on other sites. The file can
+      still be uploaded despite that.
     </div>
   </div>
 </template>
@@ -25,7 +26,7 @@ export default {
   props: {
     classes: String,
     data: {
-      validator: function(obj) {
+      validator: function (obj) {
         return typeof obj.isVideo === "boolean" && typeof obj.url === "string";
       }
     },
@@ -49,12 +50,12 @@ export default {
     },
   },
   watch: {
-    data: function() {
+    data: function () {
       this.resetFilePreview();
     }
   },
   methods: {
-   updateDimensions(e) {
+    updateDimensions(e) {
       const target = e.target;
       this.height = target.naturalHeight || target.videoHeight;
       this.width = target.naturalWidth || target.videoWidth;

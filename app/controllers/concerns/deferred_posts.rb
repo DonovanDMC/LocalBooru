@@ -8,7 +8,7 @@ module DeferredPosts
   end
 
   def deferred_posts
-    Post.includes(:uploader).where(id: deferred_post_ids.to_a).find_each.each_with_object({}) do |p, post_hash|
+    Post.where(id: deferred_post_ids.to_a).find_each.each_with_object({}) do |p, post_hash|
       post_hash[p.id] = p.thumbnail_attributes
       post_hash
     end

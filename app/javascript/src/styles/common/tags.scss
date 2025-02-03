@@ -1,5 +1,3 @@
-
-
 @each $tag-category, $tag-category-name in $tag-categories {
   .category-#{$tag-category} a,
   a.tag-type-#{$tag-category},

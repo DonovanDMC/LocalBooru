@@ -1,16 +1,13 @@
 # frozen_string_literal: true
 
 class ApplicationController < ActionController::Base
-  class APIThrottled < StandardError; end
   class FeatureUnavailable < StandardError; end
 
-  skip_forgery_protection if: -> { SessionLoader.new(request).has_api_authentication? || request.options? }
+  skip_forgery_protection
   before_action :reset_current_user
   before_action :set_current_user
   before_action :normalize_search
-  before_action :api_check
   before_action :enable_cors
-  before_action :check_valid_username
   after_action :reset_current_user
   layout "default"
 
@@ -33,25 +30,7 @@ class ApplicationController < ActionController::Base
     response.headers["Access-Control-Allow-Methods"] = "GET, HEAD, POST, PATCH, PUT, DELETE, OPTIONS"
   end
 
-  def check_valid_username
-    return if params[:controller] == "users/name_change_requests"
-
-    if request.format.html? && CurrentUser.user.name_error
-      redirect_to(new_user_name_change_request_path)
-    end
-  end
-
   protected
-
-  def api_check
-    if !CurrentUser.is_anonymous? && !request.get? && !request.head?
-      throttled = CurrentUser.user.token_bucket.throttled?
-      headers["X-Api-Limit"] = CurrentUser.user.token_bucket.cached_count.to_s
-      raise(APIThrottled) if throttled
-    end
-
-    true
-  end
 
   def rescue_exception(exception)
     @exception = exception
@@ -62,37 +41,16 @@ class ApplicationController < ActionController::Base
     case exception
     when ProcessingError
       render_expected_error(400, exception)
-    when APIThrottled
-      render_expected_error(429, "Throttled: Too many requests")
     when ActiveRecord::QueryCanceled
       render_error_page(500, exception, message: "The database timed out running your query.")
     when ActionController::BadRequest, PostVersion::UndoError
       render_error_page(400, exception)
-    when SessionLoader::AuthenticationFailure
-      session.delete(:user_id)
-      cookies.delete(:remember)
-      status = 401
-      if exception.is_a?(SessionLoader::BannedError)
-        status = 403
-        if request.format.json?
-          return render(json: {
-            success: false,
-            message: exception.message,
-            code:    nil,
-            ban:     exception.try(:ban),
-          }, status: status)
-        end
-        return redirect_to(acknowledge_bans_path(user_id: CurrentUser.user.signed_id(purpose: :acknowledge_ban))) if CurrentUser.user.ban_expired?
-      end
-      render_expected_error(status, exception.message)
     when ActionController::InvalidAuthenticityToken
       render_expected_error(403, "ActionController::InvalidAuthenticityToken. Did you properly authorize your request?")
     when ActiveRecord::RecordNotFound
       render404
-    when ActiveSupport::MessageVerifier::InvalidSignature, Pundit::NotAuthorizedError
+    when ActiveSupport::MessageVerifier::InvalidSignature
       access_denied
-    when User::PrivilegeError
-      access_denied(exception)
     when ActionController::RoutingError
       render_error_page(405, exception)
     when ActionController::UnknownFormat, ActionView::MissingTemplate
@@ -107,8 +65,6 @@ class ApplicationController < ActionController::Base
       render_error_page(503, exception, message: "The database is unavailable. Try again later.")
     when ActionController::UnpermittedParameters, ActionController::ParameterMissing
       render_expected_error(400, exception.message)
-    when BCrypt::Errors::InvalidHash
-      render_expected_error(400, "You must reset your password.")
     else
       render_error_page(500, exception)
     end
@@ -145,83 +101,21 @@ class ApplicationController < ActionController::Base
     @backtrace = Rails.backtrace_cleaner.clean(@exception.backtrace)
     format = :html unless format.in?(%i[html json atom])
 
-    if !FemboyFans.config.show_backtrace?(CurrentUser.user, @exception.backtrace) && message == exception.message
-      @message = "An unexpected error occurred."
-    end
-
     FemboyFans::Logger.log(@exception, expected: @expected)
-    log = ExceptionLog.add!(exception, user_id: CurrentUser.id, request: request) unless @expected
+    log = ExceptionLog.add!(exception, user: CurrentUser.user, request: request) unless @expected
     @log_code = log&.code
     render("static/error", status: status, formats: format)
   end
 
-  def access_denied(exception = nil)
-    previous_url = params[:url] || request.fullpath
-    @message = "Access Denied: #{exception}" if exception.is_a?(String)
-    @message ||= exception&.message || "Access Denied"
-
-    respond_to do |format|
-      format.html do
-        if CurrentUser.is_anonymous?
-          if request.get?
-            redirect_to(new_session_path(url: previous_url), notice: @message)
-          else
-            redirect_to(new_session_path, notice: @message)
-          end
-        else
-          render(template: "static/access_denied", status: 403)
-        end
-      end
-      format.json do
-        render(json: { success: false, reason: @message }.to_json, status: 403)
-      end
-    end
-  rescue ActionController::UnknownFormat
-    render(plain: @message, status: 403)
-  end
-
   def set_current_user
-    SessionLoader.new(request).load
-    session.send(:load!) unless session.send(:loaded?)
+    CurrentUser.user = User.new(request.remote_ip)
+    CurrentUser.ip_addr = request.remote_ip
+    CurrentUser.user.init
   end
 
   def reset_current_user
     CurrentUser.user = nil
     CurrentUser.ip_addr = nil
-    CurrentUser.safe_mode = FemboyFans.config.safe_mode?
-  end
-
-  def requires_reauthentication
-    return if CurrentUser.user.is_anonymous?
-
-    last_authenticated_at = session[:last_authenticated_at]
-    if last_authenticated_at.blank? || Time.zone.parse(last_authenticated_at) < 1.hour.ago
-      redirect_to(confirm_password_session_path(url: request.fullpath))
-    end
-  end
-
-  def user_access_check(method)
-    if !CurrentUser.user.send(method) || CurrentUser.user.is_banned? || IpBan.is_banned?(CurrentUser.ip_addr)
-      access_denied
-    end
-  end
-
-  User::Roles.each do |role|
-    define_method("#{role}_only") do
-      user_access_check("is_#{role}?")
-    end
-  end
-
-  %i[can_view_staff_notes can_handle_takedowns can_manage_aibur can_edit_avoid_posting_entries].each do |role|
-    define_method("#{role}_only") do
-      user_access_check("#{role}?")
-    end
-  end
-
-  def logged_in_only
-    if CurrentUser.is_anonymous?
-      access_denied("Must be logged in")
-    end
   end
 
   def pundit_user

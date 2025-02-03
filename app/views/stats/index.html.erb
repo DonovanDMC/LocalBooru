@@ -18,7 +18,6 @@
       ["Questionable posts", "questionable_posts", "existing_posts"],
       ["Explicit posts", "explicit_posts", "existing_posts"],
       ["Total post votes", "total_votes"],
-      ["Note count", "total_notes"],
       ["Total favorited posts", "total_favorites"],
       ["Pools", "total_pools"],
       ["Average posts per pool", "average_posts_per_pool"],
@@ -43,42 +42,10 @@
     ]
   }) %>
 
-  <%= render(partial: "percentage_table", locals: { header_title: "Users", data: [
-      ["User count", "total_users"],
-      ["Unactivated users", "unactivated_users", "total_users"],
-      ["Banned users", "banned_users", "total_users"],
-      ["Restricted users", "restricted_users", "total_users"],
-      ["Members", "member_users", "total_users"],
-      ["Trusted users", "trusted_users", "total_users"],
-      ["Janitors", "janitor_users", "total_users"],
-      ["Moderators", "moderator_users", "total_users"],
-      ["Admins", "admin_users", "total_users"],
-      ["Owners", "owner_users", "total_users"],
-      ["Dmails sent", "total_dmails"],
-    ]
-  }) %>
-</div>
-
-<div class="stats-column">
-  <%= render(partial: "percentage_table", locals: { header_title: "Comments", data: [
-      ["Comment count", "total_comments"],
-      ["Active comments", "active_comments", "total_comments"],
-      ["Hidden comments", "hidden_comments", "total_comments"],
-      ["Deleted comments", "deleted_comments", "total_comments"],
-    ]
-  }) %>
-
-  <%= render(partial: "stats_table", locals: { header_title: "Forum Posts", data: [
-      ["Topic count", "total_forum_topics"],
-      ["Post count", "total_forum_posts"],
-      ["Average posts per topic", "average_posts_per_topic"],
-    ]
-  }) %>
-
   <%= render(partial: "percentage_table", locals: { header_title: "Tags", data: [
       ["Tag count", "total_tags"],
       ["General tag count", "general_tags", "total_tags"],
-      ["Artist tag count", "artist_tags", "total_tags"],
+      ["Creator tag count", "creator_tags", "total_tags"],
       ["Contributor tag count", "contributor_tags", "total_tags"],
       ["Character tag count", "character_tags", "total_tags"],
       ["Copyright tag count", "copyright_tags", "total_tags"],

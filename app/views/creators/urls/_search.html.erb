@@ -1,0 +1,6 @@
+<%= form_search(path: creator_urls_path) do |f| %>
+  <%= f.input(:creator_name, label: "Creator Name", autocomplete: "creator") %>
+  <%= f.input(:url_matches, label: "URL") %>
+  <%= f.input(:normalized_url_matches, label: "Normalized URL") %>
+  <%= f.input(:order, collection: [%w[ID id], %w[Created created_at], %w[Updated updated_at]]) %>
+<% end %>

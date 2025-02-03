@@ -1,8 +1,6 @@
-
-
 @mixin grid-col($start, $end) {
-    grid-column-start: $start;
-    grid-column-end: $end;
+  grid-column-start: $start;
+  grid-column-end: $end;
 }
 
 @mixin grid-border($dir) {
@@ -119,36 +117,26 @@ div#c-posts-versions {
       @include grid-border(right);
     }
 
-    .pv-tags-locked-label {
-      grid-row: 1;
-      @include grid-col(9, 13);
-    }
-
-    .pv-tags-locked {
-      grid-row: 2;
-      @include grid-col(9, 13);
-      @include grid-border(right);
-    }
-
     .pv-tags-label {
       grid-row: 3;
-      @include grid-col(2, 10);
+      @include grid-col(2, 14);
     }
 
     .pv-tags {
       grid-row: 4;
-      @include grid-col(2, 10);
+      @include grid-col(2, 14);
       @include grid-border(right);
     }
 
     .pv-sources-label {
-      grid-row: 3;
-      @include grid-col(10, 14);
+      grid-row: 1;
+      @include grid-col(9, 13);
     }
 
     .pv-sources {
-      grid-row: 4;
-      @include grid-col(10, 14);
+      grid-row: 2;
+      @include grid-col(9, 13);
+      @include grid-border(right);
     }
 
     .pv-actions {

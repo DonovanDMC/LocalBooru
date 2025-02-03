@@ -1,22 +1,9 @@
-<%= render "posts/partials/common/blacklist_editor" %>
-
 <% content_for(:secondary_links) do %>
   <%= subnav_link_to("Listing", posts_path) %>
   <%= subnav_link_to("Upload", new_upload_path) %>
-  <%= subnav_link_to("Hot", posts_path(tags: "order:rank", d: "1")) %>
-  <%= subnav_link_to("Popular", popular_index_path) %>
-  <% unless CurrentUser.user.is_anonymous? %>
-    <%= subnav_link_to("Favorites", favorites_path) %>
-  <% end %>
+  <%= subnav_link_to("Favorites", favorites_path) %>
   <%= subnav_link_to("Changes", post_versions_path) %>
-  <li><a href="#" id="blacklist-edit-link">Blacklist</a></li>
-  <%= subnav_link_to("Help", help_page_path(id: "posts")) %>
-  <%= subnav_link_to("Post Recommendations", post_recommendations_path) %>
   <% if params[:controller] == "favorites" %>
     <%= subnav_link_to("Clear Favorites", clear_favorites_path) %>
-  <% end %>
-  <% if CurrentUser.can_approve_posts? %>
-  <li>|</li>
-  <li><a href="#" id="janitor-toolbar-toggle">Approvals: Off</a></li>
   <% end %>
 <% end %>

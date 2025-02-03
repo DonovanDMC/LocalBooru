@@ -5,14 +5,13 @@ module Posts
     respond_to :html, :json
 
     def show
-      @post = authorize(Post.find(params[:id]), :move_favorites?)
+      @post = Post.find(params[:id])
       respond_with(@post)
     end
 
     def create
-      @post = authorize(Post.find(params[:id]), :move_favorites?)
+      @post = Post.find(params[:id])
       @post.give_favorites_to_parent
-      @post.give_votes_to_parent
       respond_with(@post)
     end
   end

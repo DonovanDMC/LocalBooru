@@ -46,7 +46,6 @@ typedef enum element_t {
   INLINE_CODE,
   INLINE_SPOILER,
   INLINE_NODTEXT,
-  INLINE_TOPIC,
 } element_t;
 
 #ifdef DEBUG
@@ -87,7 +86,6 @@ static const char* element_names[] = {
   "INLINE_CODE",
   "INLINE_SPOILER",
   "INLINE_NODTEXT",
-  "INLINE_TOPIC",
 };
 #endif
 
@@ -99,11 +97,8 @@ struct DTextOptions {
   // If false, strip block-level elements (used for displaying DText in small spaces).
   bool f_inline = false;
 
-  // If false, ignore @-mentions
-  bool f_mentions = true;
-
   // If false, disallows colors.
-  bool f_allow_color = false;
+  bool f_allow_color = true;
 
   // If false, ignore #qtags
   bool f_qtags = false;
@@ -113,9 +108,6 @@ struct DTextOptions {
 
   // Links to this domain are considered internal URLs, rather than external URLs (used so links to https://danbooru.donmai.us don't get marked as external).
   std::string domain;
-
-  // The maximum amount of thumbnails to render.
-  int max_thumbs;
 
   // Links to these domains are converted to shortlinks (used so links to https://danbooru.donmai.us/posts/1234 are converted to post #1234).
   std::unordered_set<std::string> internal_domains;
@@ -157,12 +149,11 @@ public:
   std::string output;
   std::vector<int> stack;
   std::vector<element_t> dstack;
-  std::unordered_set<std::string> wiki_pages;
+  std::unordered_set<std::string> creators;
   std::vector<long> posts;
-  std::vector<std::string> mentions;
   std::vector<std::string> qtags;
 
-  using ParseResult = std::tuple<std::string, decltype(wiki_pages), decltype(posts), decltype(mentions), decltype(qtags)>;
+  using ParseResult = std::tuple<std::string, decltype(creators), decltype(posts), decltype(qtags)>;
   static ParseResult parse_dtext(const std::string_view dtext, const DTextOptions options);
 
   std::string parse_inline(const std::string_view dtext);
@@ -194,7 +185,6 @@ public:
   void append_block_html_escaped(const std::string_view string);
 
   void append_header(char header, const std::string_view id);
-  void append_mention(const std::string_view name);
   void append_qtag(const std::string_view name);
   void append_id_link(const char *title, const char *id_name, const char *url, const std::string_view id);
   void append_bare_unnamed_url(const std::string_view url);
@@ -205,9 +195,8 @@ public:
   void append_absolute_link(const std::string_view url, const std::string_view title, bool internal_url = false, bool escape_title = true);
   void append_post_search_link(const std::string_view prefix, const std::string_view search, const std::string_view title, const std::string_view suffix);
   void append_section(const std::string_view summary, bool initially_open);
-  void append_topic(const std::string_view id);
-  void append_wiki_link(const std::string_view prefix, const std::string_view tag, const std::string_view anchor, const std::string_view title, const std::string_view suffix);
-  void append_internal_anchor_link(const std::string_view prefix, const std::string_view anchor, const std::string_view title, const std::string_view suffix); 
+  void append_creator_link(const std::string_view prefix, const std::string_view tag, const std::string_view anchor, const std::string_view title, const std::string_view suffix);
+  void append_internal_anchor_link(const std::string_view prefix, const std::string_view anchor, const std::string_view title, const std::string_view suffix);
   void append_paged_link(const char *title, const std::string_view id, const char *tag, const char *href, const char *param, const std::string_view page);
   void append_dmail_key_link(const std::string_view dmail_id, const std::string_view dmail_key);
   void append_post_changes_version_link(const std::string_view post_id, const std::string_view version);

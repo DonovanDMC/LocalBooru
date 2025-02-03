@@ -1,9 +1,0 @@
-<%= table_for(@dashboard.notes) do |t| %>
-  <% t.caption { "Note Updates" } %>
-  <% t.column("User") do |activity| %>
-    <%= link_to_user(activity.user) %>
-  <% end %>
-  <% t.column("Count") do |activity| %>
-    <%= link_to(activity.count, note_versions_path(search: { updater_id: activity.user.id })) %>
-  <% end %>
-<% end %>

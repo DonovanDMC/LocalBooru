@@ -1,8 +1,6 @@
 <%= render "tag_relationships/search", url: tag_implications_path %>
 <%= render "tag_relationships/listing", tag_relations: @tag_implications %>
-<% if can_use_attribute?(TagImplication, :skip_forum) %>
-  <%= render "tag_relationships/add_form", type: :tag_implication, path: new_tag_implication_path %>
-<% end %>
+<%= render "tag_relationships/add_form", type: :tag_implication, path: tag_implications_path %>
 
 <%= numbered_paginator(@tag_implications) %>
 

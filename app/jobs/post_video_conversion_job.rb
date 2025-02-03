@@ -30,14 +30,14 @@ class PostVideoConversionJob < ApplicationJob
     sm = FemboyFans.config.storage_manager
     samples.each do |name, named_samples|
       next if name == :original
-      webm_path = sm.file_path(md5, "webm", :scaled, protected: post.is_deleted?, scale_factor: name.to_s)
+      webm_path = sm.file_path(md5, "webm", :scaled, deleted: post.is_deleted?, scale_factor: name.to_s)
       sm.store(named_samples[0], webm_path)
       named_samples[0].close!
-      mp4_path = sm.file_path(md5, "mp4", :scaled, protected: post.is_deleted?, scale_factor: name.to_s)
+      mp4_path = sm.file_path(md5, "mp4", :scaled, deleted: post.is_deleted?, scale_factor: name.to_s)
       sm.store(named_samples[1], mp4_path)
       named_samples[1].close!
     end
-    sm.store(samples[:original][1], sm.file_path(md5, post.is_webm? ? "mp4" : "webm", :original, protected: post.is_deleted?))
+    sm.store(samples[:original][1], sm.file_path(md5, post.is_webm? ? "mp4" : "webm", :original, deleted: post.is_deleted?))
     samples[:original].each(&:close!)
   end
 

@@ -2,6 +2,7 @@
   <%= f.input(:commit) %>
   <%= f.input(:class_name) %>
   <%= f.input(:without_class_name) %>
+  <%= f.user(:user) %>
 <% end %>
 
 <%= table_for(@exception_logs) do |t| %>

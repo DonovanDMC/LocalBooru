@@ -1,7 +1,7 @@
 import Utility from "./utility.js";
 
 class TagRelationships {
-  static approve (e) {
+  static approve(e) {
     e.preventDefault();
     const $e = $(e.target);
     const parent = $e.parents(".tag-relationship");
@@ -25,7 +25,7 @@ class TagRelationships {
     });
   }
 
-  static reject (e) {
+  static reject(e) {
     e.preventDefault();
     const $e = $(e.target);
     const parent = $e.parents(".tag-relationship");

@@ -1,9 +1,0 @@
-<%= form_search(path: dtext_links_path) do |f| %>
-  <%= f.input(:link_target, label: "Link", data: { autocomplete: "wiki-page" }) %>
-  <%= f.input(:model_type, label: "Page Type", collection: DtextLink::MODEL_TYPES.index_by(&:titlecase)) %>
-  <%= f.input(:link_type, label: "Link Type", collection: [%w[Wiki 0], %w[External 1]], include_blank: true) %>
-  <%= f.input(:has_linked_wiki, label: "Wiki Exists?", collection: %w[Yes No], include_blank: true) %>
-  <%= f.input(:has_linked_tag, label: "Tag Exists?", collection: %w[Yes No], include_blank: true) %>
-  <%= f.input(:wiki_page_title, hide_unless_value: true) %>
-  <%= f.input(:tag_name, hide_unless_value: true) %>
-<% end %>

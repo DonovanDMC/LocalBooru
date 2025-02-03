@@ -1,9 +1,9 @@
 /* eslint-disable comma-dangle */
 const TagScript = {
-  parse (script) {
+  parse(script) {
     return script.match(/\[.+?\]|\S+/g);
   },
-  test (tags, predicate) {
+  test(tags, predicate) {
     const split_pred = predicate.match(/\S+/g);
 
     for (const x of split_pred) {
@@ -18,7 +18,7 @@ const TagScript = {
 
     return true;
   },
-  process (tags, command) {
+  process(tags, command) {
     if (command.match(/^\[if/)) {
       const match = command.match(/\[if\s+(.+?)\s*,\s*(.+?)\]/);
       if (TagScript.test(tags, match[1])) {
@@ -32,7 +32,7 @@ const TagScript = {
       return command;
     }
   },
-  run (tags, tag_script) {
+  run(tags, tag_script) {
     const changes = [];
     const commands = TagScript.parse(tag_script);
 

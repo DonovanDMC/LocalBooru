@@ -6,7 +6,7 @@ PostReplacement.initialize_all = function () {
   $(".replacement-approve-action").on("click", e => {
     const target = $(e.target);
     e.preventDefault();
-    PostReplacement.approve(target.data("replacement-id"), target.data("penalize"));
+    PostReplacement.approve(target.data("replacement-id"));
   });
   $(".replacement-reject-action").on("click", e => {
     e.preventDefault();
@@ -16,21 +16,14 @@ PostReplacement.initialize_all = function () {
     e.preventDefault();
     PostReplacement.promote($(e.target).data("replacement-id"));
   });
-  $(".replacement-toggle-penalize-action").on("click", e => {
-    e.preventDefault();
-    PostReplacement.toggle_penalize($(e.target));
-  });
 };
 
-PostReplacement.approve = function (id, penalize_current_uploader) {
+PostReplacement.approve = function (id) {
   const $row = $("#replacement-" + id);
   make_processing($row);
   $.ajax({
     type: "PUT",
     url: `/posts/replacements/${id}/approve.json`,
-    data: {
-      penalize_current_uploader: penalize_current_uploader,
-    },
     dataType: "json",
   }).done(function () {
     set_status($row, "approved");
@@ -75,29 +68,13 @@ PostReplacement.promote = function (id) {
   });
 };
 
-PostReplacement.toggle_penalize = function ($target) {
-  const id = $target.data("replacement-id");
-  const $currentStatus = $target.parent().find(".penalized-status");
-  $target.addClass("disabled-link");
-  $.ajax({
-    type: "PUT",
-    url: `/posts/replacements/${id}/toggle_penalize.json`,
-    dataType: "json",
-  }).done(function () {
-    $target.removeClass("disabled-link");
-    $currentStatus.text($currentStatus.text() == "yes" ? "no" : "yes");
-  }).fail(function (data) {
-    Utility.error(data.responseText);
-  });
-};
-
-function make_processing ($row) {
+function make_processing($row) {
   $row.removeClass("replacement-pending-row").addClass("replacement-processing-row");
   $row.find(".replacement-status").text("processing");
   $row.find(".pending-links a").addClass("disabled-link");
 }
 
-function set_status ($row, text) {
+function set_status($row, text) {
   $row.find(".replacement-status").text(text);
   $row.removeClass("replacement-processing-row");
 }

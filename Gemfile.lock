@@ -83,7 +83,6 @@ GEM
       public_suffix (>= 2.0.2, < 6.0)
     ast (2.4.2)
     base64 (0.2.0)
-    bcrypt (3.1.20)
     better_html (2.0.2)
       actionview (>= 6.0)
       activesupport (>= 6.0)
@@ -95,24 +94,14 @@ GEM
     bootsnap (1.18.3)
       msgpack (~> 1.2)
     builder (3.2.4)
-    chunky_png (1.4.0)
-    click_house (2.1.2)
-      activesupport
-      faraday (>= 1.7, < 3)
     concurrent-ruby (1.2.3)
     connection_pool (2.4.1)
-    crack (1.0.0)
-      bigdecimal
-      rexml
     crass (1.0.6)
-    dalli (3.2.8)
     date (3.3.4)
     debug (1.9.1)
       irb (~> 1.10)
       reline (>= 0.3.8)
     diffy (3.4.2)
-    docile (1.4.0)
-    domain_name (0.6.20240107)
     dotenv (3.1.0)
     draper (4.0.2)
       actionpack (>= 5.0)
@@ -124,13 +113,6 @@ GEM
     drb (2.2.1)
     dtext_rb (1.15.9)
     erubi (1.12.0)
-    factory_bot (6.4.6)
-      activesupport (>= 5.0.0)
-    factory_bot_rails (6.4.3)
-      factory_bot (~> 6.4)
-      railties (>= 5.0.0)
-    faker (3.4.2)
-      i18n (>= 1.8.11, < 2)
     faraday (2.9.0)
       faraday-net_http (>= 2.0, < 3.2)
     faraday-follow_redirects (0.3.0)
@@ -142,10 +124,6 @@ GEM
     ffi (1.16.3)
     globalid (1.2.1)
       activesupport (>= 6.1)
-    hashdiff (1.1.0)
-    http-accept (1.7.0)
-    http-cookie (1.0.5)
-      domain_name (~> 0.5)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
     io-console (0.7.2)
@@ -153,8 +131,6 @@ GEM
       rdoc
       reline (>= 0.4.2)
     json (2.7.2)
-    jwt (2.8.2)
-      base64
     language_server-protocol (3.17.0.3)
     logger (1.6.0)
     loofah (2.22.0)
@@ -165,23 +141,13 @@ GEM
       net-imap
       net-pop
       net-smtp
-    mailgun-ruby (1.2.14)
-      rest-client (>= 2.0.2)
     marcel (1.0.4)
-    mime-types (3.5.2)
-      mime-types-data (~> 3.2015)
-    mime-types-data (3.2024.0206)
     mini_mime (1.1.5)
     mini_portile2 (2.8.5)
     minitest (5.22.2)
-    mocha (2.1.0)
-      ruby2_keywords (>= 0.0.5)
     msgpack (1.7.2)
     multi_json (1.15.0)
     mutex_m (0.2.0)
-    net-ftp (0.3.4)
-      net-protocol
-      time
     net-http (0.4.1)
       uri
     net-imap (0.4.10)
@@ -193,7 +159,6 @@ GEM
       timeout
     net-smtp (0.4.0.1)
       net-protocol
-    netrc (0.11.0)
     nio4r (2.7.0)
     nokogiri (1.16.2)
       mini_portile2 (~> 2.8.2)
@@ -260,12 +225,10 @@ GEM
     rainbow (3.1.1)
     raindrops (0.20.1)
     rake (13.1.0)
-    rakismet (1.5.4)
     rbs (3.5.3)
       logger
     rdoc (6.6.2)
       psych (>= 4.0.0)
-    recaptcha (5.16.0)
     redis (5.1.0)
       redis-client (>= 0.17.0)
     redis-client (0.20.0)
@@ -278,19 +241,9 @@ GEM
     responders (3.1.1)
       actionpack (>= 5.2)
       railties (>= 5.2)
-    rest-client (2.1.0)
-      http-accept (>= 1.7.0, < 2.0)
-      http-cookie (>= 1.0.2, < 2.0)
-      mime-types (>= 1.16, < 4.0)
-      netrc (~> 0.8)
     retriable (3.1.2)
     rexml (3.3.6)
       strscan
-    rotp (6.3.0)
-    rqrcode (2.2.0)
-      chunky_png (~> 1.0)
-      rqrcode_core (~> 1.0)
-    rqrcode_core (1.2.0)
     rubocop (1.63.5)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
@@ -325,9 +278,6 @@ GEM
     ruby2_keywords (0.0.5)
     rugged (1.7.2)
     semantic_range (3.0.0)
-    shoulda-context (2.0.0)
-    shoulda-matchers (6.1.0)
-      activesupport (>= 5.2.0)
     sidekiq (7.2.2)
       concurrent-ruby (< 2)
       connection_pool (>= 2.3.0)
@@ -340,15 +290,6 @@ GEM
     simple_form (5.3.0)
       actionpack (>= 5.2)
       activemodel (>= 5.2)
-    simplecov (0.22.0)
-      docile (~> 1.1)
-      simplecov-html (~> 0.11)
-      simplecov_json_formatter (~> 0.1)
-    simplecov-cobertura (2.1.0)
-      rexml
-      simplecov (~> 0.19)
-    simplecov-html (0.12.3)
-    simplecov_json_formatter (0.1.4)
     smart_properties (1.17.0)
     sorbet-runtime (0.5.11284)
     streamio-ffmpeg (3.0.2)
@@ -356,17 +297,11 @@ GEM
     stringio (3.1.0)
     strscan (3.1.0)
     thor (1.3.1)
-    time (0.3.0)
-      date
     timeout (0.4.1)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.5.0)
     uri (0.13.0)
-    webmock (3.23.0)
-      addressable (>= 2.8.0)
-      crack (>= 0.3.2)
-      hashdiff (>= 0.4.0, < 2.0.0)
     webpacker (6.0.0.rc.6)
       activesupport (>= 5.2)
       rack-proxy (>= 0.6.1)
@@ -383,40 +318,27 @@ PLATFORMS
 
 DEPENDENCIES
   addressable
-  bcrypt
   bootsnap
-  click_house (~> 2.1)
-  dalli
   debug
   diffy
   dotenv
   draper
   dtext_rb
-  factory_bot_rails
-  faker
   faraday
   faraday-follow_redirects
   faraday-retry
-  jwt (~> 2.8)
-  mailgun-ruby
   marcel
-  mocha
-  net-ftp (~> 0.3.4)
   opensearch-ruby
   pg
   pitchfork
   puma
   pundit (~> 2.3)
   rails (~> 7.1.0)
-  rakismet (~> 1.5)
-  recaptcha
   redis
   request_store
   responders
   retriable
   rexml (>= 3.3.6)
-  rotp (~> 6.3)
-  rqrcode (~> 2.2)
   rubocop
   rubocop-erb
   rubocop-rails
@@ -424,15 +346,10 @@ DEPENDENCIES
   ruby-lsp-rails (~> 0.3.13)
   ruby-vips
   rugged
-  shoulda-context
-  shoulda-matchers
   sidekiq (~> 7.0)
   sidekiq-unique-jobs
   simple_form
-  simplecov
-  simplecov-cobertura
   streamio-ffmpeg
-  webmock
   webpacker (>= 4.0.x)
 
 BUNDLED WITH

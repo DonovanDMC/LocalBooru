@@ -15,13 +15,6 @@
       <% end %>
       <a class="<%= "tag-type-#{change.category}" %>"><%= Tag.category_for_value(change.category) %></a>
     <% end %>
-    <% t.column("Locked") do |change| %>
-      <% if change.is_locked_changed? %>
-        <b><%= change.is_locked %></b>
-      <% else %>
-        <%= change.is_locked %>
-      <% end %>
-    <% end %>
     <% t.column("Reason") do |change| %>
       <%= change.reason %>
     <% end %>

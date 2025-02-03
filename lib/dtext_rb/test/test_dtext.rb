@@ -36,24 +36,15 @@ class DTextTest < Minitest::Test
     end
   end
 
-  def assert_parse_extra(dtext: nil, wiki_pages: nil, post_ids: nil, mentions: nil, input:, **options)
+  def assert_parse_extra(dtext: nil, creators: nil, post_ids: nil, input:, **options)
     result = parse(input, **options)
     assert_equal(result[:dtext], dtext, "DText: #{input} (dtext)") unless dtext.nil?
-    assert_equal(result[:wiki_pages], wiki_pages, "DText: #{input} (wiki_pages)") unless wiki_pages.nil?
+    assert_equal(result[:creators], creators, "DText: #{input} (creators)") unless creators.nil?
     assert_equal(result[:post_ids], post_ids, "DText: #{input} (post_ids)") unless post_ids.nil?
-    assert_equal(result[:mentions], mentions, "DText: #{input} (mentions)") unless mentions.nil?
   end
 
   def assert_inline_parse(expected, input)
     assert_parse(expected, input, inline: true)
-  end
-
-  def assert_mention(expected_username, input, **)
-    result = parse(input, **)
-    actual_username = Nokogiri::HTML5.fragment(result[:dtext]).css("a.dtext-user-mention-link").text
-
-    assert_equal([expected_username], result[:mentions])
-    assert_equal("@" + expected_username, actual_username)
   end
 
   def assert_qtag(qtag, input, **)
@@ -66,172 +57,19 @@ class DTextTest < Minitest::Test
 
   def test_relative_urls
     assert_parse('<p><a class="dtext-link dtext-id-link dtext-post-id-link" href="http://danbooru.donmai.us/posts/1234">post #1234</a></p>', "post #1234", base_url: "http://danbooru.donmai.us")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="http://danbooru.donmai.us/wiki_pages/show_or_new?title=touhou">touhou</a></p>', "[[touhou]]", base_url: "http://danbooru.donmai.us")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="http://danbooru.donmai.us/wiki_pages/show_or_new?title=touhou">Touhou</a></p>', "[[touhou|Touhou]]", base_url: "http://danbooru.donmai.us")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="http://danbooru.donmai.us/creators/show_or_new?name=touhou">touhou</a></p>', "[[touhou]]", base_url: "http://danbooru.donmai.us")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="http://danbooru.donmai.us/creators/show_or_new?name=touhou">Touhou</a></p>', "[[touhou|Touhou]]", base_url: "http://danbooru.donmai.us")
     assert_parse('<p><a class="dtext-link dtext-post-search-link" href="http://danbooru.donmai.us/posts?tags=touhou">touhou</a></p>', "{{touhou}}", base_url: "http://danbooru.donmai.us")
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-forum-topic-id-link" href="http://danbooru.donmai.us/forums/topics/1234?page=4">topic #1234 (page 4)</a></p>', "topic #1234/p4", base_url: "http://danbooru.donmai.us")
     assert_parse('<p><a class="dtext-link" href="http://danbooru.donmai.us/posts">home</a></p>', '"home":/posts', base_url: "http://danbooru.donmai.us")
     assert_parse('<p><a class="dtext-link" href="http://danbooru.donmai.us#posts">home</a></p>', '"home":#posts', base_url: "http://danbooru.donmai.us")
     assert_parse('<p><a class="dtext-link" href="http://danbooru.donmai.us/posts">home</a></p>', '<a href="/posts">home</a>', base_url: "http://danbooru.donmai.us")
     assert_parse('<p><a class="dtext-link" href="http://danbooru.donmai.us#posts">home</a></p>', '<a href="#posts">home</a>', base_url: "http://danbooru.donmai.us")
-    assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="evazion" href="http://danbooru.donmai.us/users?name=evazion">@evazion</a></p>', "@evazion", base_url: "http://danbooru.donmai.us")
-    assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="evazion" href="http://danbooru.donmai.us/users?name=evazion">@evazion</a></p>', "<@evazion>", base_url: "http://danbooru.donmai.us")
   end
 
   def test_args
     assert_parse(nil, nil)
     assert_parse("", "")
     assert_raises(TypeError) { parse_dtext(42) }
-  end
-
-  def test_mentions
-    assert_mention("user", "@user")
-    assert_mention("user", "hi @user")
-    assert_mention("user", "@user:")
-    assert_mention("user", "@user?")
-    assert_mention("user", "/@user")
-    assert_mention("user", "(@user)")
-    assert_mention("user", '(@user: blah')
-    assert_mention("user", '[i]@user [/i]')
-    assert_mention("user", '[quote]@user:')
-    assert_mention("user", 'Twitter/@user')
-    assert_mention("factory", '[b][@factory (Asakura Kotomi)] KotoKoi (Nisekoi)[/b]')
-
-    assert_mention("user", "@user's")
-    assert_mention('user', '@user...')
-    assert_mention('user', '"@user"')
-    assert_mention('user', '"@user":')
-    assert_mention('user', '(and "@user");')
-    assert_mention("user", "(@user?)")
-    assert_mention("user", "(@user!)")
-    assert_mention("user", "(@user).")
-    assert_mention("user", "(@user),")
-    assert_mention("user", "@user- hi")
-    assert_mention("user", '[i]@user:[/i]')
-    assert_mention("user", '[i]@user[/i]')
-    assert_mention("Bunch", '[i]Comic @Bunch[/i]')
-    assert_mention("TunaMayo", '@TunaMayo,　乙でした～.')
-
-    assert_mention("21", 'https://www.youtube.com/watch?v=gUxxclCqD8g (@21:50)') # XXX wrong
-    assert_mention('1027x768', '12"@1027x768') # XXX wrong
-    assert_mention("和茶_Official", "[喜欢]@和茶_Official") # XXX wrong
-    assert_mention("amazonses.com", "(from <[redacted]@amazonses.com>)") # XXX wrong
-    assert_mention("waniguchi", "(Twitter ID: @waniguchi_)") # XXX wrong
-    assert_mention("rifu", "@rifu_ from twitter") # XXX wrong
-
-    assert_parse('<p>this is not @.@ @_@ <a class="dtext-link dtext-user-mention-link" data-user-name="bob" href="/users?name=bob">@bob</a></p>', "this is not @.@ @_@ @bob")
-    assert_parse('<p>multiple <a class="dtext-link dtext-user-mention-link" data-user-name="bob" href="/users?name=bob">@bob</a> <a class="dtext-link dtext-user-mention-link" data-user-name="anna" href="/users?name=anna">@anna</a></p>', "multiple @bob @anna")
-
-    assert_mention("_cf", "@_cf")
-    assert_mention(".musouka", "@.musouka")
-    assert_mention(".dank", "@.dank")
-    assert_mention("kia'ra", "@kia'ra")
-    assert_mention("T34/38", "@T34/38")
-    assert_mention("F/A-18F", "@F/A-18F")
-    assert_mention("79248cm/s", "@79248cm/s:")
-    assert_mention("games.2019", "@games.2019")
-    assert_mention(".k1.38+23", "@.k1.38+23")
-    assert_mention('T!ramisu', '@T!ramisu')
-    assert_mention("PostIt-Notes", "@PostIt-Notes")
-    assert_mention("Fox/Tamamo™", "@Fox/Tamamo™")
-    assert_mention("Équi_libriste", "@Équi_libriste")
-    assert_mention("111K女", "@111K女")
-    assert_mention("🌟💖🌈RainbowStarblast🌈💖🌟", "@🌟💖🌈RainbowStarblast🌈💖🌟")
-
-    assert_mention("初　音　ミ　ク", "@初　音　ミ　ク") # XXX shouldn't work
-    assert_mention("http", "@http://example.com") # XXX shouldn't work
-
-    assert_parse('<p>@e?</p>', '@e?') # XXX should work
-    assert_parse("<p>@[KN]</p>", "@[KN]") # XXX should work
-    assert_parse("<p>@|Leo|</p>", "@|Leo|") # XXX should work
-    assert_parse("<p>@-abraxas-</p>", "@-abraxas-") # XXX should work
-    assert_parse("<p>@-Yangbojian</p>", "@-Yangbojian") # XXX should work
-
-    assert_mention("deadW", "@deadW@nderer") # XXX wrong
-    assert_mention("sweetpe", "@sweetpe@") # XXX wrong
-    assert_mention("Nito", "@Nito(ri^n)") # XXX wrong
-    assert_mention("Lucas", "@Lucas#Vidal:") # XXX wrong
-  end
-
-  def test_nonmentions
-    assert_parse('<p>@@</p>', "@@")
-    assert_parse('<p>@+</p>', "@+")
-    assert_parse('<p>@_</p>', "@_")
-    assert_parse('<p>@?</p>', "@?")
-    assert_parse('<p>@N</p>', "@N")
-    assert_parse('<p>@$$</p>', "@$$")
-    assert_parse('<p>@s*</p>', "@s*")
-    assert_parse('<p>@%%</p>', "@%%")
-    assert_parse('<p>@.@</p>', "@.@")
-    assert_parse('<p>@.o</p>', "@.o")
-    assert_parse('<p>@_o</p>', "@_o")
-    assert_parse('<p>@_X</p>', "@_X")
-    assert_parse('<p>@_@</p>', "@_@")
-    assert_parse('<p>@¬@</p>', "@¬@")
-    assert_parse('<p>@w@</p>', "@w@")
-    assert_parse('<p>@m@;</p>', "@m@;")
-    assert_parse('<p>@n@</p>', "@n@")
-    assert_parse('<p>@A@</p>', "@A@")
-    assert_parse('<p>@A@?</p>', "@A@?")
-    assert_parse('<p>@3@</p>', "@3@")
-    assert_parse('<p>@__X</p>', "@__X")
-    assert_parse('<p>@__@</p>', "@__@")
-    assert_parse('<p>@_@k</p>', "@_@k")
-    assert_parse('<p>@_@&quot;</p>', '@_@"')
-    assert_parse('<p>@_@:</p>', "@_@:")
-    assert_parse('<p>@_@,.</p>', "@_@,.")
-    assert_parse('<p>@_@...</p>', "@_@...")
-    assert_parse('<p>@_@!~</p>', "@_@!~")
-    assert_parse('<p>@(_   _)</p>', "@(_   _)")
-    assert_parse('<p>@_@[/quote]</p>', "@_@[/quote]")
-    assert_parse('<p>@///@</p>', "@///@")
-    assert_parse('<p>@===&gt;</p>', "@===>")
-    assert_parse('<p>@#(&amp;*.</p>', "@#(&*.")
-    assert_parse('<p>@*$-pull</p>', "@*$-pull")
-    assert_parse('<p>@@</p>', "@@")
-    assert_parse('<p>@@,but</p>', "@@,but")
-    assert_parse('<p> @: </p>', " @: ")
-    assert_parse('<p> @, </p>', " @, ")
-    assert_parse('<p>@/\/\ao</p>', '@/\/\ao')
-    assert_parse('<p>@.@;;;</p>', "@.@;;;")
-    assert_parse("<p>@'d</p>", "@'d")
-    assert_parse("<p>@'ing</p>", "@'ing")
-    assert_parse('<p>@-like</p>', "@-like")
-    assert_parse('<p>@-chan</p>', "@-chan")
-    assert_parse('<p>@-mention</p>', "@-mention")
-    assert_parse('<p>@-moz-document</p>', "@-moz-document")
-    assert_parse('<p>@&quot;I love ProgRock&quot;</p>', '@"I love ProgRock"')
-    assert_parse('<p>@@text</p>', "@@text")
-    assert_parse('<p>@o@</p>', "@o@")
-    assert_parse('<p>@.o&quot;</p>', '@.o"')
-    assert_parse("<p>@.o''</p>", "@.o''")
-    assert_parse('<p>things(@_0;...</p>', 'things(@_0;...')
-    assert_parse('<p>(@﹏@) . . .</p>', '(@﹏@) . . .')
-
-    assert_parse('<p>Q^$@T5#</p>', "Q^$@T5#")
-    assert_parse('<p>f#*@ing</p>', "f#*@ing")
-    assert_parse('<p>sick f$#@s!</p>', 'sick f$#@s!')
-    assert_parse('<p>motherf&amp;#@er!</p>', 'motherf&#@er!')
-    assert_parse('<p>mutha&amp;#*@ing</p>', "mutha&#*@ing")
-    assert_parse('<p>...@you guys.</p>', "...@you guys.")
-    assert_parse('<p>*chuckle*@the cocks tag</p>', "*chuckle*@the cocks tag")
-    assert_parse('<p>Poi!@poi?</p>', 'Poi!@poi?')
-    assert_parse('<p> @0:43?</p>', ' @0:43?')
-
-    assert_parse('<p>email@address.com</p>', "email@address.com")
-    assert_parse('<p>idolm@ster</p>', 'idolm@ster')
-
-    assert_parse('<p>@<strong>Biribiri-chan</strong></p>', '@[b]Biribiri-chan[/b]')
-    assert_parse('<p>@<a rel="external nofollow noreferrer" class="dtext-link dtext-external-link dtext-named-external-link" href="https://twitter.com/eshaolang">@eshaolang</a></p>', '@"@eshaolang":[https://twitter.com/eshaolang]')
-  end
-
-  def test_disabled_mentions
-    assert_parse('<p>@bob</p>', "@bob", disable_mentions: true)
-    assert_parse('<p>&lt;@bob&gt;</p>', "<@bob>", disable_mentions: true)
-
-    assert_parse('<p>@bob<em>blah</em></p>', "@bob[i]blah[/i]", disable_mentions: true)
-    assert_parse('<p>&lt;@bob<em>blah</em>&gt;</p>', "<@bob[i]blah[/i]>", disable_mentions: true)
-    assert_parse('<p>@<a rel="external nofollow noreferrer" class="dtext-link dtext-external-link dtext-named-external-link" href="https://twitter.com/eshaolang">@eshaolang</a></p>', '@"@eshaolang":[https://twitter.com/eshaolang]', disable_mentions: true)
   end
 
   def test_qtags
@@ -279,92 +117,92 @@ class DTextTest < Minitest::Test
     assert_parse("<p>* list</p>", "&ast; list")
 
     assert_inline_parse('<a class="dtext-link" href="/posts">&amp;quot;title&amp;quot;</a>', '"&quot;title&quot;":/posts')
-    assert_inline_parse('<a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tiger_%26amp%3B_bunny">tiger_&amp;amp;_bunny</a>', '[[tiger_&amp;_bunny]]')
+    assert_inline_parse('<a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tiger_%26amp%3B_bunny">tiger_&amp;amp;_bunny</a>', '[[tiger_&amp;_bunny]]')
 
     assert_inline_parse('&amp;lt;', '[nodtext]&lt;[/nodtext]')
     assert_parse('<pre>&amp;lt;</pre>', '[code]&lt;[/code]')
   end
 
-  def test_wiki_links
-    assert_parse("<p>a <a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=b\">b</a> c</p>", "a [[b]] c")
-    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=%E6%9D%B1%E6%96%B9\">東方</a></p>", "[[東方]]")
+  def test_creator_links
+    assert_parse("<p>a <a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=b\">b</a> c</p>", "a [[b]] c")
+    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=%E6%9D%B1%E6%96%B9\">東方</a></p>", "[[東方]]")
   end
 
-  def test_wiki_link_spacing
-    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=tag\">tag</a></p>", "[[ tag ]]")
-    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=tag\">thetagger</a></p>", "the[[ tag ]]ger")
-    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=tag\">theTagger</a></p>", "the[[ tag|Tag ]]ger")
-    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=tag\">theTagger</a></p>", "the[[ tag | Tag ]]ger")
-    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=tag#see-also\">thetagger</a></p>", "the[[ tag #See Also ]]ger")
-    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=tag#see-also\">theTagger</a></p>", "the[[ tag #See Also | Tag ]]ger")
+  def test_creator_link_spacing
+    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=tag\">tag</a></p>", "[[ tag ]]")
+    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=tag\">thetagger</a></p>", "the[[ tag ]]ger")
+    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=tag\">theTagger</a></p>", "the[[ tag|Tag ]]ger")
+    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=tag\">theTagger</a></p>", "the[[ tag | Tag ]]ger")
+    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=tag#see-also\">thetagger</a></p>", "the[[ tag #See Also ]]ger")
+    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=tag#see-also\">theTagger</a></p>", "the[[ tag #See Also | Tag ]]ger")
   end
 
-  def test_wiki_links_spoiler
-    assert_parse("<p>a <a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=spoiler\">spoiler</a> c</p>", "a [[spoiler]] c")
+  def test_creator_links_spoiler
+    assert_parse("<p>a <a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=spoiler\">spoiler</a> c</p>", "a [[spoiler]] c")
   end
 
-  def test_wiki_links_edge
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%7C3">|3</a></p>', '[[|3]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%7Cd">|D</a></p>', '[[|D]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%3A%7C">:|</a></p>', '[[:|]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%7C_%7C">|_|</a></p>', '[[|_|]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%7C%7C_%7C%7C">||_||</a></p>', '[[||_||]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%5C%7C%7C%2F">\||/</a></p>', '[[\||/]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%3C%7C%3E_%3C%7C%3E">&lt;|&gt;_&lt;|&gt;</a></p>', '[[<|>_<|>]]')
+  def test_creator_links_edge
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%7C3">|3</a></p>', '[[|3]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%7Cd">|D</a></p>', '[[|D]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%3A%7C">:|</a></p>', '[[:|]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%7C_%7C">|_|</a></p>', '[[|_|]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%7C%7C_%7C%7C">||_||</a></p>', '[[||_||]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%5C%7C%7C%2F">\||/</a></p>', '[[\||/]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%3C%7C%3E_%3C%7C%3E">&lt;|&gt;_&lt;|&gt;</a></p>', '[[<|>_<|>]]')
 
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%7C3">blah</a></p>', '[[|3|blah]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%7Cd">blah</a></p>', '[[|D|blah]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%7C_%7C">blah</a></p>', '[[|_||blah]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%7C%7C_%7C%7C">blah</a></p>', '[[||_|||blah]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%7C3">blah</a></p>', '[[|3|blah]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%7Cd">blah</a></p>', '[[|D|blah]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%7C_%7C">blah</a></p>', '[[|_||blah]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%7C%7C_%7C%7C">blah</a></p>', '[[||_|||blah]]')
 
-    #assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%3A%7C">blah</a></p>', '[[:||blah]]') # XXX should work
-    #assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%5C%7C%7C%2F">blah</a></p>', '[[\||/|blah]]') # XXX should work
-    #assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%3C%7C%3E_%3C%7C%3E">blah</a></p>', '[[<|>_<|>|blah]]') # XXX should work
+    #assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%3A%7C">blah</a></p>', '[[:||blah]]') # XXX should work
+    #assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%5C%7C%7C%2F">blah</a></p>', '[[\||/|blah]]') # XXX should work
+    #assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%3C%7C%3E_%3C%7C%3E">blah</a></p>', '[[<|>_<|>|blah]]') # XXX should work
   end
 
-  def test_wiki_links_nested_b
+  def test_creator_links_nested_b
     assert_parse("<p><strong>[[</strong>tag<strong>]]</strong></p>", "[b][[[/b]tag[b]]][/b]")
   end
 
-  def test_wiki_links_suffixes
-    assert_parse('<p>I like <a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=cat">cats</a>.</p>', "I like [[cat]]s.")
-    assert_parse('<p>a <a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=cat">cat</a>\'s paw</p>', "a [[cat]]'s paw")
-    assert_parse('<p>the <a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=60s">1960s</a>.</p>', "the 19[[60s]].")
-    assert_parse('<p>a <a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=c">bcd</a> e</p>', "a b[[c]]d e")
+  def test_creator_links_suffixes
+    assert_parse('<p>I like <a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=cat">cats</a>.</p>', "I like [[cat]]s.")
+    assert_parse('<p>a <a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=cat">cat</a>\'s paw</p>', "a [[cat]]'s paw")
+    assert_parse('<p>the <a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=60s">1960s</a>.</p>', "the 19[[60s]].")
+    assert_parse('<p>a <a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=c">bcd</a> e</p>', "a b[[c]]d e")
 
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=b">acd</a></p>', "a[[b|c]]d")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=b">acd</a></p>', "a[[b|c]]d")
   end
 
-  def test_wiki_links_pipe_trick
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tagme">tagme</a></p>', "[[tagme|]]")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tagme">TAGME</a></p>', "[[TAGME|]]")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tagme">tagme</a></p>', "[[tagme| ]]")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tagme">tagme</a></p>', "[[tagme |]]")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tagme">tagme</a></p>', "[[tagme | ]]")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=foo_%28bar%29">foo</a></p>', "[[foo (bar)|]]")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=foo_%28bar%29">foo</a></p>', "[[foo (bar) | ]]")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=foo_%28bar%29">abcfoo123</a></p>', "abc[[foo (bar)|]]123")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=foo_%28bar%29">abcfoo123</a></p>', "abc[[foo (bar) | ]]123")
+  def test_creator_links_pipe_trick
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tagme">tagme</a></p>', "[[tagme|]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tagme">TAGME</a></p>', "[[TAGME|]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tagme">tagme</a></p>', "[[tagme| ]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tagme">tagme</a></p>', "[[tagme |]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tagme">tagme</a></p>', "[[tagme | ]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=foo_%28bar%29">foo</a></p>', "[[foo (bar)|]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=foo_%28bar%29">foo</a></p>', "[[foo (bar) | ]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=foo_%28bar%29">abcfoo123</a></p>', "abc[[foo (bar)|]]123")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=foo_%28bar%29">abcfoo123</a></p>', "abc[[foo (bar) | ]]123")
 
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=kaga_%28kantai_collection%29">kaga</a></p>', "[[kaga_(kantai_collection)|]]")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=kaga_%28kantai_collection%29">Kaga</a></p>', "[[Kaga (Kantai Collection)|]]")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=kaga_%28kantai_collection%29_%28cosplay%29">kaga (kantai collection)</a></p>', "[[kaga (kantai collection) (cosplay)|]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=kaga_%28kantai_collection%29">kaga</a></p>', "[[kaga_(kantai_collection)|]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=kaga_%28kantai_collection%29">Kaga</a></p>', "[[Kaga (Kantai Collection)|]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=kaga_%28kantai_collection%29_%28cosplay%29">kaga (kantai collection)</a></p>', "[[kaga (kantai collection) (cosplay)|]]")
 
     assert_parse('<p>[[long hair|<br>long]]</p>', "[[long hair|\nlong]]")
     assert_parse('<p>[[|long hair]]</p>', "[[|long hair]]")
   end
 
-  def test_wiki_links_anchor
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=touhou#see-also">touhou</a></p>', '[[touhou#See also]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=touhou#see-also">touhou</a></p>', '[[touhou#See-Also]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=touhou#see-also">touhou</a></p>', '[[touhou#See_Also]]')
+  def test_creator_links_anchor
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=touhou#see-also">touhou</a></p>', '[[touhou#See also]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=touhou#see-also">touhou</a></p>', '[[touhou#See-Also]]')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=touhou#see-also">touhou</a></p>', '[[touhou#See_Also]]')
 
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=cd#ef">abghij</a></p>', 'ab[[cd#Ef|gh]]ij')
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=cd#ef">abghij</a></p>', 'ab[[cd#Ef|gh]]ij')
 
     assert_parse('<p>[[touhou#See Also:]]</p>', '[[touhou#See Also:]]')
     assert_parse('<p>[[Htol#Niq: Hotaru no Nikki#See also]]</p>', '[[Htol#Niq: Hotaru no Nikki#See also]]')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tokyo_mirage_sessions#fe">Tokyo Mirage Sessions</a></p>', '[[Tokyo Mirage Sessions #FE]]') # XXX wrong
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=http%3A%2F%2Fen.wikipedia.org%2Fwiki%2Fgolden_age_of_detective_fiction#description-of-the-genre">Knox Decalogue</a></p>', '[[http://en.wikipedia.org/wiki/Golden_Age_of_Detective_Fiction#Description_of_the_genre| Knox Decalogue]]') # XXX wrong
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tokyo_mirage_sessions#fe">Tokyo Mirage Sessions</a></p>', '[[Tokyo Mirage Sessions #FE]]') # XXX wrong
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=http%3A%2F%2Fen.wikipedia.org%2Fwiki%2Fgolden_age_of_detective_fiction#description-of-the-genre">Knox Decalogue</a></p>', '[[http://en.wikipedia.org/wiki/Golden_Age_of_Detective_Fiction#Description_of_the_genre| Knox Decalogue]]') # XXX wrong
   end
 
   def test_spoilers
@@ -472,15 +310,13 @@ class DTextTest < Minitest::Test
   def test_thumbnails
     assert_parse_extra(post_ids: [1], dtext: "<p><a class=\"dtext-link dtext-id-link dtext-post-id-link thumb-placeholder-link\" data-id=\"1\" href=\"/posts/1\">post #1</a></p>", input: "thumb #1")
     assert_parse_extra(post_ids: [1, 2], dtext: "<p><a class=\"dtext-link dtext-id-link dtext-post-id-link thumb-placeholder-link\" data-id=\"1\" href=\"/posts/1\">post #1</a> <a class=\"dtext-link dtext-id-link dtext-post-id-link thumb-placeholder-link\" data-id=\"2\" href=\"/posts/2\">post #2</a></p>", input: "thumb #1 thumb #2")
-    assert_parse_extra(post_ids: [1], dtext: "<p><a class=\"dtext-link dtext-id-link dtext-post-id-link thumb-placeholder-link\" data-id=\"1\" href=\"/posts/1\">post #1</a> <a class=\"dtext-link dtext-id-link dtext-post-id-link\" href=\"/posts/2\">post #2</a></p>", input: "thumb #1 thumb #2", max_thumbs: 1)
-    assert_parse_extra(post_ids: [], dtext: "<p><a class=\"dtext-link dtext-id-link dtext-post-id-link\" href=\"/posts/1\">post #1</a> <a class=\"dtext-link dtext-id-link dtext-post-id-link\" href=\"/posts/2\">post #2</a></p>", input: "thumb #1 thumb #2", max_thumbs: 0)
   end
 
   def test_color
     assert_parse("<p><span class=\"dtext-color\" style=\"color: #FFA500\">test</span></p>", "[color=#FFA500]test[/color]", allow_color: true)
     assert_parse("<p><span class=\"dtext-color\" style=\"color: orangered\">test</span></p>", "[color=orangered]test[/color]", allow_color: true)
     assert_parse("<p>test</p>", "[color=orangered]test[/color]", allow_color: false)
-    typed = %w[general gen artist art contributor cont copyright copy co character char ch oc species spec invalid inv meta lore lor gender safe questionable explicit]
+    typed = %w[general gen cr creator contributor cont copyright copy co character char ch oc species spec invalid inv meta lore lor gender safe questionable explicit]
     typed.each do |category|
       assert_parse("<p><span class=\"dtext-color-#{category}\">test</span></p>", "[color=#{category}]test[/color]", allow_color: true)
     end
@@ -524,7 +360,7 @@ class DTextTest < Minitest::Test
 
   def test_anchors
     assert_parse('<p><a id="test"></a></p>', "[#test]")
-    assert_parse_extra(wiki_pages: [], dtext: '<p><a class="dtext-link dtext-internal-anchor-link" href="#test">test</a></p>', input: "[[#test]]")
+    assert_parse_extra(creators: [], dtext: '<p><a class="dtext-link dtext-internal-anchor-link" href="#test">test</a></p>', input: "[[#test]]")
   end
 
   def test_block_note
@@ -745,29 +581,17 @@ class DTextTest < Minitest::Test
 
     assert_parse('<p><a class="dtext-link dtext-id-link dtext-post-id-link" href="/posts/1234">post #1234</a></p>', 'https://danbooru.donmai.us/posts/1234?q=touhou', internal_domains: %w[danbooru.donmai.us])
     assert_parse('<p><a class="dtext-link dtext-id-link dtext-post-id-link" href="/posts/1234">post #1234</a></p>', 'https://danbooru.donmai.us:443/posts/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/posts/1234#comment-5678">https://danbooru.donmai.us/posts/1234#comment-5678</a></p>', 'https://danbooru.donmai.us/posts/1234#comment-5678', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
 
     assert_parse('<p><a class="dtext-link dtext-id-link dtext-post-id-link" href="/posts/1234">post #1234</a></p>', 'https://danbooru.donmai.us/posts/1234', internal_domains: %w[danbooru.donmai.us])
     assert_parse('<p><a class="dtext-link dtext-id-link dtext-pool-id-link" href="/pools/1234">pool #1234</a></p>', 'https://danbooru.donmai.us/pools/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-comment-id-link" href="/comments/1234">comment #1234</a></p>', 'https://danbooru.donmai.us/comments/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-forum-post-id-link" href="/forums/posts/1234">forum #1234</a></p>', 'https://danbooru.donmai.us/forums/posts/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-forum-topic-id-link" href="/forums/topics/1234">topic #1234</a></p>', 'https://danbooru.donmai.us/forums/topics/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-forum-category-id-link" href="/forums/categories/1234">category #1234</a></p>', 'https://danbooru.donmai.us/forums/categories/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-user-id-link" href="/users/1234">user #1234</a></p>', 'https://danbooru.donmai.us/users/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-artist-id-link" href="/artists/1234">artist #1234</a></p>', 'https://danbooru.donmai.us/artists/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-note-id-link" href="/notes/1234">note #1234</a></p>', 'https://danbooru.donmai.us/notes/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-set-id-link" href="/post_sets/1234">set #1234</a></p>', 'https://danbooru.donmai.us/post_sets/1234', internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-wiki-page-id-link" href="/wiki_pages/1234">wiki #1234</a></p>', 'https://danbooru.donmai.us/wiki_pages/1234', internal_domains: %w[danbooru.donmai.us])
+    assert_parse('<p><a class="dtext-link dtext-id-link dtext-creator-id-link" href="/creators/1234">creator #1234</a></p>', 'https://danbooru.donmai.us/creators/1234', internal_domains: %w[danbooru.donmai.us])
 
     assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/posts/1234#comment_5678">https://danbooru.donmai.us/posts/1234#comment_5678</a></p>', 'https://danbooru.donmai.us/posts/1234#comment_5678', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
     assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/pools/1234?page=2">https://danbooru.donmai.us/pools/1234?page=2</a></p>', 'https://danbooru.donmai.us/pools/1234?page=2', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/post_sets/1234?page=2">https://danbooru.donmai.us/post_sets/1234?page=2</a></p>', 'https://danbooru.donmai.us/post_sets/1234?page=2', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/forums/topics/1234?page=2">https://danbooru.donmai.us/forums/topics/1234?page=2</a></p>', 'https://danbooru.donmai.us/forums/topics/1234?page=2', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/forums/topics/1234#forum_post_5678">https://danbooru.donmai.us/forums/topics/1234#forum_post_5678</a></p>', 'https://danbooru.donmai.us/forums/topics/1234#forum_post_5678', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/wiki_pages/1234#see-also">https://danbooru.donmai.us/wiki_pages/1234#see-also</a></p>', 'https://danbooru.donmai.us/wiki_pages/1234#see-also', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
-    assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/wiki_pages/touhou#see-also">https://danbooru.donmai.us/wiki_pages/touhou#see-also</a></p>', 'https://danbooru.donmai.us/wiki_pages/touhou#see-also', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
+    assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/creators/1234#see-also">https://danbooru.donmai.us/creators/1234#see-also</a></p>', 'https://danbooru.donmai.us/creators/1234#see-also', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
+    assert_parse('<p><a class="dtext-link" href="https://danbooru.donmai.us/creators/touhou#see-also">https://danbooru.donmai.us/creators/touhou#see-also</a></p>', 'https://danbooru.donmai.us/creators/touhou#see-also', domain: "danbooru.donmai.us", internal_domains: %w[danbooru.donmai.us])
 
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=touhou">touhou</a></p>', 'https://danbooru.donmai.us/wiki_pages/touhou', internal_domains: %w[danbooru.donmai.us])
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=touhou">touhou</a></p>', 'https://danbooru.donmai.us/creators/touhou', internal_domains: %w[danbooru.donmai.us])
   end
 
   def test_old_style_links
@@ -870,7 +694,7 @@ class DTextTest < Minitest::Test
     assert_inline_parse('[url](<a rel="external nofollow noreferrer" class="dtext-link dtext-external-link" href="http://example.com">http://example.com</a>)[/url]', "[url](http://example.com)[/url]")
     assert_inline_parse('[url](<a rel="external nofollow noreferrer" class="dtext-link dtext-external-link" href="http://example.com">http://example.com</a>)', "[url](http://example.com)")
     assert_inline_parse('<strong>foo</strong>(<a rel="external nofollow noreferrer" class="dtext-link dtext-external-link" href="http://example.com">http://example.com</a>)', "[b]foo[/b](http://example.com)")
-    assert_inline_parse('<a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=foo">foo</a>(<a rel="external nofollow noreferrer" class="dtext-link dtext-external-link" href="http://example.com">http://example.com</a>)', "[[foo]](http://example.com)")
+    assert_inline_parse('<a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=foo">foo</a>(<a rel="external nofollow noreferrer" class="dtext-link dtext-external-link" href="http://example.com">http://example.com</a>)', "[[foo]](http://example.com)")
 
     assert_inline_parse('<a class="dtext-link" href="/posts/1">test</a>', "[test](/posts/1)")
     assert_inline_parse('<a class="dtext-link" href="#foo">test</a>', "[test](#foo)")
@@ -880,7 +704,7 @@ class DTextTest < Minitest::Test
     assert_inline_parse("<strong>(/posts)</strong>", "[b](/posts)[/b]")
     assert_inline_parse("<strong>(/posts)</strong>", "[b](/posts)")
     assert_inline_parse("<strong>foo</strong>(/posts)", "[b]foo[/b](/posts)")
-    assert_inline_parse('<a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=foo">foo</a>(/posts)', "[[foo]](/posts)")
+    assert_inline_parse('<a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=foo">foo</a>(/posts)', "[[foo]](/posts)")
 
     assert_inline_parse('[test](/posts/1 2)', "[test](/posts/1 2)")
     assert_inline_parse('[test](#foo bar)', "[test](#foo bar)")
@@ -1211,11 +1035,11 @@ class DTextTest < Minitest::Test
     assert_parse('<p><a class="dtext-link dtext-post-search-link" href="/posts?tags=-%7CD">-|D</a></p>', '{{-|D}}')
     assert_parse('<p><a class="dtext-link dtext-post-search-link" href="/posts?tags=~%7CD">~|D</a></p>', '{{~|D}}')
 
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tag#see-also">tag</a> <a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">tag</a></p>', "[[tag#See also]] {{tag}}")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tag#see-also">Tag</a> <a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">tag</a></p>', "[[tag#See also|Tag]] {{tag}}")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tag#see-also">tag</a> <a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">tag</a></p>', "[[tag#see-also]] {{tag}}")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tag#see-also">Tag</a> <a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">tag</a></p>', "[[tag#see-also|Tag]] {{tag}}")
-    assert_parse('<p><a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">Tag</a> <a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=tag">tag</a></p>', "{{tag|Tag}} [[tag]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tag#see-also">tag</a> <a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">tag</a></p>', "[[tag#See also]] {{tag}}")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tag#see-also">Tag</a> <a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">tag</a></p>', "[[tag#See also|Tag]] {{tag}}")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tag#see-also">tag</a> <a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">tag</a></p>', "[[tag#see-also]] {{tag}}")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tag#see-also">Tag</a> <a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">tag</a></p>', "[[tag#see-also|Tag]] {{tag}}")
+    assert_parse('<p><a class="dtext-link dtext-post-search-link" href="/posts?tags=tag">Tag</a> <a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=tag">tag</a></p>', "{{tag|Tag}} [[tag]]")
 
     assert_parse('<p><a class="dtext-link dtext-post-search-link" href="/posts?tags=%3A%7C">:|</a> foo <a class="dtext-link dtext-post-search-link" href="/posts?tags=bar">bar</a></p>', '{{:|}} foo {{bar}}')
 
@@ -1310,15 +1134,11 @@ class DTextTest < Minitest::Test
   end
 
   def test_complex_links_1
-    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/1\">2 3</a> | <a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/4\">5 6</a></p>", "[[1|2 3]] | [[4|5 6]]")
+    assert_parse("<p><a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/1\">2 3</a> | <a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/4\">5 6</a></p>", "[[1|2 3]] | [[4|5 6]]")
   end
 
   def test_complex_links_2
-    assert_parse("<p>Tags <strong>(<a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=howto%3Atag\">Tagging Guidelines</a> | <a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=howto%3Atag_checklist\">Tag Checklist</a> | <a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"/wiki_pages/show_or_new?title=tag_groups\">Tag Groups</a>)</strong></p>", "Tags [b]([[howto:tag|Tagging Guidelines]] | [[howto:tag_checklist|Tag Checklist]] | [[Tag Groups]])[/b]")
-  end
-
-  def test_note_id_link
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-note-id-link" href="/notes/1234">note #1234</a></p>', "note #1234")
+    assert_parse("<p>Tags <strong>(<a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=howto%3Atag\">Tagging Guidelines</a> | <a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=howto%3Atag_checklist\">Tag Checklist</a> | <a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"/creators/show_or_new?name=tag_groups\">Tag Groups</a>)</strong></p>", "Tags [b]([[howto:tag|Tagging Guidelines]] | [[howto:tag_checklist|Tag Checklist]] | [[Tag Groups]])[/b]")
   end
 
   def test_table
@@ -1402,55 +1222,25 @@ class DTextTest < Minitest::Test
     assert_parse('<table class="striped"><colgroup><col><td>foo</td></colgroup></table>', "[table][colgroup][col][td]foo") # XXX wrong
   end
 
-  def test_forum_links
-    assert_parse('<p><a class="dtext-link dtext-id-link dtext-forum-topic-id-link" href="/forums/topics/1234?page=4">topic #1234 (page 4)</a></p>', "topic #1234/p4")
-    assert_parse('<p><a class="dtext-link dtext-forum-topic-link" href="/forums/topics/1234">Topic: Topic Name</a></p>', "[topic=1234]Topic Name[/topic]")
-    assert_parse('<p><a class="dtext-link dtext-forum-topic-link" href="/forums/topics/1234">Topic: Topic Name</a></p>', "[topic=1234]Topic Name")
-  end
-
   def test_id_links
     assert_parse_id_link("dtext-post-id-link", "/posts/1234", "post #1234")
     assert_parse_id_link("dtext-post-changes-for-id-link", "/posts/versions?search[post_id]=1234", "post changes #1234")
     assert_parse_id_link("dtext-post-changes-for-id-version-link", "/posts/versions?search[post_id]=1234&search[version]=4321", "post changes #1234:4321", text: "post changes #1234")
-    assert_parse_id_link("dtext-post-flag-id-link", "/posts/flags/1234", "flag #1234")
-    assert_parse_id_link("dtext-note-id-link", "/notes/1234", "note #1234")
-    assert_parse_id_link("dtext-forum-post-id-link", "/forums/posts/1234", "forum #1234")
-    assert_parse_id_link("dtext-forum-topic-id-link", "/forums/topics/1234", "topic #1234")
-    assert_parse_id_link("dtext-forum-category-id-link", "/forums/categories/1234", "category #1234")
-    assert_parse_id_link("dtext-comment-id-link", "/comments/1234", "comment #1234")
     assert_parse_id_link("dtext-pool-id-link", "/pools/1234", "pool #1234")
-    assert_parse_id_link("dtext-user-id-link", "/users/1234", "user #1234")
-    assert_parse_id_link("dtext-artist-id-link", "/artists/1234", "artist #1234")
-    assert_parse_id_link("dtext-ban-id-link", "/bans/1234", "ban #1234")
     assert_parse_id_link("dtext-tag-alias-id-link", "/tags/aliases/1234", "alias #1234")
     assert_parse_id_link("dtext-tag-implication-id-link", "/tags/implications/1234", "implication #1234")
     assert_parse_id_link("dtext-mod-action-id-link", "/mod_actions/1234", "mod action #1234")
-    assert_parse_id_link("dtext-user-feedback-id-link", "/users/feedbacks/1234", "record #1234")
-    assert_parse_id_link("dtext-wiki-page-id-link", "/wiki_pages/1234", "wiki #1234")
-    assert_parse_id_link("dtext-dmail-id-link", "/dmails/1234", "dmail #1234")
-    assert_parse_id_link("dtext-set-id-link", "/post_sets/1234", "set #1234")
-    assert_parse_id_link("dtext-ticket-id-link", "/tickets/1234", "ticket #1234")
-    assert_parse_id_link("dtext-avoid-posting-id-link", "/avoid_postings/1234", "avoid posting #1234")
-    assert_parse_id_link("dtext-takedown-id-link", "/takedowns/1234", "takedown #1234")
+    assert_parse_id_link("dtext-creator-id-link", "/creators/1234", "creator #1234")
 
-    assert_parse_id_link("dtext-github-id-link", "https://github.com/FemboyFans/FemboyFans/issues/1234", "issue #1234")
-    assert_parse_id_link("dtext-github-pull-id-link", "https://github.com/FemboyFans/FemboyFans/pull/1234", "pull #1234")
-    assert_parse_id_link("dtext-github-commit-id-link", "https://github.com/FemboyFans/FemboyFans/commit/1234", "commit #1234")
+    assert_parse_id_link("dtext-github-id-link", "https://github.com/DonovanDMC/LocalBooru/issues/1234", "issue #1234")
+    assert_parse_id_link("dtext-github-pull-id-link", "https://github.com/DonovanDMC/LocalBooru/pull/1234", "pull #1234")
+    assert_parse_id_link("dtext-github-commit-id-link", "https://github.com/DonovanDMC/LocalBooru/commit/1234", "commit #1234")
 
     assert_parse('<p>(R-18指定注意)→<a class="dtext-link dtext-id-link dtext-post-id-link" href="/posts/2053744">post #2053744</a></p>', '(R-18指定注意)→post #2053744')
 
     assert_parse("<p>shitpost #24</p>", "shitpost #24")
     assert_parse("<p>Spiderman/Deadpool #69</p>", "Spiderman/Deadpool #69")
     assert_parse("<p>◼️船乗りの恋人1pixiv #64368055の続きです。</p>", "◼️船乗りの恋人1pixiv #64368055の続きです。")
-  end
-
-  def test_dmail_key_id_link
-    assert_parse(%{<p><a class="dtext-link dtext-id-link dtext-dmail-id-link" href="/dmails/1234?key=abc%3D%3D--DEF123">dmail #1234</a></p>}, "dmail #1234/abc==--DEF123")
-    assert_parse(%{<p><a class="dtext-link dtext-id-link dtext-dmail-id-link" href="http://danbooru.donmai.us/dmails/1234?key=abc%3D%3D--DEF123">dmail #1234</a></p>}, "dmail #1234/abc==--DEF123", base_url: "http://danbooru.donmai.us")
-  end
-
-  def test_boundary_exploit
-    assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="mack" href="/users?name=mack">@mack</a>&lt;</p>', "@mack<")
   end
 
   def test_section
@@ -1655,7 +1445,7 @@ class DTextTest < Minitest::Test
     assert_parse('<table class="striped"><tr><td>foo<br>bar</td></tr></table>', "[table][tr][td]foo[br]bar[/td][/tr][/table]")
 
     assert_parse("<h4>foo&lt;br&gt;bar</h4>", "h4. foo<br>bar")
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=foo">bar&lt;br&gt;baz</a></p>', "[[foo|bar<br>baz]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=foo">bar&lt;br&gt;baz</a></p>', "[[foo|bar<br>baz]]")
     assert_parse('<p><a rel="external nofollow noreferrer" class="dtext-link dtext-external-link dtext-named-external-link" href="http://example.com">foo&lt;br&gt;bar</a></p>', '"foo<br>bar":http://example.com')
 
     assert_parse("<p>foo <br></p><p>bar</p>", "foo [br]\n\nbar")
@@ -1672,38 +1462,12 @@ class DTextTest < Minitest::Test
     assert_parse("<p>hello *world* neutral</p>", "hello *world* neutral")
   end
 
-  def test_utf8_mentions
-    assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="葉月" href="/users?name=%E8%91%89%E6%9C%88">@葉月</a></p>', "@葉月")
-    assert_parse('<p>Hello <a class="dtext-link dtext-user-mention-link" data-user-name="葉月" href="/users?name=%E8%91%89%E6%9C%88">@葉月</a> and <a class="dtext-link dtext-user-mention-link" data-user-name="Alice" href="/users?name=Alice">@Alice</a></p>', "Hello @葉月 and @Alice")
-    assert_parse('<p>Should not parse 葉月@葉月</p>', "Should not parse 葉月@葉月")
-  end
-
-  def test_mention_boundaries
-    assert_parse('<p>「hi <a class="dtext-link dtext-user-mention-link" data-user-name="葉月" href="/users?name=%E8%91%89%E6%9C%88">@葉月</a>」</p>', "「hi @葉月」")
-  end
-
-  def test_delimited_mentions
-    assert_parse('<p>(blah <a class="dtext-link dtext-user-mention-link" data-user-name="evazion" href="/users?name=evazion">@evazion</a>).</p>', "(blah <@evazion>).")
-    assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="葉月" href="/users?name=%E8%91%89%E6%9C%88">@葉月</a></p>', "<@葉月>")
-
-    # assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="nwf_renim" href="/users?name=nwf_renim">@NWF Renim</a></p>', "<@NWF Renim>")
-    assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="NWF Renim" href="/users?name=NWF%20Renim">@NWF Renim</a></p>', "<@NWF Renim>") # XXX should normalize to nwf_renim for href
-
-    assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="_evazion" href="/users?name=_evazion">@_evazion</a></p>', "<@_evazion>")
-    assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="evazion_" href="/users?name=evazion_">@evazion_</a></p>', "<@evazion_>")
-    assert_parse('<p><a class="dtext-link dtext-user-mention-link" data-user-name="evazion" href="/users?name=evazion">@evazion</a>blah&gt;</p>', "<@evazion>blah>")
-
-    assert_parse('<p>&lt;@ evazion&gt;</p>', "<@ evazion>")
-    assert_parse('<p>&lt;@<br>evazion&gt;</p>', "<@\nevazion>")
-    assert_parse('<p>&lt;@eva<br>zion&gt;</p>', "<@eva\nzion>")
-  end
-
   def test_utf8_links
     assert_parse('<p><a class="dtext-link" href="/posts?tags=approver:葉月">7893</a></p>', '"7893":/posts?tags=approver:葉月')
     assert_parse('<p><a class="dtext-link" href="/posts?tags=approver:葉月">7893</a></p>', '"7893":[/posts?tags=approver:葉月]')
     assert_parse('<p><a rel="external nofollow noreferrer" class="dtext-link dtext-external-link" href="http://danbooru.donmai.us/posts?tags=approver:葉月">http://danbooru.donmai.us/posts?tags=approver:葉月</a></p>', 'http://danbooru.donmai.us/posts?tags=approver:葉月')
-    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=full_metal_panic%21_%CE%A3">Full Metal Panic! Σ</a></p>', '[[Full Metal Panic! Σ]]')
-    assert_parse(%{<p><a rel="nofollow" class="dtext-link dtext-wiki-link" href="/wiki_pages/show_or_new?title=%C2%97">\u0097</a></p>}, "[[\u0097]]")
+    assert_parse('<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=full_metal_panic%21_%CE%A3">Full Metal Panic! Σ</a></p>', '[[Full Metal Panic! Σ]]')
+    assert_parse(%{<p><a rel="nofollow" class="dtext-link dtext-creator-link" href="/creators/show_or_new?name=%C2%97">\u0097</a></p>}, "[[\u0097]]")
     assert_parse(%{<p><a rel="external nofollow noreferrer" class="dtext-link dtext-external-link dtext-named-external-link" href="https://www.example.com/\u0097">\u0097</a></p>}, %{"\u0097":https://www.example.com/\u0097})
   end
 
@@ -1811,15 +1575,9 @@ class DTextTest < Minitest::Test
     assert_raises(DText::Error) { parse_dtext("\xFF".dup.force_encoding("UTF-8")) }
   end
 
-  def test_wiki_link_xss
+  def test_creator_link_xss
     assert_raises(DText::Error) do
       parse_dtext("[[\xFA<script \xFA>alert(42); //\xFA</script \xFA>]]")
-    end
-  end
-
-  def test_mention_xss
-    assert_raises(DText::Error) do
-      parse_dtext("@user\xF4<b>xss\xFA</b>")
     end
   end
 

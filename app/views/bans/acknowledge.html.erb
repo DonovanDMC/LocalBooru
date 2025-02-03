@@ -1,7 +1,0 @@
-<p><%= sanitize(@notice) %></p>
-
-<% if @ban.expired? %>
-  <%= link_to("Acknowledge", acknowledge_bans_path(user_id: @user.signed_id(purpose: :acknowledge_ban), commit: "Acknowledge"), class: "button btn-neutral") %>
-<% else %>
-  <p><b>Your ban has not expired.</b></p>
-<% end %>

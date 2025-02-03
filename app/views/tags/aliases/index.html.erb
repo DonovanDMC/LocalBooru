@@ -1,8 +1,6 @@
 <%= render "tag_relationships/search", url: tag_aliases_path %>
 <%= render "tag_relationships/listing", tag_relations: @tag_aliases %>
-<% if can_use_attribute?(TagAlias, :skip_forum) %>
-  <%= render "tag_relationships/add_form", type: :tag_alias, path: tag_aliases_path %>
-<% end %>
+<%= render "tag_relationships/add_form", type: :tag_alias, path: tag_aliases_path %>
 
 <%= numbered_paginator(@tag_aliases) if @tag_aliases.respond_to?(:current_page) %>
 

@@ -18,13 +18,14 @@ class SearchFormBuilder < SimpleForm::FormBuilder
   end
 
   def user(user_attribute, **args)
-    name_attribute = user_attribute.is_a?(Symbol) ? :"#{user_attribute}_name" : user_attribute[0]
-    id_attribute = user_attribute.is_a?(Symbol) ? :"#{user_attribute}_id" : user_attribute[1]
-    label = args[:label] || user_attribute.capitalize
+    if user_attribute.is_a?(String)
+      user_attribute = user_attribute.to_sym
+    else
+      user_attribute = :"#{user_attribute}_ip_addr"
+    end
+    args[:label] ||= user_attribute.to_s.titleize.gsub("Ip", "IP")
 
-    name_input = input(name_attribute, { **args.deep_dup, label: label, autocomplete: "user" })
-    id_input = input(id_attribute, { **args, label: "#{label} ID", hide_unless_value: true })
-    name_input + id_input
+    input(user_attribute, args)
   end
 
   private

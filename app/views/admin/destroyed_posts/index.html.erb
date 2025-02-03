@@ -4,27 +4,16 @@
   <% t.column(:post_id, name: "ID", width: "5%") %>
   <% t.column("Destroyer", width: "20%") do |destroyed_post| %>
     <%= link_to_user(destroyed_post.destroyer) %>
-    (<%= link_to_ip(destroyed_post.destroyer_ip_addr) %>)
     <p><%= compact_time(destroyed_post.created_at) %></p>
   <% end %>
   <% t.column("Uploader", width: "20%") do |destroyed_post| %>
-    <% if destroyed_post.uploader_id.present? %>
+    <% if destroyed_post.uploader.present? %>
       <%= link_to_user(destroyed_post.uploader) %>
-      (<%= link_to_ip(destroyed_post.uploader_ip_addr) %>)
       <p><%= compact_time(destroyed_post.upload_date) %></p>
     <% end %>
   <% end %>
   <% t.column(:md5, width: "20%") %>
   <% t.column(:reason) %>
-  <% if CurrentUser.user.is_owner? %>
-    <% t.column("Notify", width: "10%") do |destroyed_post| %>
-      <% if destroyed_post.notify %>
-        <%= link_to("Disable Notifications", admin_destroyed_post_path(id: destroyed_post.post_id, destroyed_post: { notify: "false" }), method: :put) %>
-      <% else %>
-        <%= link_to("Enable Notifications", admin_destroyed_post_path(id: destroyed_post.post_id, destroyed_post: { notify: "true" }), method: :put) %>
-      <% end %>
-    <% end %>
-  <% end %>
 <% end %>
 
 <% content_for(:page_title) do %>

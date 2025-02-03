@@ -8,8 +8,8 @@
       <%= link_to("page #{pool.last_page}", pool_path(pool, page: pool.last_page), class: "last-page") %>
     <% end %>
   <% end %>
-  <% t.column("Artists") do |pool| %>
-    <%= link_to_pool_artists(pool.artist_names) %>
+  <% t.column("Creators") do |pool| %>
+    <%= link_to_pool_creators(pool.creator_names) %>
   <% end %>
   <% t.column("Count") do |pool| %>
     <%= pool.post_count %>
@@ -25,5 +25,5 @@
 <% end %>
 
 <% content_for(:html_header) do %>
-  <meta name="description" content="Pools are groups of posts with something in common. The most common use of pools is for posts that are part of a series (such as a comic, or a group of images released by an artist).">
+  <meta name="description" content="Pools are groups of posts with something in common. The most common use of pools is for posts that are part of a series (such as a comic, or a group of images released by a creator).">
 <% end %>

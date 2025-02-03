@@ -1,24 +1,20 @@
 # frozen_string_literal: true
 
 class Tag < ApplicationRecord
-  has_one :wiki_page, foreign_key: "title", primary_key: "name"
-  has_one :artist, foreign_key: "name", primary_key: "name"
   has_one :antecedent_alias, -> { active }, class_name: "TagAlias", foreign_key: "antecedent_name", primary_key: "name"
   has_many :consequent_aliases, -> { active }, class_name: "TagAlias", foreign_key: "consequent_name", primary_key: "name"
   has_many :antecedent_implications, -> { active }, class_name: "TagImplication", foreign_key: "antecedent_name", primary_key: "name"
   has_many :consequent_implications, -> { active }, class_name: "TagImplication", foreign_key: "consequent_name", primary_key: "name"
   has_many :versions, class_name: "TagVersion"
-  has_many :followers, class_name: "TagFollower"
+  has_one :creator, foreign_key: "name" # Creator class
 
   validates :name, uniqueness: true, tag_name: true, on: :create
   validates :name, length: { minimum: 1, maximum: 100 }
   validates :category, inclusion: { in: TagCategory.ids }
-  validate :user_can_create_tag?, on: :create
-  validate :user_can_change_category?, if: :category_changed?
 
   before_save :update_category, if: :category_changed?
   after_create :create_version
-  after_update :create_version, if: ->(rec) { rec.saved_change_to_category? || rec.saved_change_to_is_locked? }
+  after_update :create_version, if: ->(rec) { rec.saved_change_to_category? }
 
   attr_accessor :reason
 
@@ -106,7 +102,6 @@ class Tag < ApplicationRecord
           post.set_tag_counts(disable_cache: false)
           categories = TagCategory.category_names.to_h { |x| ["tag_count_#{x}", post.send("tag_count_#{x}")] }.update("tag_count" => post.tag_count)
           post.update(**categories)
-          post.update_pool_artists
           post.update_index
         end
       end
@@ -120,29 +115,15 @@ class Tag < ApplicationRecord
       Cache.write("tc:#{name}", category, expires_in: 3.hours)
     end
 
-    def user_can_change_category?
-      cat = TagCategory.get(category)
-      return false unless cat
-      if !CurrentUser.user.is_admin? && cat.admin_only?
-        errors.add(:category, "can only used by admins")
-        return false
-      end
-      if cat.suffix && !name&.ends_with?(cat.suffix)
-        errors.add(:category, "can only be applied to tags that end with '#{cat.suffix}'")
-        false
-      end
-    end
-
     def update_category
       update_category_cache
       update_category_post_counts unless new_record?
     end
 
     def create_version
-      TagVersion.create(tag_id:    id,
-                        category:  category.to_i,
-                        is_locked: is_locked?,
-                        reason:    reason || "")
+      TagVersion.create(tag_id:   id,
+                        category: category.to_i,
+                        reason:   reason || "")
     end
 
     TagCategory.categories.map(&:name).each do |category|
@@ -181,7 +162,7 @@ class Tag < ApplicationRecord
       end
 
       existing = Tag.where(name: names.keys).to_a
-      CurrentUser.scoped(user) do
+      CurrentUser.scoped(user: user) do
         existing.each do |tag|
           cat = names[tag.name]
           category_id = TagCategory.value_for(cat)
@@ -217,7 +198,7 @@ class Tag < ApplicationRecord
       end
 
       tag = find_by(name: name)
-      CurrentUser.scoped(user) do
+      CurrentUser.scoped(user: user) do
         if tag
           if category
             category_id = TagCategory.value_for(category)
@@ -331,18 +312,6 @@ class Tag < ApplicationRecord
         q = q.where("post_count > 0")
       end
 
-      if params[:has_wiki].to_s.truthy?
-        q = q.joins(:wiki_page).where("wiki_pages.is_deleted = false")
-      elsif params[:has_wiki].to_s.falsy?
-        q = q.joins("LEFT JOIN wiki_pages ON tags.name = wiki_pages.title").where("wiki_pages.title IS NULL OR wiki_pages.is_deleted = true")
-      end
-
-      if params[:has_artist].to_s.truthy?
-        q = q.joins("INNER JOIN artists ON tags.name = artists.name")
-      elsif params[:has_artist].to_s.falsy?
-        q = q.joins("LEFT JOIN artists ON tags.name = artists.name").where("artists.name IS NULL")
-      end
-
       q = q.attribute_matches(:is_locked, params[:is_locked])
 
       case params[:order]
@@ -362,48 +331,17 @@ class Tag < ApplicationRecord
     end
   end
 
-  module FollowerMethods
-    def follow!(user = CurrentUser.user)
-      return if followers.exists?(user: user)
-      raise(TagFollower::AliasedTagError) if antecedent_alias.present?
-      last_post = Post.sql_raw_tag_match(name).order(id: :asc).last
-      followers.create(user: user, last_post: last_post)
-    end
-
-    def unfollow!(user = CurrentUser.user)
-      return unless followers.exists?(user: user)
-      followers.find_by(user: user).destroy
-    end
-  end
-
-  def category_editable_by_implicit?(user)
-    return false unless user.is_janitor?
-    return false if is_locked?
-    return false if post_count >= FemboyFans.config.tag_type_change_cutoff(user)
+  def category_editable_by_implicit?(_user)
     true
   end
 
-  def category_editable_by?(user)
-    return true if user.is_admin?
-    return false if is_locked?
-    return false if TagCategory.get(category).admin_only?
-    return true if post_count < FemboyFans.config.tag_type_change_cutoff(user)
-    false
-  end
-
-  def user_can_create_tag?
-    if name =~ /\A.*_\((lore)\)\z/ && !CurrentUser.user.is_admin?
-      errors.add(:base, "Can not create #{$1} tags unless admin")
-      errors.add(:name, "is invalid")
-      return false
-    end
+  def category_editable_by?(_user)
     true
   end
 
   include CountMethods
   include CategoryMethods
   include RelationMethods
-  include FollowerMethods
   extend NameMethods
   extend SearchMethods
 
@@ -416,6 +354,6 @@ class Tag < ApplicationRecord
   end
 
   def self.available_includes
-    %i[artist antecedent_alias wiki_page]
+    %i[antecedent_alias]
   end
 end

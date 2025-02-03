@@ -14,7 +14,7 @@ class UploadPresenter < Presenter
   end
 
   def strip_metatags(tags)
-    tags.grep_v(/\A(?:rating|-?parent|-?locked|-?pool|newpool|-?set|-?fav|-?child|upvote|downvote):/i)
+    tags.grep_v(/\A(?:rating|-?parent|-?pool|newpool|-?set|-?fav|-?child):/i)
   end
 
   def normalize_tags(tags)

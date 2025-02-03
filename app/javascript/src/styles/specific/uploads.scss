@@ -14,7 +14,10 @@ div#c-uploads {
       border-radius: 0.25rem;
       margin: 0.25rem 0.5rem 0.25rem 0;
     }
-    .toggle-button:last-child { margin-right: 0; }
+
+    .toggle-button:last-child {
+      margin-right: 0;
+    }
 
     .toggle-button.active {
       background-color: themed("color-button-active");
@@ -23,9 +26,11 @@ div#c-uploads {
     .rating-e.active {
       background-color: themed("color-rating-explicit");
     }
+
     .rating-q.active {
       background-color: themed("color-rating-questionable");
     }
+
     .rating-s.active {
       background-color: themed("color-rating-safe");
     }
@@ -150,6 +155,7 @@ div#c-uploads {
       }
     }
   }
+
   div#a-index {
     .post-info {
       margin-right: 1.5em;

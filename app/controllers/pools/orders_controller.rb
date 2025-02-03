@@ -5,7 +5,7 @@ module Pools
     respond_to :html, :json, :js
 
     def edit
-      @pool = authorize(Pool.find(params[:pool_id]), policy_class: ::PoolOrderPolicy)
+      @pool = Pool.find(params[:pool_id])
       respond_with(@pool)
     end
   end

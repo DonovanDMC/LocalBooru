@@ -1,0 +1,12 @@
+<h1>Edit Creator</h1>
+
+<% if @creator.editable_by?(CurrentUser.user) %>
+  <%= render "form" %>
+
+<% end %>
+
+<%= render "secondary_links" %>
+
+<% content_for(:page_title) do %>
+  Edit Creator - <%= @creator.name %>
+<% end %>

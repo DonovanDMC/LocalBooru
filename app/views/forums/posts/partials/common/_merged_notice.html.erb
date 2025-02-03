@@ -1,9 +1,0 @@
-<% if record.is_merged? %>
-  <div class="post-merge-notice">
-    <hr>
-    <em>Merged from <%= link_to(record.original_topic.title, forum_topic_path(record.original_topic)) %>.</em>
-    <% if record.merged_at.present? %>
-      <span class="info"><%= time_ago_in_words_tagged(record.merged_at) %></span>
-    <% end %>
-  </div>
-<% end %>

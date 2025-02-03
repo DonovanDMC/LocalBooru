@@ -1,7 +1,0 @@
-<div class="ui-corner-all site-notice" id="ban-notice">
-  <h1>Your account has been banned</h1>
-  <% if CurrentUser.user.recent_ban.present? %>
-    <div class="dtext-container">Reason: <%= format_text(CurrentUser.user.recent_ban.reason) %></div>
-    <p>Ban expires: <%= CurrentUser.user.recent_ban.expire_days %></p>
-  <% end %>
-</div>

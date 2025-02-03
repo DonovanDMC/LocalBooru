@@ -8,82 +8,6 @@ class ApplicationPolicy
     @record = record
   end
 
-  def index?
-    true
-  end
-
-  def show?
-    index?
-  end
-
-  def search?
-    index?
-  end
-
-  def new?
-    create?
-  end
-
-  def create?
-    member?
-  end
-
-  def edit?
-    update?
-  end
-
-  def update?
-    member?
-  end
-
-  def delete?
-    destroy?
-  end
-
-  def destroy?
-    member?
-  end
-
-  def unbanned?
-    logged_in? && !user.is_banned?
-  end
-
-  def member?
-    user.is_member?
-  end
-
-  def logged_in?
-    !user.is_anonymous?
-  end
-
-  def approver?
-    user.is_approver?
-  end
-
-  def can_search_ip_addr?
-    user.is_admin?
-  end
-
-  def can_see_ip_addr?
-    user.is_admin?
-  end
-
-  def can_see_email?
-    user.is_admin?
-  end
-
-  def lockdown?(type)
-    !(user.is_staff? || !Security::Lockdown.public_send("#{type}_disabled?"))
-  end
-
-  def all?(*methods)
-    methods.all? { |name| respond_to?(name) ? send(name) : false }
-  end
-
-  def any?(*methods)
-    methods.any? { |name| respond_to?(name) ? send(name) : false }
-  end
-
   def policy(object)
     Pundit.policy!(user, object)
   end
@@ -108,25 +32,6 @@ class ApplicationPolicy
     permitted_attributes_for_update
   end
 
-  def can_use_attribute?(attr, action = nil)
-    attr = [attr] unless attr.is_a?(Array)
-    permitted = action.nil? || !respond_to?("permitted_attributes_for_#{action}") ? permitted_attributes : send("permitted_attributes_for_#{action}")
-    (permitted & attr) == attr
-  end
-
-  alias can_use_attributes? can_use_attribute?
-
-  def can_use_any_attribute?(*attrs, action: nil)
-    attrs.any? { |attr| can_use_attribute?(attr, action) }
-  end
-
-  def can_search_attribute?(attr)
-    attr = [attr] unless attr.is_a?(Array)
-    (permitted_search_params & attr) == attr
-  end
-
-  alias can_search_attributes? can_search_attribute?
-
   def visible_for_search(relation, _attribute = nil)
     relation
   end
@@ -147,5 +52,10 @@ class ApplicationPolicy
     end.map(&:name).map(&:to_sym)
 
     api_attributes & data_attributes
+  end
+
+  def method_missing(method, *)
+    return true if method.to_s.end_with?("?")
+    super
   end
 end

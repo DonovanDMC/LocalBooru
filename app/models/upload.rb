@@ -5,24 +5,17 @@ require "tmpdir"
 class Upload < ApplicationRecord
   class Error < StandardError; end
 
-  attr_accessor :as_pending, :replaced_post, :file, :original_post_id, :locked_rating, :replacement_id, :locked_tags
+  attr_accessor :replaced_post, :file, :original_post_id, :replacement_id
 
-  belongs_to :uploader, class_name: "User"
+  belongs_to_user :uploader
   belongs_to :post, optional: true
 
-  after_initialize :set_locked_tags
   before_validation :assign_rating_from_tags
   before_validation :normalize_direct_url, on: :create
-  validate :uploader_is_not_limited, on: :create
-  validate :direct_url_is_whitelisted, on: :create
   validates :rating, inclusion: { in: %w[q e s] }, allow_nil: false
   validate :md5_is_unique, on: :file
   validate on: :file do |upload|
     FileValidator.new(upload, file.path).validate
-  end
-
-  def set_locked_tags
-    self.locked_tags ||= ""
   end
 
   module StatusMethods
@@ -87,12 +80,6 @@ class Upload < ApplicationRecord
     end
   end
 
-  module UploaderMethods
-    def uploader_name
-      User.id_to_name(uploader_id)
-    end
-  end
-
   module SearchMethods
     def pending
       where(status: "pending")
@@ -105,8 +92,7 @@ class Upload < ApplicationRecord
     def search(params)
       q = super
 
-      q = q.where_user(:uploader_id, :uploader, params)
-
+      q = q.where_user(:uploader_ip_addr, :uploader_ip_addr, params)
       if params[:source].present?
         q = q.where(source: params[:source])
       end
@@ -155,40 +141,11 @@ class Upload < ApplicationRecord
 
   include FileMethods
   include StatusMethods
-  include UploaderMethods
   extend SearchMethods
   include DirectURLMethods
 
-  def uploader_is_not_limited
-    # Uploads created when approving a replacemnet should always go through
-    return if replacement_id.present?
-
-    uploadable = uploader.can_upload_with_reason
-    if uploadable != true
-      errors.add(:uploader, User.upload_reason_string(uploadable))
-      return false
-    end
-    true
-  end
-
-  def direct_url_is_whitelisted
-    return true if direct_url_parsed.blank?
-    valid, reason = UploadWhitelist.is_whitelisted?(direct_url_parsed)
-    unless valid
-      errors.add(:source, "is not whitelisted: #{reason}")
-      return false
-    end
-    true
-  end
-
   def md5_is_unique
     if md5.nil?
-      return
-    end
-
-    if (destroyed_post = DestroyedPost.find_by(md5: md5))
-      errors.add(:base, "That image had been deleted from our site, and cannot be re-uploaded")
-      destroyed_post.notify_reupload(uploader)
       return
     end
 
@@ -225,15 +182,7 @@ class Upload < ApplicationRecord
     @presenter ||= UploadPresenter.new(self)
   end
 
-  def upload_as_pending?
-    as_pending.to_s.truthy?
-  end
-
   def self.available_includes
-    %i[post uploader]
-  end
-
-  def visible?(user = CurrentUser.user)
-    user.is_janitor?
+    %i[post]
   end
 end

@@ -4,22 +4,13 @@ class Pool < ApplicationRecord
   class RevertError < StandardError
   end
 
-  ARTIST_EXCLUSION_TAGS = TagCategory::ARTIST.exclusion
-
   array_attribute :post_ids, parse: %r{(?:https://#{FemboyFans.config.domain}/posts/)?(\d+)}i, cast: :to_i
   belongs_to_creator
-  has_dtext_links :description
 
   normalizes :description, with: ->(desc) { desc.gsub("\r\n", "\n") }
   validates :name, uniqueness: { case_sensitive: false, if: :name_changed? }
   validates :name, length: { minimum: 1, maximum: 250 }
-  validates :description, length: { maximum: FemboyFans.config.pool_descr_max_size }
-  validate :user_not_create_limited, on: :create
-  validate :user_not_limited, on: :update, if: :limited_attribute_changed?
-  validate :user_not_posts_limited, on: :update, if: :post_ids_changed?
   validate :validate_name, if: :name_changed?
-  validate :updater_can_remove_posts
-  validate :validate_number_of_posts
   before_validation :normalize_post_ids
   before_validation :normalize_name
   after_create :synchronize!
@@ -37,16 +28,12 @@ class Pool < ApplicationRecord
   end
 
   module SearchMethods
-    def for_user(id)
-      where("pools.creator_id = ?", id)
+    def any_creator_name_matches(regex)
+      where(id: Pool.from("unnest(creator_names) AS creator_name").where("creator_name ~ ?", regex))
     end
 
-    def any_artist_name_matches(regex)
-      where(id: Pool.from("unnest(artist_names) AS artist_name").where("artist_name ~ ?", regex))
-    end
-
-    def any_artist_name_like(name)
-      where(id: Pool.from("unnest(artist_names) AS artist_name").where("artist_name LIKE ?", name.to_escaped_for_sql_like))
+    def any_creator_name_like(name)
+      where(id: Pool.from("unnest(creator_names) AS creator_name").where("creator_name LIKE ?", name.to_escaped_for_sql_like))
     end
 
     def selected_first(current_pool_id)
@@ -66,19 +53,11 @@ class Pool < ApplicationRecord
         q = q.attribute_matches(:name, normalize_name(params[:name_matches]), convert_to_wildcard: true)
       end
 
-      q = q.any_artist_name_matches(params[:any_artist_name_matches]) if params[:any_artist_name_matches].present?
-      q = q.any_artist_name_like(params[:any_artist_name_like]) if params[:any_artist_name_like].present?
+      q = q.where_user(:creator_ip_addr, :creator_ip_addr, params)
+      q = q.any_creator_name_matches(params[:any_creator_name_matches]) if params[:any_creator_name_matches].present?
+      q = q.any_creator_name_like(params[:any_creator_name_like]) if params[:any_creator_name_like].present?
       q = q.attribute_matches(:description, params[:description_matches])
-      q = q.where_user(:creator_id, :creator, params)
       q = q.attribute_matches(:is_active, params[:is_active])
-
-      if params[:linked_to].present?
-        q = q.linked_to(params[:linked_to])
-      end
-
-      if params[:not_linked_to].present?
-        q = q.not_linked_to(params[:not_linked_to])
-      end
 
       case params[:order]
       when "name"
@@ -96,33 +75,6 @@ class Pool < ApplicationRecord
   end
 
   extend SearchMethods
-
-  def user_not_create_limited
-    allowed = creator.can_pool_with_reason
-    if allowed != true
-      errors.add(:creator, User.throttle_reason(allowed))
-      return false
-    end
-    true
-  end
-
-  def user_not_limited
-    allowed = CurrentUser.can_pool_edit_with_reason
-    if allowed != true
-      errors.add(:updater, User.throttle_reason(allowed))
-      return false
-    end
-    true
-  end
-
-  def user_not_posts_limited
-    allowed = CurrentUser.can_pool_post_edit_with_reason
-    if allowed != true
-      errors.add(:updater, "#{User.throttle_reason(allowed)}: updating unique pools posts")
-      return false
-    end
-    true
-  end
 
   def self.name_to_id(name)
     if name =~ /\A\d+\z/
@@ -176,21 +128,8 @@ class Pool < ApplicationRecord
     post_ids.find_index(post_id).to_i + 1
   end
 
-  def deletable_by?(user)
-    user.is_janitor?
-  end
-
-  def validate_number_of_posts
-    post_ids_before = post_ids_before_last_save || post_ids_was
-    added = post_ids - post_ids_before
-    return if added.empty?
-    max = FemboyFans.config.pool_post_limit(CurrentUser.user)
-    if post_ids.size > max
-      errors.add(:base, "Pools can only have up to #{ActiveSupport::NumberHelper.number_to_delimited(max)} posts each")
-      false
-    else
-      true
-    end
+  def deletable_by?(_user)
+    true
   end
 
   def add!(post)
@@ -203,7 +142,7 @@ class Pool < ApplicationRecord
       self.skip_sync = true
       update(post_ids: post_ids + [post.id])
       raise(ActiveRecord::Rollback) unless valid?
-      update_artists!
+      update_creators!
       self.skip_sync = false
       post.add_pool!(self)
       post.save
@@ -219,14 +158,13 @@ class Pool < ApplicationRecord
 
   def remove!(post)
     return unless contains?(post.id)
-    return unless CurrentUser.user.can_remove_from_pools?
 
     with_lock do
       reload
       self.skip_sync = true
       update(post_ids: post_ids - [post.id])
       raise(ActiveRecord::Rollback) unless valid?
-      update_artists!
+      update_creators!
       self.skip_sync = false
       post.remove_pool!(self)
       post.save
@@ -237,17 +175,16 @@ class Pool < ApplicationRecord
     Post.joins("left join pools on posts.id = ANY(pools.post_ids)").where(pools: { id: id }).order(Arel.sql("array_position(pools.post_ids, posts.id)"))
   end
 
-  def update_artists!
-    update_column(:artist_names, posts_artist_tags)
-    artist_names
+  def update_creators!
+    update_column(:creator_names, posts_creator_tags)
+    creator_names
   end
 
-  def posts_artist_tags
+  def posts_creator_tags
     posts
       .with_unflattened_tags
       .joins("inner join tags on tags.name = tag")
-      .where("pools.id = ? AND tags.category = ?", id, TagCategory.artist)
-      .where.not("tags.name": ARTIST_EXCLUSION_TAGS)
+      .where("pools.id = ? AND tags.category = ?", id, TagCategory.creator)
       .pluck("tags.name")
       .uniq
   end
@@ -267,7 +204,7 @@ class Pool < ApplicationRecord
       post.remove_pool!(self)
       post.save
     end
-    update_artists!
+    update_creators!
   end
 
   def synchronize!
@@ -317,12 +254,12 @@ class Pool < ApplicationRecord
     Post.find_by(id: post_ids.first)
   end
 
-  def create_version(updater: CurrentUser.user, updater_ip_addr: CurrentUser.ip_addr)
-    PoolVersion.queue(self, updater, updater_ip_addr)
+  def create_version(updater: CurrentUser.user)
+    PoolVersion.queue(self, updater)
   end
 
   def last_page
-    (post_count / CurrentUser.user.per_page.to_f).ceil
+    (post_count / FemboyFans.config.per_page.to_f).ceil
   end
 
   def validate_name
@@ -342,22 +279,11 @@ class Pool < ApplicationRecord
     end
   end
 
-  def updater_can_remove_posts
-    removed = post_ids_was - post_ids
-    if removed.any? && !CurrentUser.user.can_remove_from_pools?
-      errors.add(:base, "You cannot removes posts from pools within the first week of sign up")
-    end
-  end
-
   module LogMethods
     def log_delete
-      ModAction.log!(:pool_delete, self, pool_name: name, user_id: creator_id)
+      ModAction.log!(:pool_delete, self, pool_name: name, user_ip_addr: creator_ip_addr)
     end
   end
 
   include LogMethods
-
-  def self.available_includes
-    %i[creator]
-  end
 end

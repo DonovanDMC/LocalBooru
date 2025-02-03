@@ -1,8 +1,8 @@
 import Uploader from "./uploader/uploader.vue.erb";
-import { createApp } from "vue";
+import {createApp} from "vue";
 
 export default {
-  init () {
+  init() {
     const app = createApp(Uploader);
     app.mount("#uploader");
   },

@@ -3,7 +3,7 @@
 module Sources
   module Alternates
     class Furaffinity < Base
-      IMAGE_TO_ARTIST = %r{d2?\.(?:facdn|furaffinity)\.net/art/([0-9a-zA-Z_.~\-\[\]]+)}
+      IMAGE_TO_CREATOR = %r{d2?\.(?:facdn|furaffinity)\.net/art/([0-9a-zA-Z_.~\-\[\]]+)}
       SUBMISSION_URL = %r{furaffinity\.net/view/(\d+)}
 
       def force_https?
@@ -16,7 +16,7 @@ module Sources
 
       def parse
         # Add gallery link, parsed from direct link
-        if @url =~ IMAGE_TO_ARTIST
+        if @url =~ IMAGE_TO_CREATOR
           @gallery_url = "https://furaffinity.net/user/#{$1}"
           @direct_url = @url
         end

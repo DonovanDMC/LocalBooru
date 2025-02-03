@@ -13,11 +13,7 @@ class FormFieldCollector
   end
 
   def user(input_prefix, **)
-    if input_prefix.is_a?(Array)
-      @fields.push(*input_prefix)
-    else
-      @fields.push(:"#{input_prefix}_id", :"#{input_prefix}_name")
-    end
+    @fields.push(:"#{input_prefix}_ip_addr")
   end
 
   # Swallow the rest

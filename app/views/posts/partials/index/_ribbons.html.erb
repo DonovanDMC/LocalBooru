@@ -15,18 +15,8 @@
     </div>
   <% end %>
 
-  <% if post.is_flagged? %>
-    <% if post.is_pending? %>
-      <div class="ribbon right is-flagged is-pending" title="Flagged\nPending">
-        <span></span>
-      </div>
-    <% else %>
-      <div class="ribbon right is-flagged" title="Flagged">
-        <span></span>
-      </div>
-    <% end %>
-  <% elsif post.is_pending? %>
-    <div class="ribbon right is-pending" title="Pending">
+  <% if post.is_deleted? %>
+    <div class="ribbon right is-deleted" title="Deleted">
       <span></span>
     </div>
   <% end %>

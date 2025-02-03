@@ -10,7 +10,7 @@ Autocomplete.TAG_PREFIXES = "-|~|" + Object.keys(Autocomplete.TAG_CATEGORIES).ma
 Autocomplete.TAG_PREFIXES_REGEX = new RegExp("^(" + Autocomplete.TAG_PREFIXES + ")(.*)$", "i");
 Autocomplete.METATAGS_REGEX = new RegExp("^(" + Autocomplete.METATAGS.join("|") + "):(.*)$", "i");
 
-Autocomplete.initialize_all = function() {
+Autocomplete.initialize_all = function () {
   if (Utility.meta("enable-autocomplete") !== "true")
     return;
 
@@ -19,9 +19,11 @@ Autocomplete.initialize_all = function() {
       delay: 225,
       minLength: 3,
       autoFocus: false,
-      focus: function() { return false; },
+      focus: function () {
+        return false;
+      },
     },
-    _create: function() {
+    _create: function () {
       this.element.on("keydown.Autocomplete.tab", null, "tab", Autocomplete.on_tab);
       this._super();
     },
@@ -29,23 +31,21 @@ Autocomplete.initialize_all = function() {
   });
 
   this.initialize_tag_autocomplete();
-  this.initialize_artist_autocomplete($('[data-autocomplete="artist"]'));
+  this.initialize_creator_autocomplete($('[data-autocomplete="creator"]'));
   this.initialize_pool_autocomplete($('[data-autocomplete="pool"]'));
-  this.initialize_user_autocomplete($('[data-autocomplete="user"]'));
-  this.initialize_wiki_autocomplete($('[data-autocomplete="wiki-page"]'));
 }
 
-Autocomplete.initialize_tag_autocomplete = function() {
+Autocomplete.initialize_tag_autocomplete = function () {
   var $fields_multiple = $('[data-autocomplete="tag-query"], [data-autocomplete="tag-edit"]');
   var $fields_single = $('[data-autocomplete="tag"]');
 
   $fields_multiple.autocomplete({
-    search: function() {
+    search: function () {
       if ($(this).data("ui-autocomplete")) {
         $(this).data("ui-autocomplete").menu.bindings = $();
       }
     },
-    select: function(event, ui) {
+    select: function (event, ui) {
       // Prevent Upload.initialize_enter_on_tags from running if the
       // Enter key is used to select a tag from the autocomplete menu.
       if (event.key === "Enter") {
@@ -55,7 +55,7 @@ Autocomplete.initialize_tag_autocomplete = function() {
       Autocomplete.insert_completion(this, ui.item.value);
       return false;
     },
-    source: function(req, resp) {
+    source: function (req, resp) {
       var query = Autocomplete.parse_query(req.term, this.element.get(0).selectionStart);
       var metatag = query.metatag;
       var term = query.term;
@@ -66,123 +66,80 @@ Autocomplete.initialize_tag_autocomplete = function() {
       }
 
       switch (metatag) {
-      case "md5":
-      case "width":
-      case "height":
-      case "mpixels":
-      case "ratio":
-      case "score":
-      case "duration":
-      case "favcount":
-      case "framecount":
-      case "views":
-      case "filesize":
-      case "source":
-      case "id":
-      case "date":
-      case "age":
-      case "limit":
-      case "tagcount":
-      <% TagCategory.short_name_list.each do |category| %>
+        case "md5":
+        case "width":
+        case "height":
+        case "mpixels":
+        case "ratio":
+        case "duration":
+        case "framecount":
+        case "filesize":
+        case "source":
+        case "id":
+        case "date":
+        case "age":
+        case "limit":
+        case "tagcount":
+        <% TagCategory.short_name_list.each do |category| %>
         case "<%= category %>tags": // eslint-disable-line
-      <% end %>
-        resp([]);
-        return;
-      case "order":
-      case "status":
-      case "rating":
-      case "locked":
-      case "child":
-      case "parent":
-      case "filetype":
-      case "type":
-      case "disapproval":
-        Autocomplete.static_metatag_source(term, resp, metatag);
-        return;
-      case "user":
-      case "disapprover":
-      case "approver":
-      case "commenter":
-      case "comm":
-      case "noter":
-      case "noteupdater":
-      case "fav":
-      case "favoritedby":
-      case "flagger":
-        Autocomplete.user_source(term, resp, metatag + ":");
-        break;
-        case "upvote":
-        case "downvote":
-        case "voted":
-        case "votedup":
-        case "voteddown":
-        Autocomplete.user_vote_source(term, resp, metatag + ":");
-        break;
-      case "pool":
-        Autocomplete.pool_source(term, resp, metatag);
-        break;
-      default:
-        Autocomplete.normal_source(term, resp);
-        break;
+        <% end %>
+          resp([]);
+          return;
+        case "order":
+        case "status":
+        case "rating":
+        case "child":
+        case "parent":
+        case "filetype":
+        case "type":
+          Autocomplete.static_metatag_source(term, resp, metatag);
+          return;
+        case "fav":
+          resp(["fav:true", "fav:false"]);
+          return
+        case "pool":
+          Autocomplete.pool_source(term, resp, metatag);
+          break;
+        default:
+          Autocomplete.normal_source(term, resp);
+          break;
       }
     }
   });
 
   $fields_single.autocomplete({
-    search: function() {
+    search: function () {
       $(this).data("ui-autocomplete").menu.bindings = $();
     },
-    source: function(req, resp) {
+    source: function (req, resp) {
       Autocomplete.normal_source(req.term, resp);
     }
   });
 }
 
-Autocomplete.initialize_artist_autocomplete = function($fields) {
+Autocomplete.initialize_creator_autocomplete = function ($fields) {
   $fields.autocomplete({
-    search: function() {
+    search: function () {
       $(this).data("ui-autocomplete").menu.bindings = $();
     },
-    source: function(req, resp) {
-      Autocomplete.artist_source(req.term, resp);
+    source: function (req, resp) {
+      Autocomplete.creator_source(req.term, resp);
     }
   });
 };
 
-Autocomplete.initialize_pool_autocomplete = function($fields) {
+Autocomplete.initialize_pool_autocomplete = function ($fields) {
   $fields.autocomplete({
-    search: function() {
+    search: function () {
       $(this).data("ui-autocomplete").menu.bindings = $();
     },
-    source: function(req, resp) {
+    source: function (req, resp) {
       Autocomplete.pool_source(req.term, resp);
     },
   });
 };
 
-Autocomplete.initialize_user_autocomplete = function($fields) {
-  $fields.autocomplete({
-    search: function() {
-      $(this).data("ui-autocomplete").menu.bindings = $();
-    },
-    source: function(req, resp) {
-      Autocomplete.user_source(req.term, resp, "");
-    },
-  });
-};
-
-Autocomplete.initialize_wiki_autocomplete = function($fields) {
-  $fields.autocomplete({
-    search: function() {
-      $(this).data("ui-autocomplete").menu.bindings = $();
-    },
-    source: function(req, resp) {
-      Autocomplete.wiki_source(req.term, resp);
-    }
-  });
-};
-
-Autocomplete.parse_query = function(text, caret) {
+Autocomplete.parse_query = function (text, caret) {
   var metatag = "";
   var term = "";
 
@@ -206,12 +163,12 @@ Autocomplete.parse_query = function(text, caret) {
     term = match[2];
   }
 
-  return { metatag: metatag, term: term };
+  return {metatag: metatag, term: term};
 };
 
 // Update the input field with the item currently focused in the
 // autocomplete menu, then position the caret just after the inserted completion.
-Autocomplete.insert_completion = function(input, completion) {
+Autocomplete.insert_completion = function (input, completion) {
   var before_caret_text = input.value.substring(0, input.selectionStart).trim();
   var after_caret_text = input.value.substring(input.selectionStart).trim();
 
@@ -219,7 +176,7 @@ Autocomplete.insert_completion = function(input, completion) {
   before_caret_text = before_caret_text.replace(regexp, "$1") + completion;
 
   // Only insert a space if we're at the end or if there's some text and it doesn't alreay start with a space
-  if(after_caret_text.length === 0 || (after_caret_text.length !== 0 && !after_caret_text.startsWith(" "))) {
+  if (after_caret_text.length === 0 || (after_caret_text.length !== 0 && !after_caret_text.startsWith(" "))) {
     before_caret_text += " ";
   }
 
@@ -234,7 +191,7 @@ Autocomplete.insert_completion = function(input, completion) {
 
 // If we press tab while the autocomplete menu is open but nothing is
 // focused, complete the first item and close the menu.
-Autocomplete.on_tab = function(event) {
+Autocomplete.on_tab = function (event) {
   var input = this;
   var autocomplete = $(input).autocomplete("instance");
   var $autocomplete_menu = autocomplete.menu.element;
@@ -255,11 +212,11 @@ Autocomplete.on_tab = function(event) {
   event.preventDefault();
 };
 
-Autocomplete.render_item = function(list, item) {
+Autocomplete.render_item = function (list, item) {
   var $link = $("<a/>");
   $link.text(item.label);
   $link.attr("href", Autocomplete.get_href(item));
-  $link.on("click.danbooru", function(e) {
+  $link.on("click.danbooru", function (e) {
     e.preventDefault();
   });
 
@@ -286,12 +243,6 @@ Autocomplete.render_item = function(list, item) {
 
   if (item.type === "tag") {
     $link.addClass("tag-type-" + item.category);
-  } else if (item.type === "user") {
-    var level_class = "user-" + item.level.replace(/ /g, "-").toLowerCase();
-    $link.addClass(level_class);
-    if (Utility.meta("style-usernames") === "true") {
-      $link.addClass("with-style");
-    }
   } else if (item.type === "pool") {
     $link.addClass("pool-category-" + item.category);
   }
@@ -307,23 +258,19 @@ Autocomplete.render_item = function(list, item) {
   return $list_item.appendTo(list);
 };
 
-Autocomplete.get_href = function(item) {
-  switch(item.type) {
-  case "user":
-    return "/users/" + item.id;
-  case "pool":
-    return "/pools/" + item.id;
-  case "artist":
-    return "/artists/" + item.id;
-  case "wiki_page":
-    return "/wiki_pages/" + item.id;
-  case "tag":
-  default:
-    return "/posts?tags=" + encodeURIComponent(item.value);
+Autocomplete.get_href = function (item) {
+  switch (item.type) {
+    case "pool":
+      return "/pools/" + item.id;
+    case "creator":
+      return "/creator/" + item.id;
+    case "tag":
+    default:
+      return "/posts?tags=" + encodeURIComponent(item.value);
   }
 }
 
-Autocomplete.normal_source = function(term, resp) {
+Autocomplete.normal_source = function (term, resp) {
   if (term.length < 3) {
     return;
   }
@@ -334,8 +281,8 @@ Autocomplete.normal_source = function(term, resp) {
       "expiry": 7
     },
     method: "get",
-    success: function(data) {
-      var d = $.map(data, function(tag) {
+    success: function (data) {
+      var d = $.map(data, function (tag) {
         return {
           id: tag.id,
           type: "tag",
@@ -362,9 +309,6 @@ Autocomplete.static_metatags = {
   rating: [
     "safe", "questionable", "explicit"
   ],
-  locked: [
-    "rating", "note", "status"
-  ],
   child: [
     "any", "none"
   ],
@@ -379,7 +323,7 @@ Autocomplete.static_metatags = {
   ],
 }
 
-Autocomplete.static_metatag_source = function(term, resp, metatag) {
+Autocomplete.static_metatag_source = function (term, resp, metatag) {
   var sub_metatags = this.static_metatags[metatag];
 
   var matches = sub_metatags.filter(sub_metatag => sub_metatag.startsWith(term.toLowerCase()));
@@ -388,47 +332,7 @@ Autocomplete.static_metatag_source = function(term, resp, metatag) {
   resp(matches);
 }
 
-Autocomplete.user_vote_source = function(term, resp, prefix) {
-  if (document.body.dataset.userIsModerator === "true") {
-    return Autocomplete.user_source(term, resp, prefix);
-  } else {
-    const id = Number(Utility.meta("current-user-id") || 0),
-      name = Utility.meta("current-user-name").replace(/_/g, " ")
-
-    resp([{
-      id,
-      type: "user",
-      label: name,
-      value: prefix + name,
-      level: document.body.dataset.userLevelString,
-    }]);
-  }
-}
-
-Autocomplete.user_source = function(term, resp, prefix) {
-  return $.ajax({
-    url: "/users.json",
-    data: {
-      "search[order]": "post_upload_count",
-      "search[name_matches]": term + "*",
-      "limit": 10
-    },
-    method: "get",
-    success: function(data) {
-      resp($.map(data, function(user) {
-        return {
-          id: user.id,
-          type: "user",
-          label: user.name.replace(/_/g, " "),
-          value: prefix + user.name,
-          level: user.level_string
-        };
-      }));
-    }
-  });
-}
-
-Autocomplete.pool_source = function(term, resp, metatag) {
+Autocomplete.pool_source = function (term, resp, metatag) {
   return $.ajax({
     url: "/pools.json",
     data: {
@@ -437,8 +341,8 @@ Autocomplete.pool_source = function(term, resp, metatag) {
       "limit": 10
     },
     method: "get",
-    success: function(data) {
-      resp($.map(data, function(pool) {
+    success: function (data) {
+      resp($.map(data, function (pool) {
         return {
           id: pool.id,
           type: "pool",
@@ -452,9 +356,9 @@ Autocomplete.pool_source = function(term, resp, metatag) {
   });
 }
 
-Autocomplete.artist_source = function(term, resp) {
+Autocomplete.creator_source = function (term, resp) {
   return $.ajax({
-    url: "/artists.json",
+    url: "/creators.json",
     data: {
       "search[name]": term.trim().replace(/\s+/g, "_") + "*",
       "search[order]": "post_count",
@@ -462,21 +366,21 @@ Autocomplete.artist_source = function(term, resp) {
       "expiry": 7
     },
     method: "get",
-    success: function(data) {
-      resp($.map(data, function(artist) {
+    success: function (data) {
+      resp($.map(data, function (creator) {
         return {
-          id: artist.id,
-          type: "artist",
-          label: artist.name.replace(/_/g, " "),
-          value: artist.name,
-          category: Autocomplete.TAG_CATEGORIES.artist,
+          id: creator.id,
+          type: "creator",
+          label: creator.name.replace(/_/g, " "),
+          value: creator.name,
+          category: Autocomplete.TAG_CATEGORIES.creator,
         };
       }));
     }
   });
 }
 
-Autocomplete.wiki_source = function(term, resp) {
+Autocomplete.wiki_source = function (term, resp) {
   return $.ajax({
     url: "/wiki_pages.json",
     data: {
@@ -487,8 +391,8 @@ Autocomplete.wiki_source = function(term, resp) {
       "expiry": 7
     },
     method: "get",
-    success: function(data) {
-      resp($.map(data, function(wiki_page) {
+    success: function (data) {
+      resp($.map(data, function (wiki_page) {
         return {
           id: wiki_page.id,
           type: "wiki_page",
@@ -501,7 +405,7 @@ Autocomplete.wiki_source = function(term, resp) {
   });
 }
 
-$(document).ready(function() {
+$(document).ready(function () {
   Autocomplete.initialize_all();
 });
 

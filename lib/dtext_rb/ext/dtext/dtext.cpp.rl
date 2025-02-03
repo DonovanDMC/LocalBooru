@@ -85,9 +85,7 @@ action mark_f2 { f2 = p; }
 action mark_g1 { g1 = p; }
 action mark_g2 { g2 = p; }
 
-action after_mention_boundary { is_mention_boundary(p[-1]) }
 action after_qtag_boundary { is_qtag_boundary(p[-1]) }
-action mentions_enabled { options.f_mentions }
 action qtags_enabled { options.f_qtags }
 action in_quote { dstack_is_open(BLOCK_QUOTE) }
 action in_section { dstack_is_open(BLOCK_SECTION) }
@@ -158,13 +156,6 @@ nonpipebracket = nonpipe & nonbracket;
 # * The second character can't be '@' (to avoid emoticons like '@_@').
 # * Must be at least two characters long.
 
-mention_nonboundary_char = char - punct - space - eos - utf8_boundary_char;
-mention_char = nonspace - (punct - [._/'\-+!]);
-bare_username = ([_.]? mention_nonboundary_char mention_char* mention_nonboundary_char) - (char '@') - (char* '\'' [sd]);
-
-bare_mention = ('@' when after_mention_boundary) (bare_username >mark_a1 @mark_a2);
-delimited_mention = '<@' (nonspace nonnewline*) >mark_a1 @mark_a2 :>> '>';
-
 qtag_nonboundary_char = char - punct - space - eos - utf8_boundary_char;
 qtag_char = nonspace - (punct - [._/'\-+!]);
 bare_qtag_tag = (qtag_nonboundary_char qtag_char* qtag_nonboundary_char) - (char '#') - (char* '\'' [sd]);
@@ -216,16 +207,16 @@ internal_anchor_target = (alnum | [_\-])+ >mark_b1 %mark_b2;
 internal_anchor = '[#' internal_anchor_target ']';
 
 emoticon_tags = '|' alnum | ':|' | '|_|' | '||_||' | '\\||/' | '<|>_<|>' | '>:|' | '>|3' | '|w|' | ':{' | ':}';
-wiki_prefix = alnum* >mark_a1 %mark_a2;
-wiki_suffix = alnum* >mark_e1 %mark_e2;
-wiki_target = (nonpipebracket* (nonpipebracket - space) | emoticon_tags) >mark_b1 %mark_b2;
-wiki_anchor_id = (alnum ([ _\-]* alnum+)*) >mark_c1 %mark_c2;
-wiki_title = (ws* (nonpipebracket - space)+)* >mark_d1 %mark_d2;
+creator_prefix = alnum* >mark_a1 %mark_a2;
+creator_suffix = alnum* >mark_e1 %mark_e2;
+creator_target = (nonpipebracket* (nonpipebracket - space) | emoticon_tags) >mark_b1 %mark_b2;
+creator_anchor_id = (alnum ([ _\-]* alnum+)*) >mark_c1 %mark_c2;
+creator_title = (ws* (nonpipebracket - space)+)* >mark_d1 %mark_d2;
 
-basic_internal_anchor_link = wiki_prefix '[[' '#' internal_anchor_target ']]' wiki_suffix;
-aliased_internal_anchor_link = wiki_prefix '[[' '#' internal_anchor_target '|' ws* wiki_title ws* ']]' wiki_suffix;
-basic_wiki_link = wiki_prefix '[[' ws* wiki_target ws* :>> ('#' wiki_anchor_id ws*)? ']]' wiki_suffix;
-aliased_wiki_link = wiki_prefix '[[' ws* wiki_target ws* :>> ('#' wiki_anchor_id ws*)? '|' ws* wiki_title ws* ']]' wiki_suffix;
+basic_internal_anchor_link = creator_prefix '[[' '#' internal_anchor_target ']]' creator_suffix;
+aliased_internal_anchor_link = creator_prefix '[[' '#' internal_anchor_target '|' ws* creator_title ws* ']]' creator_suffix;
+basic_creator_link = creator_prefix '[[' ws* creator_target ws* :>> ('#' creator_anchor_id ws*)? ']]' creator_suffix;
+aliased_creator_link = creator_prefix '[[' ws* creator_target ws* :>> ('#' creator_anchor_id ws*)? '|' ws* creator_title ws* ']]' creator_suffix;
 
 tag = (nonspace - [|{}])+ | ([~\-]? emoticon_tags);
 tags = (tag (ws+ tag)*) >mark_b1 %mark_b2;
@@ -249,7 +240,6 @@ open_aliased_section = ('[section'i (ws* '=' ws* | ws+) ((nonnewline - ']')* >ma
                | ('<section'i (ws* '=' ws* | ws+) ((nonnewline - '>')* >mark_a1 %mark_a2) '>');
 open_aliased_section_expanded = ('[section,expanded'i (ws* '=' ws* | ws+) ((nonnewline - ']')* >mark_a1 %mark_a2) ']')
                | ('<section,expanded'i (ws* '=' ws* | ws+) ((nonnewline - '>')* >mark_a1 %mark_a2) '>');
-open_topic = ('[topic='i id ']') | ('<topic='i id '>');
 
 list_item = '*'+ >mark_e1 %mark_e2 ws+ nonnewline+ >mark_f1 %mark_f2;
 
@@ -279,7 +269,7 @@ open_th = '[th'i tag_attributes :>> ']' | '<th'i tag_attributes :>> '>';
 open_td = '[td'i tag_attributes :>> ']' | '<td'i tag_attributes :>> '>';
 open_br = '[br]'i | '<br>'i;
 open_color = '[color='i ([a-z]+|'#'i[0-9a-fA-F]{3,6}) >mark_a1 %mark_a2 ']';
-open_color_typed = '[color='i ('gen'i('eral'i)?|'art'i('ist'i)?|'cont'|'contributor'i|'oc'i|'ch'i('ar'i('acter'i)?)?|'co'i('py'i('right'i)?)?|'spec'i('ies'i)?|'inv'i('alid'i)?|'meta'i|'lor'i('e'i)?|'gender'i|'s'i('afe'i)?|'q'i('uestionable'i)?|'e'i('xplicit'i)?) >mark_a1 %mark_a2 ']';
+open_color_typed = '[color='i ('gen'i('eral'i)?|'cr'i('eator'i)?|'cont'|'contributor'i|'oc'i|'ch'i('ar'i('acter'i)?)?|'co'i('py'i('right'i)?)?|'spec'i('ies'i)?|'inv'i('alid'i)?|'meta'i|'lor'i('e'i)?|'gender'i|'s'i('afe'i)?|'q'i('uestionable'i)?|'e'i('xplicit'i)?) >mark_a1 %mark_a2 ']';
 
 open_note = '[note]'i | '<note>'i;
 open_b = '[b]'i | '<b>'i | '<strong>'i;
@@ -293,7 +283,6 @@ close_spoilers = ('[/spoiler'i 's'i? ']') | ('</spoiler'i 's'i? '>');
 close_nodtext = '[/nodtext]'i | '</nodtext>'i;
 close_quote = '[/quote'i (']' when in_quote) | '</quote'i ('>' when in_quote) | '</blockquote'i (']' when in_quote);
 close_section = '[/section'i (']' when in_section) | '</section'i ('>' when in_section);
-close_topic = '[/topic]'i | '</topic>'i;
 close_code = '[/code]'i | '</code>'i;
 close_table = '[/table]'i | '</table>'i;
 close_colgroup = '[/colgroup]'i | '</colgroup>'i;
@@ -339,56 +328,32 @@ inline := |*
   };
 
   'thumb #'i id => {
-    if(posts.size() < options.max_thumbs) {
-      long post_id = strtol(a1, (char**)&a2, 10);
-      posts.push_back(post_id);
-      append("<a class=\"dtext-link dtext-id-link dtext-post-id-link thumb-placeholder-link\" data-id=\"");
-      append_html_escaped({ a1, a2 });
-      append("\" href=\"");
-      append_relative_url("/posts/");
-      append_uri_escaped({ a1, a2 });
-      append("\">");
-      append("post #");
-      append_html_escaped({ a1, a2 });
-      append("</a>");
-    } else {
-      append_id_link("post", "post", "/posts/", { a1, a2 });
-    }
+    long post_id = strtol(a1, (char**)&a2, 10);
+    posts.push_back(post_id);
+    append("<a class=\"dtext-link dtext-id-link dtext-post-id-link thumb-placeholder-link\" data-id=\"");
+    append_html_escaped({ a1, a2 });
+    append("\" href=\"");
+    append_relative_url("/posts/");
+    append_uri_escaped({ a1, a2 });
+    append("\">");
+    append("post #");
+    append_html_escaped({ a1, a2 });
+    append("</a>");
   };
 
   'post #'i id                                 => { append_id_link("post", "post", "/posts/", { a1, a2 }); };
   'post changes #'i id                         => { append_id_link("post changes", "post-changes-for", "/posts/versions?search[post_id]=", { a1, a2 }); };
   'post changes #'i id ':'i version            => { append_post_changes_version_link({ a1, a2 }, { b1, b2 }); };
-  'flag #'i id                                 => { append_id_link("flag", "post-flag", "/posts/flags/", { a1, a2 }); };
-  'note #'i id                                 => { append_id_link("note", "note", "/notes/", { a1, a2 }); };
-  'forum'i ' 'i? 'post'i? ' #'i id             => { append_id_link("forum", "forum-post", "/forums/posts/", { a1, a2 }); };
-  'forum 'i? 'topic #'i id                     => { append_id_link("topic", "forum-topic", "/forums/topics/", { a1, a2 }); };
-  'forum 'i? 'topic #'i id '/p'i page          => { append_paged_link("topic #", { a1, a2 }, "<a class=\"dtext-link dtext-id-link dtext-forum-topic-id-link\" href=\"", "/forums/topics/", "?page=", { b1, b2 }); };
-  'forum 'i? 'category #'i id                  => { append_id_link("category", "forum-category", "/forums/categories/", { a1, a2 }); };
-  'comment #'i id                              => { append_id_link("comment", "comment", "/comments/", { a1, a2 }); };
-  'dmail #'i id                                => { append_id_link("dmail", "dmail", "/dmails/", { a1, a2 }); };
-  'dmail #'i id '/' dmail_key                  => { append_dmail_key_link({ a1, a2 }, { b1, b2 }); };
   'pool #'i id                                 => { append_id_link("pool", "pool", "/pools/", { a1, a2 }); };
-  'user #'i id                                 => { append_id_link("user", "user", "/users/", { a1, a2 }); };
-  'artist #'i id                               => { append_id_link("artist", "artist", "/artists/", { a1, a2 }); };
-  'artist changes #'i id                       => { append_id_link("artist changes", "artist-changes-for", "/artists/versions?search[artist_id]=", { a1, a2 }); };
-  'ban #'i id                                  => { append_id_link("ban", "ban", "/bans/", { a1, a2 }); };
-  'bur #'i id                                  => { append_id_link("BUR", "bulk-update-request", "/bulk_update_requests/", { a1, a2 }); };
+  'creator #'i id                               => { append_id_link("creator", "creator", "/creators/", { a1, a2 }); };
+  'creator changes #'i id                       => { append_id_link("creator changes", "creator-changes-for", "/creators/versions?search[creator_id]=", { a1, a2 }); };
   'alias #'i id                                => { append_id_link("alias", "tag-alias", "/tags/aliases/", { a1, a2 }); };
   'implication #'i id                          => { append_id_link("implication", "tag-implication", "/tags/implications/", { a1, a2 }); };
   'mod action #'i id                           => { append_id_link("mod action", "mod-action", "/mod_actions/", { a1, a2 }); };
-  'record #'i id                               => { append_id_link("record", "user-feedback", "/users/feedbacks/", { a1, a2 }); };
-  'wiki'i ' 'i? 'page'i? ' #'i id              => { append_id_link("wiki", "wiki-page", "/wiki_pages/", { a1, a2 }); };
-  'wiki'i ' 'i? 'page 'i? 'changes'i? ' #'i id => { append_id_link("wiki changes", "wiki-page-changes-for", "/wiki_pages/versions?search[wiki_page_id]=", { a1, a2 }); };
-  'set #'i id                                  => { append_id_link("set", "set", "/post_sets/", { a1, a2 }); };
-  'ticket #'i id                               => { append_id_link("ticket", "ticket", "/tickets/", { a1, a2 }); };
-  'take'i ' 'i? 'down 'i 'request 'i? '#'i id  => { append_id_link("takedown", "takedown", "/takedowns/", { a1, a2 }); };
-  'dnp #'i id                                  => { append_id_link("avoid posting", "avoid-posting", "/avoid_postings/", { a1, a2 }); };
-  'avoid posting #'i id                        => { append_id_link("avoid posting", "avoid-posting", "/avoid_postings/", { a1, a2 }); };
 
-  'issue #'i id                                => { append_id_link("issue", "github", "https://github.com/FemboyFans/FemboyFans/issues/", { a1, a2 }); };
-  'pull #'i id                                 => { append_id_link("pull", "github-pull", "https://github.com/FemboyFans/FemboyFans/pull/", { a1, a2 }); };
-  'commit #'i id                               => { append_id_link("commit", "github-commit", "https://github.com/FemboyFans/FemboyFans/commit/", { a1, a2 }); };
+  'issue #'i id                                => { append_id_link("issue", "github", "https://github.com/DonovanDMC/LocalBooru/issues/", { a1, a2 }); };
+  'pull #'i id                                 => { append_id_link("pull", "github-pull", "https://github.com/DonovanDMC/LocalBooru/pull/", { a1, a2 }); };
+  'commit #'i id                               => { append_id_link("commit", "github-commit", "https://github.com/DonovanDMC/LocalBooru/commit/", { a1, a2 }); };
 
 
   basic_post_search_link => {
@@ -407,12 +372,12 @@ inline := |*
     append_internal_anchor_link({ a1, a2 }, { b1, b2 }, { d1, d2 }, { e1, e2 });
   };
 
-  basic_wiki_link => {
-    append_wiki_link({ a1, a2 }, { b1, b2 }, { c1, c2 }, { b1, b2 }, { e1, e2 });
+  basic_creator_link => {
+    append_creator_link({ a1, a2 }, { b1, b2 }, { c1, c2 }, { b1, b2 }, { e1, e2 });
   };
 
-  aliased_wiki_link => {
-    append_wiki_link({ a1, a2 }, { b1, b2 }, { c1, c2 }, { d1, d2 }, { e1, e2 });
+  aliased_creator_link => {
+    append_creator_link({ a1, a2 }, { b1, b2 }, { c1, c2 }, { d1, d2 }, { e1, e2 });
   };
 
   basic_textile_link => {
@@ -437,10 +402,6 @@ inline := |*
 
   delimited_url | unnamed_bbcode_link => {
     append_unnamed_url({ a1, a2 });
-  };
-
-  (bare_mention | delimited_mention) when mentions_enabled => {
-    append_mention({ a1, a2 + 1 });
   };
 
   (bare_qtag | delimited_qtag) when qtags_enabled => {
@@ -541,19 +502,6 @@ inline := |*
 
   open_spoilers => {
     dstack_open_element(INLINE_SPOILER, "<span class=\"spoiler\">");
-  };
-
-  open_topic => {
-    dstack_push(INLINE_TOPIC);
-    append_topic({ a1, a2 });
-  };
-
-  close_topic => {
-    if (dstack_is_open(INLINE_TOPIC)) {
-      dstack_close_element(INLINE_TOPIC, { ts, te });
-    } else {
-      append_html_escaped({ ts, te });
-    }
   };
 
   newline? close_spoilers => {
@@ -994,18 +942,6 @@ void StateMachine::append_absolute_link(const std::string_view url, const std::s
   append("</a>");
 }
 
-void StateMachine::append_mention(const std::string_view name) {
-  mentions.push_back(std::string{name});
-  append("<a class=\"dtext-link dtext-user-mention-link\" data-user-name=\"");
-  append_html_escaped(name);
-  append("\" href=\"");
-  append_relative_url("/users?name=");
-  append_uri_escaped(name);
-  append("\">@");
-  append_html_escaped(name);
-  append("</a>");
-}
-
 void StateMachine::append_qtag(const std::string_view name) {
   qtags.push_back(std::string{name});
   append("<a class=\"dtext-link dtext-qtag-link\" data-qtag-name=\"");
@@ -1071,24 +1007,13 @@ void StateMachine::append_internal_url(const DText::URL& url) {
       } else if (controller == "pools" && query.empty()) {
         // https://danbooru.donmai.us/pools/903?page=2
         return append_id_link("pool", "pool", "/pools/", id);
-      } else if (controller == "comments") {
-        return append_id_link("comment", "comment", "/comments/", id);
-      } else if (controller == "users") {
-        return append_id_link("user", "user", "/users/", id);
-      } else if (controller == "artists") {
-        return append_id_link("artist", "artist", "/artists/", id);
-      } else if (controller == "notes") {
-        return append_id_link("note", "note", "/notes/", id);
-      } else if (controller == "post_sets" && query.empty()) {
-        // https://danbooru.donmai.us/post_sets/1234?page=2
-        return append_id_link("set", "set", "/post_sets/", id);
-      } else if (controller == "wiki_pages" && fragment.empty()) {
-        // http://danbooru.donmai.us/wiki_pages/10933#dtext-self-upload
-        return append_id_link("wiki", "wiki-page", "/wiki_pages/", id);
-      }
-    } else if (controller == "wiki_pages" && fragment.empty()) {
-      return append_wiki_link({}, id, {}, id, {});
-    }
+      } else if (controller == "creators" && fragment.empty()) {
+         // http://danbooru.donmai.us/wiki_pages/10933#dtext-self-upload
+         return append_id_link("creator", "creator", "/creators/", id);
+       }
+     } else if (controller == "creators" && fragment.empty()) {
+       return append_creator_link({}, id, {}, id, {});
+     }
   } else if (path_components.size() >= 3) {
     // http://danbooru.donmai.us/post/show/1234/touhou
     auto controller = path_components.at(0);
@@ -1098,14 +1023,6 @@ void StateMachine::append_internal_url(const DText::URL& url) {
     if (!id.empty() && std::all_of(id.begin(), id.end(), ::isdigit)) {
       if (controller == "post" && action == "show") {
         return append_id_link("post", "post", "/posts/", id);
-      } else if (controller == "forums" && action == "posts") {
-        return append_id_link("forum", "forum-post", "/forums/posts/", id);
-      } else if (controller == "forums" && action == "categories") {
-        return append_id_link("category", "forum-category", "/forums/categories/", id);
-      } else if (controller == "forums" && action == "topics" && query.empty() && fragment.empty()) {
-        // https://danbooru.donmai.us/forums/topics/1234?page=2
-        // https://danbooru.donmai.us/forums/topics/1234#forum_post_5678
-        return append_id_link("topic", "forum-topic", "/forums/topics/", id);
       }
     }
   }
@@ -1181,15 +1098,7 @@ void StateMachine::append_section(const std::string_view summary, bool initially
   append_block("</summary><div>");
 }
 
-void StateMachine::append_topic(const std::string_view id) {
-  append("<a class=\"dtext-link dtext-forum-topic-link\" href=\"");
-  append_relative_url("/forums/topics/");
-  append_uri_escaped(id);
-  append("\">");
-  append("Topic: ");
-}
-
-void StateMachine::append_wiki_link(const std::string_view prefix, const std::string_view tag, const std::string_view anchor, const std::string_view title, const std::string_view suffix) {
+void StateMachine::append_creator_link(const std::string_view prefix, const std::string_view tag, const std::string_view anchor, const std::string_view title, const std::string_view suffix) {
   auto normalized_tag = std::string(tag);
   auto title_string = std::string(title);
 
@@ -1211,14 +1120,14 @@ void StateMachine::append_wiki_link(const std::string_view prefix, const std::st
     title_string.append(suffix);
   }
 
-  append("<a rel=\"nofollow\" class=\"dtext-link dtext-wiki-link\" href=\"");
+  append("<a rel=\"nofollow\" class=\"dtext-link dtext-creator-link\" href=\"");
   if (std::all_of(normalized_tag.cbegin(), normalized_tag.cend(), ::isdigit)) {
-  append_relative_url("/wiki_pages/");
+  append_relative_url("/creators/");
   } else {
-  append_relative_url("/wiki_pages/show_or_new?title=");
+  append_relative_url("/creators/show_or_new?name=");
   }
   append_uri_escaped(normalized_tag);
-    
+
   if (!anchor.empty()) {
     std::string normalized_anchor(anchor);
     std::transform(normalized_anchor.begin(), normalized_anchor.end(), normalized_anchor.begin(), [](char c) { return isalnum(c) ? ascii_tolower(c) : '-'; });
@@ -1230,7 +1139,7 @@ void StateMachine::append_wiki_link(const std::string_view prefix, const std::st
   append_html_escaped(title_string);
   append("</a>");
 
-  wiki_pages.insert(std::string(tag));
+  creators.insert(std::string(tag));
 
   clear_matches();
 }
@@ -1436,7 +1345,6 @@ void StateMachine::dstack_rewind() {
     case INLINE_NOTE: append("</span>"); break;
     case INLINE_CODE: append("</code>"); break;
     case INLINE_COLOR: append("</span>"); break;
-    case INLINE_TOPIC: append("</a>"); break;
 
     case BLOCK_NOTE: append_block("</p>"); break;
     case BLOCK_TABLE: append_block("</table>"); break;
@@ -1528,8 +1436,7 @@ void StateMachine::clear_matches() {
   g2 = NULL;
 }
 
-// True if a mention is allowed to start after this character.
-static bool is_mention_boundary(unsigned char c) {
+static bool is_qtag_boundary(unsigned char c) {
   switch (c) {
     case '\0': return true;
     case '\r': return true;
@@ -1546,10 +1453,6 @@ static bool is_mention_boundary(unsigned char c) {
     case '}':  return true;
     default:   return false;
   }
-}
-
-static bool is_qtag_boundary(unsigned char c) {
-  return is_mention_boundary(c);
 }
 
 // Trim trailing unbalanced ')' characters from the URL.
@@ -1605,14 +1508,13 @@ std::string StateMachine::parse_inline(const std::string_view dtext) {
 
 std::string StateMachine::parse_basic_inline(const std::string_view dtext) {
   DTextOptions opt = options;
-  opt.max_thumbs = 0;
   StateMachine sm(dtext, dtext_en_basic_inline, options);
   return sm.parse();
 }
 
 StateMachine::ParseResult StateMachine::parse_dtext(const std::string_view dtext, DTextOptions options) {
   StateMachine sm(dtext, dtext_en_main, options);
-  return { sm.parse(), sm.wiki_pages, sm.posts, sm.mentions, sm.qtags };
+  return { sm.parse(), sm.creators, sm.posts, sm.qtags };
 }
 
 std::string StateMachine::parse() {

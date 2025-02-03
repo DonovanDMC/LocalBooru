@@ -1,0 +1,7 @@
+<%= form_search(path: creator_versions_path, policy: policy(CreatorVersion)) do |f| %>
+  <%= f.user(:updater) %>
+  <%= f.input(:creator_name, label: "Creator Name", autocomplete: "creator") %>
+  <%= f.input(:creator_id, label: "Creator ID", hide_unless_value: true) %>
+  <%= f.input(:updater_ip_addr, label: "Updater IP Address") %>
+  <%= f.input(:order, collection: [%w[Name name], %w[Updated id_desc]]) %>
+<% end %>

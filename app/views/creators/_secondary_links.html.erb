@@ -1,0 +1,17 @@
+<% content_for(:secondary_links) do %>
+  <li><%= render "creators/quick_search" %></li>
+  <%= subnav_link_to("Listing", creators_path) %>
+  <%= subnav_link_to_if(policy(Creator).create?, "New", new_creator_path) %>
+  <%= subnav_link_to("Recent changes", creator_versions_path) %>
+  <%= subnav_link_to("URLs", creator_urls_path) %>
+  <% if @creator && !@creator.new_record? %>
+    <li>|</li>
+    <%= subnav_link_to("Posts (#{@creator.tag.try(:post_count).to_i})", posts_path(tags: @creator.name)) %>
+    <% if @creator.tag.present? %>
+    <% end %>
+    <%= subnav_link_to("Show", creator_path(@creator)) %>
+    <%= subnav_link_to_if(policy(@creator).edit?, "Edit", edit_creator_path(@creator), data: { shortcut: "e" }) %>
+    <%= subnav_link_to("History", creator_versions_path(search: { creator_id: @creator.id })) %>
+    <%= subnav_link_to_if(policy(@creator).destroy?, "Delete", creator_path(@creator), method: :delete, data: { confirm: "Are you sure you want to delete this creator?" }) %>
+  <% end %>
+<% end %>

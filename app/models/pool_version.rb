@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PoolVersion < ApplicationRecord
-  belongs_to_updater counter_cache: "pool_update_count"
+  belongs_to_updater
   belongs_to :pool
   before_validation :fill_version, on: :create
   before_validation :fill_changes, on: :create
@@ -11,21 +11,12 @@ class PoolVersion < ApplicationRecord
       order(updated_at: :desc)
     end
 
-    def for_user(user_id)
-      where("updater_id = ?", user_id)
-    end
-
     def search(params)
       q = super
 
-      q = q.where_user(:updater_id, :updater, params)
-
+      q = q.where_user(:updater_ip_addr, :updater_ip_addr, params)
       if params[:pool_id].present?
         q = q.where(pool_id: params[:pool_id].split(",").map(&:to_i))
-      end
-
-      if params[:ip_addr].present?
-        q = q.where("updater_ip_addr <<= ?", params[:ip_addr])
       end
 
       q.apply_basic_order(params)
@@ -34,12 +25,11 @@ class PoolVersion < ApplicationRecord
 
   extend SearchMethods
 
-  def self.queue(pool, updater, updater_ip_addr)
+  def self.queue(pool, updater)
     create({
       pool_id:         pool.id,
       post_ids:        pool.post_ids,
-      updater_id:      updater.id,
-      updater_ip_addr: updater_ip_addr,
+      updater_ip_addr: updater.ip_addr,
       description:     pool.description,
       name:            pool.name,
       is_active:       pool.is_active?,
@@ -73,14 +63,6 @@ class PoolVersion < ApplicationRecord
 
   def pool
     Pool.find(pool_id)
-  end
-
-  def updater
-    User.find(updater_id)
-  end
-
-  def updater_name
-    User.id_to_name(updater_id)
   end
 
   def pretty_name

@@ -2,7 +2,7 @@
 
 class ModActionPolicy < ApplicationPolicy
   def permitted_search_params
-    super + %i[creator_id creator_name action subject_type subject_id]
+    super + %i[action subject_type subject_id creator_ip_addr]
   end
 
   def api_attributes

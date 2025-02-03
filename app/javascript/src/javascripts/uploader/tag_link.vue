@@ -5,7 +5,7 @@
 </template>
 
 <script>
-  export default {
-    props: ["tagType", "name"],
-  }
+export default {
+  props: ["tagType", "name"],
+}
 </script>

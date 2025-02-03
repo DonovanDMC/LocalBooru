@@ -4,13 +4,5 @@
   <% if tag_implication.new_record? %>
     <%= f.input(:reason, as: :dtext, limit: FemboyFans.config.forum_post_max_size) %>
   <% end %>
-
-  <% if tag_implication.new_record? %>
-    <%= f.input(:forum_topic_id, as: :string, hint: " (optional)") %>
-  <% end %>
-
-  <% if tag_implication.new_record? && can_use_attribute?(tag_implication, :skip_forum) %>
-    <%= f.input(:skip_forum, as: :boolean, label: "Skip forum topic creation") %>
-  <% end %>
   <%= f.button(:submit, "Submit") %>
 <% end %>

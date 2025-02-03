@@ -1,25 +1,21 @@
 <%# locals: (tag:) -%>
 <% if tag&.antecedent_alias %>
   <p class="hint">
-    This tag has been aliased to <%= link_to_wiki_or_new(tag.antecedent_alias.consequent_name) %>
-    (<%= link_to "learn more", help_page_path(id: "tag_aliases") %>).
+    This tag has been aliased to <%= link_to_tag(tag.antecedent_alias.consequent_tag) %>
   </p>
 <% end %>
 <% if tag&.consequent_aliases&.present? %>
   <p class="hint">
-    The following tags are aliased to this tag: <%= multiple_link_to_wiki_or_new(tag.consequent_aliases.pluck(:antecedent_name).sort) %>
-    (<%= link_to "learn more", help_page_path(id: "tag_aliases") %>).
+    The following tags are aliased to this tag: <%= multiple_link_to_tag(tag.consequent_aliases.map(:antecedent_tag).sort) %>
   </p>
 <% end %>
 <% if tag&.antecedent_implications&.present? %>
   <p class="hint">
-    This tag implicates <%= multiple_link_to_wiki_or_new(tag.antecedent_implications.pluck(:consequent_name).sort) %>
-    (<%= link_to "learn more", help_page_path(id: "tag_implications") %>).
+    This tag implicates <%= multiple_link_to_tag(tag.antecedent_implications.pluck(:consequent_tag).sort) %>
   </p>
 <% end %>
 <% if tag&.consequent_implications&.present? %>
   <p class="hint">
-    The following tags implicate this tag: <%= multiple_link_to_wiki_or_new(tag.consequent_implications.pluck(:antecedent_name).sort) %>
-    (<%= link_to "learn more", help_page_path(id: "tag_implications") %>).
+    The following tags implicate this tag: <%= multiple_link_to_tag(tag.consequent_implications.pluck(:antecedent_tag).sort) %>
   </p>
 <% end %>

@@ -1,10 +1,7 @@
 base_url: https://femboy.fan
 post_ids: []
 # fetch and restore parent/child chains
-fetch_related_posts: false
-safe: true
+fetch_related_posts: true
+safe: false
 tags:
   - order:random
-
-
-mascots: []

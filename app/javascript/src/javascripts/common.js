@@ -1,8 +1,7 @@
-import Cookie from "./cookie";
 import Utility from "./utility";
 import LStorage from "./utility/storage";
 
-function initSearch () {
+function initSearch() {
   const $searchForm = $("#searchform");
   const $searchShow = $("#search-form-show-link");
   const $searchHide = $("#search-form-hide-link");
@@ -22,13 +21,6 @@ function initSearch () {
   }
 }
 
-function initMarkAllAsRead () {
-  $("#subnav-mark-all-as-read-link").on("click.femboyfans", (event) => {
-    const link = $(event.currentTarget);
-    return confirm(`Are you sure that you want to mark all ${link.attr("data-item")} as read?`);
-  });
-}
-
 $(function () {
   $("#theme-switcher").change(function () {
     let theme = $(this).val();
@@ -41,23 +33,6 @@ $(function () {
     $("body").attr("data-th-main", theme);
     $("#theme-switcher").val(theme);
   }
-
-  // Account notices
-  $("#hide-dmail-notice").on("click.danbooru", function (e) {
-    e.preventDefault();
-    const $notice = $("#dmail-notice");
-    $notice.hide();
-    const id = $notice.data("id");
-    Cookie.put("hide_dmail_notice", id);
-  });
-
-  $("#hide-notification-notice").on("click.danbooru", function (e) {
-    e.preventDefault();
-    const $notice = $("#notification-notice");
-    $notice.hide();
-    const id = $notice.data("id");
-    Cookie.put("hide_notification_notice", id);
-  });
 
   $("#close-notice-link").on("click.danbooru", function (e) {
     $("#notice").fadeOut("fast");
@@ -82,10 +57,5 @@ $(function () {
     });
   });
 
-  initMarkAllAsRead();
   initSearch();
 });
-
-window.submitInvisibleRecaptchaForm = function () {
-  document.getElementById("signup-form").submit();
-};

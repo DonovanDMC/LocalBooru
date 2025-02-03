@@ -1,13 +1,7 @@
 # frozen_string_literal: true
 
 class PoolVersionPolicy < ApplicationPolicy
-  def diff?
-    index?
-  end
-
   def permitted_search_params
-    params = super + %i[updater_id updater_name pool_id is_active]
-    params += %i[ip_addr] if can_search_ip_addr?
-    params
+    super + %i[updater_ip_addr pool_id is_active]
   end
 end

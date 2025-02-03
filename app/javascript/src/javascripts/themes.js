@@ -7,8 +7,10 @@ Theme.Values = ["Main", "Extra", "Palette", "Navbar", "Gestures"];
 
 for (const one of Theme.Values) {
   Object.defineProperty(Theme, one, {
-    get () { return LStorage.Theme[one]; },
-    set (value) {
+    get() {
+      return LStorage.Theme[one];
+    },
+    set(value) {
       // No value checking, we die like men
       LStorage.Theme[one] = value;
       $("body").attr("data-th-" + one.toLowerCase(), value);

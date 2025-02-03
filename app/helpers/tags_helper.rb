@@ -15,4 +15,12 @@ module TagsHelper
     return nil if tag.blank?
     "tag-type-#{tag.category}"
   end
+
+  def link_to_tag(tag)
+    link_to(tag.name, tag_path(tag), class: tag_class(tag))
+  end
+
+  def multiple_link_to_tag(tags)
+    safe_join(tags.map { |tag| link_to(tag, tag_path(tag), class: tag_class(tag)) }, ", ")
+  end
 end

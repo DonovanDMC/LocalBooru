@@ -1,12 +1,8 @@
 import Utility from "./utility";
 import ZingTouch from "zingtouch";
-import Note from "./notes";
-import { SendQueue } from "./send_queue";
+import {SendQueue} from "./send_queue";
 import Shortcuts from "./shortcuts";
 import LStorage from "./utility/storage";
-import PostSet from "./post_sets";
-import Blacklist from "./blacklists";
-import Favorite from "./favorites";
 
 let Post = {};
 
@@ -19,12 +15,10 @@ Post.initialize_all = function () {
   if ($("#c-posts").length) {
     this.initialize_shortcuts();
     this.initialize_collapse();
-    this.initialize_tag_actions();
   }
 
   if ($("#c-posts #a-index").length) {
     this.initialize_gestures();
-    this.initialize_vote_buttons();
   }
 
   if ($("#c-posts #a-show").length) {
@@ -33,33 +27,12 @@ Post.initialize_all = function () {
     this.initialize_post_sections();
     this.initialize_resize();
     this.initialize_gestures();
-    this.initialize_voting();
-    this.initialize_moderation();
-    this.initialize_hide_notes();
     this.initialize_thumbnail_frame_preview();
   }
 
-  if ($("#p-index-by-post").length)
-    this.initialize_voting();
 
   if ($("#c-posts #a-show, #c-uploads #a-new").length) {
     this.initialize_edit_dialog();
-  }
-
-  if ($("div.set-nav").length) {
-    const sets = $("div.set-nav span.set-name");
-    for (const set of sets) {
-      const removeButton = $(set).find("a#remove-from-set-button");
-      removeButton.on("click", (event) => {
-        event.preventDefault();
-        const setID = set.dataset.setId;
-        const setName = set.dataset.setName;
-        const postID = Post.currentPost().id;
-        PostSet.remove_post(setID, postID, (data) => `<a href="/post_sets/${setID}">${setName}</a>: <a href="/posts/${postID}">post #${postID}</a> removed (${data.post_count} total)`);
-        // debating if we should remove the element or not
-        // set.parentElement.remove();
-      });
-    }
   }
 
   $(document).on("danbooru:open-post-edit-tab", () => Shortcuts.disabled = true);
@@ -71,91 +44,6 @@ Post.initialize_all = function () {
   $fields_multiple.on("click", Post.update_tag_count);
 };
 
-Post.initialize_tag_actions = function () {
-  $(".blacklist-tag-toggle").on("click", async function (event) {
-    event.preventDefault();
-    const tag = $(event.currentTarget).closest(".tag-actions").data("tag");
-    const blacklist = JSON.parse(Utility.meta("blacklisted-tags") || "[]");
-    const idx = blacklist.indexOf(tag);
-
-    if (idx === -1) {
-      blacklist.push(tag);
-    } else {
-      blacklist.splice(idx, 1);
-    }
-
-    SendQueue.add(function () {
-      $.ajax({
-        method: "POST",
-        url: "/users/update.json",
-        data: {
-          "user[blacklisted_tags]": blacklist.join("\n"),
-        },
-        success: function () {
-          if (idx === -1) {
-            Utility.notice(`Added tag "${tag}" to blacklist`);
-          } else {
-            Utility.notice(`Removed tag "${tag}" from blacklist`);
-          }
-          $("meta[name=blacklisted-tags]").attr("content", JSON.stringify(blacklist));
-          Blacklist.initialize_all();
-        },
-        error: function (data) {
-          Utility.error("Error:" + data);
-        },
-      });
-    });
-  });
-
-  $(".tag-action-follow").on("click", function (event) {
-    event.preventDefault();
-    const $link = $(event.currentTarget).find("a.follow-button-minor");
-    const tag = $(event.currentTarget).closest(".tag-actions").data("tag");
-    const followed = $link.attr("data-followed") === "true";
-
-    SendQueue.add(function () {
-      $.ajax({
-        type: "PUT",
-        url: `/tags/${tag}/${followed ? "un" : ""}follow.json`,
-        dataType: "json",
-        success: function () {
-          if (followed) {
-            Utility.notice(`Removed follow for "${tag}"`);
-            $link.attr("data-followed", false);
-          } else {
-            Utility.notice(`Added follow for "${tag}"`);
-            $link.attr("data-followed", true);
-          }
-        },
-        error: function (data) {
-          Utility.error("Error:" + data);
-        },
-      });
-    });
-  });
-};
-
-Post.initialize_moderation = function () {
-  $("#unapprove-post-link").on("click", e => {
-    Post.unapprove($(e.target).data("pid"));
-    e.preventDefault();
-  });
-  $(".unflag-post-link").on("click", e => {
-    const $e = $(e.target);
-    Post.unflag($e.data("pid"), $e.data("type"));
-    e.preventDefault();
-  });
-  $(".move-flag-to-parent-link").on("click", e => {
-    e.preventDefault();
-    const $e = $(e.target);
-    const post_id = $e.data("pid");
-    const parent_id = $e.data("parent-id");
-
-    if (confirm("Move flag to parent?"))
-      Post.move_flag_to_parent(post_id, parent_id);
-  });
-};
-
 Post.initialize_collapse = function () {
   $(".tag-list-header").on("click", function (e) {
     const category = $(e.target).data("category");
@@ -163,11 +51,6 @@ Post.initialize_collapse = function () {
     $(e.target).toggleClass("hidden-category");
     e.preventDefault();
   });
-};
-
-Post.initialize_voting = function () {
-  $(document).on("click.danbooru.post", ".post-vote-up-link", Post.vote_up);
-  $(document).on("click.danbooru.post", ".post-vote-down-link", Post.vote_down);
 };
 
 Post.initialize_edit_dialog = function () {
@@ -222,17 +105,18 @@ Post.open_edit_dialog = function () {
     if (dialog_widget.css("position") === "absolute") {
       pos.left -= $(window).scrollLeft();
       pos.top -= $(window).scrollTop();
-      dialog_widget.offset(pos).css({ position: "fixed" });
+      dialog_widget.offset(pos).css({position: "fixed"});
       dialog.dialog("option", "resize", function () {
-        dialog_widget.css({ position: "fixed" });
+        dialog_widget.css({position: "fixed"});
       });
 
       pin_button.button("option", "icons", {primary: "ui-icon-pin-s"});
     } else {
       pos.left += $(window).scrollLeft();
       pos.top += $(window).scrollTop();
-      dialog_widget.offset(pos).css({ position: "absolute" });
-      dialog.dialog("option", "resize", function () { /* do nothing */ });
+      dialog_widget.offset(pos).css({position: "absolute"});
+      dialog.dialog("option", "resize", function () { /* do nothing */
+      });
 
       pin_button.button("option", "icons", {primary: "ui-icon-pin-w"});
     }
@@ -272,21 +156,23 @@ Post.has_prev_target = function () {
  * leading to false detections when a gesture path bends at the end.
  */
 class E6Swipe extends ZingTouch.Swipe {
-  constructor (options) {
+  constructor(options) {
     super(options);
     this.type = "e6swipe";
     this.minDistance = 150;
   }
 
-  end (inputs) {
-    function getAngle (a, b) {
+  end(inputs) {
+    function getAngle(a, b) {
       return Math.atan2(b[1] - a[1], b[0] - a[0]);
     }
-    function getVelocity (a, b) {
+
+    function getVelocity(a, b) {
       const dist = distanceBetweenTwoPoints([a[0], a[1]], [b[0], b[1]]);
       return dist / (b[2] - a[2]);
     }
-    function distanceBetweenTwoPoints (a, b) {
+
+    function distanceBetweenTwoPoints(a, b) {
       return Math.hypot(b[0] - a[0], b[1] - a[1]);
     }
 
@@ -322,7 +208,12 @@ class E6Swipe extends ZingTouch.Swipe {
       const vel = getVelocity([acc.last.x, acc.last.y, acc.last.time], [move.x, move.y, move.time]);
       const angle = getAngle([acc.last.x, acc.last.y], [move.x, move.y]);
       const dist = distanceBetweenTwoPoints([acc.last.x, acc.last.y], [move.x, move.y]);
-      return {vel: acc.vel + vel, angle: [acc.angle[0] + Math.cos(angle), acc.angle[1] + Math.sin(angle)], dist: acc.dist + dist, last: move};
+      return {
+        vel: acc.vel + vel,
+        angle: [acc.angle[0] + Math.cos(angle), acc.angle[1] + Math.sin(angle)],
+        dist: acc.dist + dist,
+        last: move
+      };
     }, {vel: 0, angle: 0, dist: 0, last: null});
     // const initial = input.initial;
     // Add total gesture motion as a bias.
@@ -371,11 +262,21 @@ Post.initialize_gestures = function () {
     const hasPrev = Post.has_prev_target();
     const hasNext = Post.has_next_target();
     if (hasPrev && (angle > 90 - 25 && angle < 90 + 25)) { // right swipe
-      $("body").css({"transition-timing-function": "ease", "transition-duration": "0.2s", "opacity": "0", "transform": "translateX(150%)"});
+      $("body").css({
+        "transition-timing-function": "ease",
+        "transition-duration": "0.2s",
+        "opacity": "0",
+        "transform": "translateX(150%)"
+      });
       Utility.delay(200).then(() => Post.nav_prev(e));
     }
     if (hasNext && (angle > -90 - 25 && angle < -90 + 25)) { // Left swipe
-      $("body").css({"transition-timing-function": "ease", "transition-duration": "0.2s", "opacity": "0", "transform": "translateX(-150%)"});
+      $("body").css({
+        "transition-timing-function": "ease",
+        "transition-duration": "0.2s",
+        "opacity": "0",
+        "transform": "translateX(-150%)"
+      });
       Utility.delay(200).then(() => Post.nav_next(e));
     }
   });
@@ -438,19 +339,6 @@ Post.initialize_links = function () {
       location.reload();
     });
   });
-  $(".approve-post-link").on("click", e => {
-    e.preventDefault();
-    Post.approve($(e.target).data("pid"), () => {
-      location.reload();
-    });
-  });
-  $(".approve-post-and-navigate-link").on("click", e => {
-    e.preventDefault();
-    const $target = $(e.target);
-    Post.approve($target.data("pid"), () => {
-      location.href = $target.data("location");
-    });
-  });
   $("#destroy-post-link").on("click", e => {
     e.preventDefault();
     const reason = prompt("This will permanently delete this post (meaning the file will be deleted). What is the reason for destroying the post?");
@@ -464,44 +352,6 @@ Post.initialize_links = function () {
   $("#regenerate-video-samples-link").on("click", e => {
     e.preventDefault();
     Post.regenerate_video_samples($(e.target).data("pid"));
-  });
-  $(".disapprove-post-link").on("click", e => {
-    e.preventDefault();
-    const target = $(e.target);
-    Post.disapprove(target.data("pid"), target.data("reason"));
-  });
-  $("#set-as-avatar-link").on("click.danbooru", function (e) {
-    e.preventDefault();
-    if (!confirm("Set post as avatar?"))
-      return;
-    Post.set_as_avatar($(e.target).data("post-id"));
-  });
-  $("#copy-notes").on("click.danbooru", function (e) {
-    var current_post_id = $("meta[name=post-id]").attr("content");
-    var other_post_id = parseInt(prompt("Enter the ID of the post to copy all notes to:"), 10);
-
-    if (other_post_id !== null) {
-      $.ajax("/posts/" + current_post_id + "/copy_notes", {
-        type: "PUT",
-        data: {
-          other_post_id: other_post_id,
-        },
-        success: function () {
-          $(window).trigger("danbooru:notice", "Successfully copied notes to <a href='" + other_post_id + "'>post #" + other_post_id + "</a>");
-        },
-        error: function (data) {
-          if (data.status === 404) {
-            $(window).trigger("danbooru:error", "Error: Invalid destination post");
-          } else if (data.responseJSON && data.responseJSON.reason) {
-            $(window).trigger("danbooru:error", "Error: " + data.responseJSON.reason);
-          } else {
-            $(window).trigger("danbooru:error", "There was an error copying notes to <a href='" + other_post_id + "'>post #" + other_post_id + "</a>");
-          }
-        },
-      });
-    }
-
-    e.preventDefault();
   });
 };
 
@@ -556,10 +406,6 @@ Post.fromDOM = function (element) {
   return JSON.parse(post);
 };
 
-Post.resize_notes = function () {
-  Note.Box.scale_all();
-};
-
 Post.resize_video = function (post, target_size) {
   const $video = $("video#image");
   if (!$video.length) return; // Caused by the video being deleted
@@ -575,7 +421,7 @@ Post.resize_video = function (post, target_size) {
   let target_sources = [];
   let desired_classes = [];
 
-  function original_sources () {
+  function original_sources() {
     target_sources.push({type: "video/webm; codecs=\"vp9\"", url: post?.file?.url});
     if (typeof post?.sample?.alternates?.original !== "undefined")
       target_sources.push({type: "video/mp4", url: post?.sample?.alternates?.original?.urls[1]});
@@ -669,7 +515,6 @@ Post.resize_image = function (post, target_size) {
   for (const class_name of desired_classes) {
     $image.addClass(class_name);
   }
-  Post.resize_notes();
 };
 
 Post.resize_to = function (target_size) {
@@ -684,7 +529,7 @@ Post.resize_to = function (target_size) {
 };
 
 
-function is_video (post) {
+function is_video(post) {
   switch (post.file.ext) {
     case "webm":
     case "mp4":
@@ -694,7 +539,7 @@ function is_video (post) {
   }
 }
 
-function update_size_selector (choice) {
+function update_size_selector(choice) {
   const selector = $("#image-resize-selector");
   const choices = selector.find("option");
   if (choice === "next") {
@@ -713,7 +558,7 @@ function update_size_selector (choice) {
   return "fit";
 }
 
-function most_relevant_sample_size (post) {
+function most_relevant_sample_size(post) {
   let samples = Object.entries(Post.currentPost().sample.alternates);
   samples = samples.filter((x) => x[0] !== "original");
   if (samples.length === 0) {
@@ -734,15 +579,11 @@ Post.initialize_resize = function () {
   if (!is_post_video) {
     const $image = $("img#image");
     if ($image.length > 0 && $image[0]) {
-      if ($image[0].complete)
-        Post.resize_notes();
     }
 
     $image.on("load", function () {
-      Post.resize_notes();
       $("#image-container").removeClass("image-loading");
     });
-    $(window).on("resize", Post.resize_notes);
   }
   let image_size = Utility.meta("image-override-size") || Utility.meta("default-image-size");
   if (is_post_video && image_size === "large") {
@@ -823,12 +664,12 @@ Post.update_data = function (data) {
 
 Post.tag = function (post_id, tags) {
   const tag_string = (Array.isArray(tags) ? tags.join(" ") : String(tags));
-  Post.update(post_id, { "post[old_tag_string]": "", "post[tag_string]": tag_string });
+  Post.update(post_id, {"post[old_tag_string]": "", "post[tag_string]": tag_string});
 };
 
 Post.tagScript = function (post_id, tags) {
   const tag_string = (Array.isArray(tags) ? tags.join(" ") : String(tags));
-  Post.update(post_id, { "post[tag_string_diff]": tag_string });
+  Post.update(post_id, {"post[tag_string_diff]": tag_string});
 };
 
 Post.update = function (post_id, params) {
@@ -846,7 +687,9 @@ Post.update = function (post_id, params) {
       error: function (data) {
         Post.notice_update("dec");
         const message = $
-          .map(data.responseJSON.errors, function (msg) { return msg; })
+          .map(data.responseJSON.errors, function (msg) {
+            return msg;
+          })
           .join("; ");
         $(window).trigger("danbooru:error", `There was an error updating <a href="/posts/${post_id}">post #${post_id}</a>: ${message}`);
       },
@@ -897,92 +740,20 @@ Post.undelete = function (post_id, callback) {
   });
 };
 
-Post.unflag = function (post_id, approval, reload = true, callback = null) {
-  Post.notice_update("inc");
-  let modApproval = approval || "none";
-  SendQueue.add(function () {
-    $.ajax({
-      type: "DELETE",
-      url: `/posts/${post_id}/flag.json`,
-      data: {approval: modApproval},
-    }).fail(function (data) {
-      const message = data.responseJSON.message;
-      $(window).trigger("danbooru:error", "Error: " + message);
-    }).done(function () {
-      $(window).trigger("danbooru:notice", "Unflagged post");
-      if (callback) callback();
-      if (reload) location.reload();
-    }).always(function () {
-      Post.notice_update("dec");
-    });
-  });
-};
-
-Post.flag = function (post_id, reason_name, parent_id = null, reload = true, callback = null) {
-  Post.notice_update("inc");
-  SendQueue.add(function () {
-    $.ajax({
-      type: "POST",
-      url: "/post_flags.json",
-      data: {
-        post_flag: {
-          post_id: parseInt(post_id),
-          reason_name,
-          parent_id,
-        },
-      },
-    }).fail(function (data) {
-      const message = data.responseJSON.message;
-      $(window).trigger("danbooru:error", "Error: " + message);
-    }).done(function () {
-      $(window).trigger("danbooru:notice", "Flagged post");
-      if (callback) callback();
-      if (reload) location.reload();
-    }).always(function () {
-      Post.notice_update("dec");
-    });
-  });
-};
-
-Post.move_flag_to_parent = function (post_id, parent_id) {
-  Post.unflag(post_id, false, false, function () {
-    Post.flag(parent_id, "inferior", post_id, false, function () {
-      location.href = `/moderator/post/posts/${parent_id}/confirm_delete`;
-    });
-  });
-};
-
-
-Post.unapprove = function (post_id) {
-  Post.notice_update("inc");
-  SendQueue.add(function () {
-    $.ajax({
-      type: "DELETE",
-      url: `/posts/approvals/${post_id}.json`,
-    }).fail(function (data) {
-      var message = $.map(data.responseJSON.errors, function (msg) { return msg; }).join("; ");
-      $(window).trigger("danbooru:error", "Error: " + message);
-    }).done(function () {
-      $(window).trigger("danbooru:notice", "Unapproved post.");
-      location.reload();
-    }).always(function () {
-      Post.notice_update("dec");
-    });
-  });
-};
-
 Post.destroy = function (post_id, reason) {
   $.ajax({
     method: "PUT",
     url: `/posts/${post_id}/expunge.json`,
-    data: { reason },
+    data: {reason},
   })
     .fail(data => {
-      var message = $.map(data.responseJSON.errors, function (msg) { return msg; }).join("; ");
+      var message = $.map(data.responseJSON.errors, function (msg) {
+        return msg;
+      }).join("; ");
       $(window).trigger("danbooru:error", "Error: " + message);
     }).done(() => {
-      location.href = `/admin/destroyed_posts/${post_id}`;
-    });
+    location.href = `/admin/destroyed_posts/${post_id}`;
+  });
 };
 
 Post.regenerate_image_samples = function (post_id) {
@@ -993,8 +764,8 @@ Post.regenerate_image_samples = function (post_id) {
     .fail(data => {
       Utility.error("Error: " + data.responseJSON.reason);
     }).done(() => {
-      Utility.notice("Image samples regenerated.");
-    });
+    Utility.notice("Image samples regenerated.");
+  });
 };
 
 Post.regenerate_video_samples = function (post_id) {
@@ -1005,51 +776,7 @@ Post.regenerate_video_samples = function (post_id) {
     .fail(data => {
       Utility.error("Error: " + data.responseJSON.reason);
     }).done(() => {
-      Utility.notice("Video samples will be regenerated in a few minutes.");
-    });
-};
-
-Post.approve = function (post_id, callback) {
-  Post.notice_update("inc");
-  SendQueue.add(function () {
-    $.post(
-      "/posts/approvals.json",
-      { post_id },
-    ).fail(function (data) {
-      var message = $.map(data.responseJSON.errors, (msg) => msg).join("; ") || data.responseJSON.message;
-      Post.notice_update("dec");
-      Danbooru.error("Error: " + message);
-    }).done(function () {
-      var $post = $("#post_" + post_id);
-      if ($post.length) {
-        $post.data("flags", $post.data("flags").replace(/pending/, ""));
-        $post.removeClass("post-status-pending");
-        Post.notice_update("dec");
-        Danbooru.notice("Approved post #" + post_id);
-      }
-      if (callback) {
-        callback();
-      }
-    });
-  });
-};
-
-Post.disapprove = function (post_id, reason, message) {
-  Post.notice_update("inc");
-  SendQueue.add(function () {
-    $.post(
-      "/posts/disapprovals.json",
-      {"post_disapproval[post_id]": post_id, "post_disapproval[reason]": reason, "post_disapproval[message]": message},
-    ).fail(function (data) {
-      var message = $.map(data.responseJSON.errors, (msg) => msg).join("; ");
-      $(window).trigger("danbooru:error", "Error: " + message);
-    }).done(function () {
-      if ($("#c-posts #a-show").length) {
-        location.reload();
-      }
-    }).always(function () {
-      Post.notice_update("dec");
-    });
+    Utility.notice("Video samples will be regenerated in a few minutes.");
   });
 };
 
@@ -1073,205 +800,6 @@ Post.update_tag_count = function (event) {
     klass = "meh";
   }
   $("#tags-container .options #face").removeClass().addClass(`fa-regular fa-face-${klass}`);
-};
-
-Post.vote_up = function (e) {
-  var id = $(e.target).parent().attr("data-id");
-  Post.vote(id, 1);
-};
-
-Post.vote_down = function (e) {
-  var id = $(e.target).parent().attr("data-id");
-  Post.vote(id, -1);
-};
-
-Post.unvote = function (id) {
-  const score = $(`#post_${id}`).attr("data-own-vote");
-  if (score !== undefined && score !== "0") {
-    Post.vote(id, score, false);
-  }
-};
-
-Post.vote = function (id, score, prevent_unvote) {
-  Post.notice_update("inc");
-  SendQueue.add(function () {
-    $.ajax({
-      method: "POST",
-      url: `/posts/${id}/votes.json`,
-      data: {
-        score: score,
-        no_unvote: prevent_unvote === true,
-      },
-      dataType: "json",
-      headers: {
-        accept: "*/*;q=0.5,text/javascript",
-      },
-    }).done(function (data) {
-      Post.after_vote(id, data);
-      $(window).trigger("danbooru:notice", "Vote saved");
-    }).always(function () {
-      Post.notice_update("dec");
-    }).fail(function (data) {
-      Utility.error("Error: " + data.responseJSON.message);
-    });
-  });
-};
-
-/**
- * @typedef PostVote
- * @prop {Number} score
- * @prop {Number} up
- * @prop {Number} down
- * @prop {Number} our_score
- * @prop {Number} is_locked
- */
-
-/**
- * @param {Number} post_id
- * @param {PostVote} vote
- */
-Post.after_vote = function (post_id, vote) {
-  const scoreClasses = "score-neutral score-positive score-negative";
-  const post = $(`#post_${post_id}`);
-  if (vote.is_locked) {
-    post.removeAttr("data-own-vote");
-  } else {
-    post.attr("data-own-vote", vote.our_score);
-  }
-  post.attr("data-score-up", vote.up);
-  post.attr("data-score-down", vote.down);
-  post.attr("data-score", vote.score);
-  function scoreToClass (inScore) {
-    if (inScore === 0) return "score-neutral";
-    return inScore > 0 ? "score-positive" : "score-negative";
-  }
-
-  const scoreSelector = $(`.post-score-${post_id}`);
-  const voteUpSelector = $(`.post-vote-up-${post_id}`);
-  const voteDownSelector = $(`.post-vote-down-${post_id}`);
-  scoreSelector.removeClass(scoreClasses);
-  scoreSelector.text(vote.score);
-  scoreSelector.attr("title", `${vote.up} up/${vote.down} down`);
-  scoreSelector.addClass(scoreToClass(vote.score));
-  voteUpSelector.removeClass(scoreClasses);
-  voteUpSelector.addClass(vote.our_score > 0 ? "score-positive" : "score-neutral");
-  voteDownSelector.removeClass(scoreClasses);
-  voteDownSelector.addClass(vote.our_score < 0 ? "score-negative" : "score-neutral");
-
-  const scoreScoreSelector = $(`.post-score-score-${post_id}`);
-  const scoreClassesSelector = $(`.post-score-classes-${post_id}`);
-  const iconsSelector = $(scoreClassesSelector.find(`.post-score-icon-${post_id}`));
-  scoreScoreSelector.text(vote.score);
-  scoreScoreSelector.attr("title", `${vote.up} up/${vote.down} down`);
-  scoreClassesSelector.removeClass(scoreClasses);
-  scoreClassesSelector.addClass(scoreToClass(vote.score));
-  if (iconsSelector.length) {
-    const positive = iconsSelector.attr("data-icon-positive");
-    const negative = iconsSelector.attr("data-icon-negative");
-    const neutral = iconsSelector.attr("data-icon-neutral");
-    const icon = vote.score > 0 ? positive : vote.score < 0 ? negative : neutral;
-    iconsSelector.text(icon);
-  }
-};
-
-Post.set_as_avatar = function (id) {
-  SendQueue.add(function () {
-    $.ajax({
-      method: "POST",
-      url: "/users/update.json",
-      data: {
-        "user[avatar_id]": id,
-      },
-      headers: {
-        accept: "*/*;q=0.5,text/javascript",
-      },
-    }).done(function () {
-      $(window).trigger("danbooru:notice", "Post set as avatar");
-    });
-  });
-};
-
-Post.initialize_hide_notes = function () {
-  const container = $("#note-container")
-    .css("display", "");
-  $("#toggle-notes-button")
-    .on("click", (event) => {
-      event.preventDefault();
-      Post.toggle_hide_notes();
-    });
-  $("#translate")
-    .on("click", async () => {
-
-      if (container.attr("data-hidden") === "true") {
-        Post.toggle_hide_notes(false);
-      } else {
-        const isHidden = LStorage.HideNotes;
-        if (isHidden) {
-          Post.toggle_hide_notes(false, true);
-        }
-      }
-    });
-
-  Post.toggle_hide_notes(false, true);
-};
-
-Post.toggle_hide_notes = function (save = true, init = false) {
-  let isHidden = LStorage.HideNotes;
-  if (init) {
-    isHidden = !isHidden;
-    save = false;
-  }
-  const button = $("#toggle-notes-button");
-  const container = $("#note-container");
-
-  if (isHidden) {
-    container.attr("data-hidden", false);
-    button.text("Notes: ON");
-    if (save) LStorage.HideNotes = false;
-  } else {
-    container.attr("data-hidden", true);
-    button.text("Notes: OFF");
-    if (save) LStorage.HideNotes = true;
-  }
-};
-
-Post.initialize_vote_buttons = function () {
-  const containers = $(".post-preview div#vote-buttons");
-  for (const set of containers) {
-    for (const button of $(set).find("button.vote-button")) {
-      $(button).on("click.femboyfans.vote", (event) => {
-        event.preventDefault();
-        const id = $(event.target).parent().parent().attr("data-id");
-        switch ($(event.target).attr("data-action")) {
-          case "up": {
-            Post.vote(id, 1);
-            break;
-          }
-
-          case "down": {
-            Post.vote(id, -1);
-            break;
-          }
-
-          case "fav": {
-            const span = $(event.target).find("span");
-            const isFavorited = span.hasClass("is-favorited");
-            if (isFavorited) {
-              Favorite.destroy(id);
-              span.removeClass("is-favorited");
-            } else {
-              Favorite.create(id);
-              span.addClass("is-favorited");
-            }
-
-            const favSelector = $(`.post-score-faves-faves-${id}`);
-            favSelector.text(Number(favSelector.text()) + (isFavorited ? -1 : 1));
-            break;
-          }
-        }
-      });
-    }
-  }
 };
 
 Post.initialize_thumbnail_frame_preview = function () {

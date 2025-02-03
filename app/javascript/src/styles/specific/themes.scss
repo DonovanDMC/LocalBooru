@@ -7,13 +7,27 @@
     grid-template-columns: min-content auto;
     max-width: 30rem;
     gap: 1em;
-    
-    h3, br, p.theme-info { grid-column: 1 / -1; }
-    label { text-align: right; }
-    .hint { grid-column: 2; }
+
+    h3, br, p.theme-info {
+      grid-column: 1 / -1;
+    }
+    label {
+      text-align: right;
+    }
+    .hint {
+      grid-column: 2;
+    }
   }
 
-  h3, br, p.theme-info { text-align: center; }
-  h3 { margin-top: 0.5em; }
-  .hint { max-width: unset; }
+  h3, br, p.theme-info {
+    text-align: center;
+  }
+
+  h3 {
+    margin-top: 0.5em;
+  }
+
+  .hint {
+    max-width: unset;
+  }
 }

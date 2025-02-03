@@ -1,4 +1,0 @@
-<h4>You are reporting the following set:</h4>
-<div class="page"><%= link_to(@ticket.model.name, post_set_path(@ticket.model)) %></div>
-<div class="author"><%= link_to_user(@ticket.model.creator) %></div>
-<span class="date"><%= time_ago_in_words_tagged(@ticket.model.created_at) %></span>

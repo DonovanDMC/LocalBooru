@@ -53,8 +53,4 @@ class RelatedTagQuery
   def related_tags_by_category
     RelatedTagCalculator.calculate_from_sample_to_array(query, category_id).map(&:first)
   end
-
-  def wiki_page
-    WikiPage.titled(query)
-  end
 end

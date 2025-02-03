@@ -30,29 +30,37 @@
       }
     }
 
-    #search-box { display: none; }
+    #search-box {
+      display: none;
+    }
 
     .mobile-search {
       display: block;
       margin: $padding-050 $padding-050 $padding-150;
+
       .search-help {
         font-size: $font-size;
       }
     }
+
     .mobile-search > .search-form > form {
       box-sizing: border-box;
       display: flex;
       width: 100%;
       margin-bottom: $padding-025;
+
       .search-input {
         width: 100%;
+
         input {
           width: 100%;
           box-sizing: border-box;
           border-radius: $border-radius-half 0 0 $border-radius-half;
         }
+
         flex-grow: 1;
       }
+
       .search-button > button {
         width: 32px;
         height: 32px;
@@ -225,9 +233,6 @@
 
       .desc {
         font-size: 100%;
-        .post-score-views {
-          display: none;
-        }
       }
     }
 

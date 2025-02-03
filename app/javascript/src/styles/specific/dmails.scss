@@ -1,6 +1,0 @@
-div#c-dmails {
-  tr[data-is-read=false]:not([data-is-owner=false]) {
-    font-weight: bold;
-    background-color: var(--color-section-lighten-10);
-  }
-}

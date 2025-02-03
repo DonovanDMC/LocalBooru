@@ -1,6 +1,3 @@
-import Blacklist from "./blacklists";
-import PostCache from "./models/PostCache";
-
 const Thumbnails = {};
 
 Thumbnails.initialize = function () {
@@ -25,17 +22,10 @@ Thumbnails.initialize = function () {
       continue;
     }
 
-    // Add data to cache right away, instead of
-    // getting it from data-attributes later
-    PostCache.fromDeferredPosts(postID, postData);
-
     // Building the element
     const thumbnail = $("<div>")
       .addClass("post-thumbnail")
       .toggleClass("dtext", $post.hasClass("thumb-placeholder-link"));
-
-    if (Danbooru.Blacklist.hiddenPosts.has(postID))
-      thumbnail.addClass("blacklisted");
 
     for (const key in postData)
       thumbnail.attr("data-" + key.replace(/_/g, "-"), postData[key]);
@@ -59,13 +49,7 @@ Thumbnails.initialize = function () {
     replacedPosts.push(thumbnail);
   }
 
-  if (replacedPosts.length > 0) {
-    Blacklist.add_posts(replacedPosts);
-    Blacklist.update_styles();
-    Blacklist.update_visibility();
-  }
-
-  function clearPlaceholder (post) {
+  function clearPlaceholder(post) {
     if (post.hasClass("thumb-placeholder-link"))
       post.removeClass("thumb-placeholder-link");
     else post.empty();

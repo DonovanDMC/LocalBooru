@@ -41,7 +41,7 @@ class ElasticQueryBuilder
       query:   query,
       sort:    order,
       _source: false,
-      timeout: "#{CurrentUser.user.try(:statement_timeout) || 3_000}ms",
+      timeout: "#{FemboyFans.config.statement_timeout}ms",
     }
   end
 

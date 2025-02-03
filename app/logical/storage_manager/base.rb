@@ -2,16 +2,16 @@
 
 module StorageManager
   class Base
-    attr_reader :base_url, :base_dir, :hierarchical, :large_image_prefix, :protected_prefix, :base_path, :replacement_prefix
+    attr_reader :base_url, :base_dir, :hierarchical, :large_image_prefix, :deleted_prefix, :base_path, :replacement_prefix
 
     def initialize(base_url: default_base_url, base_path: default_base_path, base_dir: DEFAULT_BASE_DIR, hierarchical: false,
                    large_image_prefix: FemboyFans.config.large_image_prefix,
-                   protected_prefix: FemboyFans.config.protected_path_prefix,
+                   deleted_prefix: FemboyFans.config.deleted_path_prefix,
                    replacement_prefix: FemboyFans.config.replacement_path_prefix)
       @base_url = base_url.chomp("/")
       @base_dir = base_dir
       @base_path = base_path
-      @protected_prefix = protected_prefix
+      @deleted_prefix = deleted_prefix
       @replacement_prefix = replacement_prefix
       @hierarchical = hierarchical
       @large_image_prefix = large_image_prefix
@@ -54,23 +54,23 @@ module StorageManager
 
     def delete_file(_post_id, md5, file_ext, type, scale_factor: nil)
       delete(file_path(md5, file_ext, type, scale_factor: scale_factor))
-      delete(file_path(md5, file_ext, type, protected: true, scale_factor: scale_factor))
+      delete(file_path(md5, file_ext, type, deleted: true, scale_factor: scale_factor))
     end
 
     def delete_post_files(post_or_md5, file_ext)
       md5 = post_or_md5.is_a?(String) ? post_or_md5 : post_or_md5.md5
       StorageManager::IMAGE_TYPES.each do |type|
-        delete(file_path(md5, file_ext, type, protected: false))
-        delete(file_path(md5, file_ext, type, protected: true))
+        delete(file_path(md5, file_ext, type, deleted: false))
+        delete(file_path(md5, file_ext, type, deleted: true))
       end
       FemboyFans.config.video_rescales.each_key do |k|
         %w[mp4 webm].each do |ext|
-          delete(file_path(md5, ext, :scaled, protected: false, scale_factor: k.to_s))
-          delete(file_path(md5, ext, :scaled, protected: true, scale_factor: k.to_s))
+          delete(file_path(md5, ext, :scaled, deleted: false, scale_factor: k.to_s))
+          delete(file_path(md5, ext, :scaled, deleted: true, scale_factor: k.to_s))
         end
       end
-      delete(file_path(md5, "mp4", :original, protected: false))
-      delete(file_path(md5, "mp4", :original, protected: true))
+      delete(file_path(md5, "mp4", :original, deleted: false))
+      delete(file_path(md5, "mp4", :original, deleted: true))
     end
 
     def delete_replacement(replacement)
@@ -79,7 +79,7 @@ module StorageManager
     end
 
     def open_file(post, type)
-      open(file_path(post.md5, post.file_ext, type)) # rubocop:disable Security/Open
+      open(file_path(post.md5, post.file_ext, type, deleted: post.is_deleted?)) # rubocop:disable Security/Open
     end
 
     def move_file_delete(post)
@@ -90,17 +90,10 @@ module StorageManager
       raise(NotImplementedError, "move_file_undelete not implemented")
     end
 
-    def protected_params(url, _post, secret: FemboyFans.config.protected_file_secret)
-      user_id = CurrentUser.id
-      time = (Time.now + 15.minutes).to_i
-      hmac = Digest::MD5.base64digest("#{time} #{url} #{user_id} #{secret}").tr("+/", "-_").gsub("==", "")
-      "?auth=#{hmac}&expires=#{time}&uid=#{user_id}"
-    end
-
     def file_url_ext(post, type, ext, scale: nil)
       subdir = subdir_for(post.md5)
       file = file_name(post.md5, ext, type, scale_factor: scale)
-      base = post.protect_file? ? "#{base_path}/#{protected_prefix}" : base_path
+      base = post.protect_file? ? "#{base_path}/#{deleted_prefix}" : base_path
 
       return "#{root_url}/images/download-preview.png" if type == :preview && !post.has_preview?
       path = if type == :preview
@@ -112,11 +105,7 @@ module StorageManager
              else
                "#{base}/#{subdir}#{file}"
              end
-      if post.protect_file?
-        "#{base_url}#{path}#{protected_params(path, post)}"
-      else
-        "#{base_url}#{path}"
-      end
+      "#{base_url}#{path}"
     end
 
     def file_url(post, type)
@@ -128,7 +117,7 @@ module StorageManager
       file = "#{replacement.storage_id}#{'_thumb' if image_size == :preview}.#{replacement.file_ext}"
       base = "#{base_path}/#{replacement_prefix}"
       path = "#{base}/#{subdir}#{file}"
-      "#{base_url}#{path}#{protected_params(path, nil, secret: FemboyFans.config.replacement_file_secret)}"
+      "#{base_url}#{path}"
     end
 
     def root_url
@@ -137,11 +126,11 @@ module StorageManager
       origin
     end
 
-    def file_path(post_or_md5, file_ext, type, protected: false, scale_factor: nil)
+    def file_path(post_or_md5, file_ext, type, deleted: false, scale_factor: nil)
       md5 = post_or_md5.is_a?(String) ? post_or_md5 : post_or_md5.md5
       subdir = subdir_for(md5)
       file = file_name(md5, file_ext, type, scale_factor: scale_factor)
-      base = protected ? "#{base_dir}/#{protected_prefix}" : base_dir
+      base = deleted ? "#{base_dir}/#{deleted_prefix}" : base_dir
 
       case type
       when :preview
@@ -173,24 +162,6 @@ module StorageManager
       subdir = subdir_for(storage_id)
       file = "#{storage_id}#{'_thumb' if image_size == :preview}.#{file_ext}"
       "#{base_dir}/#{replacement_prefix}/#{subdir}#{file}"
-    end
-
-    def store_mascot(io, mascot)
-      store(io, mascot_path(mascot.md5, mascot.file_ext))
-    end
-
-    def mascot_path(md5, file_ext)
-      file = "#{md5}.#{file_ext}"
-      "#{base_dir}/#{MASCOT_PREFIX}/#{file}"
-    end
-
-    def mascot_url(mascot)
-      file = "#{mascot.md5}.#{mascot.file_ext}"
-      "#{base_url}#{base_path}/#{MASCOT_PREFIX}/#{file}"
-    end
-
-    def delete_mascot(md5, file_ext)
-      delete(mascot_path(md5, file_ext))
     end
 
     def subdir_for(md5)

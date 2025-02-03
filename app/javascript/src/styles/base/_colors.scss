@@ -2,14 +2,14 @@
 $inverted-text-color: invert(#fff);
 
 // Main background colors
-$lighten-background-5: rgba(255,255,255,0.05);
+$lighten-background-5: rgba(255, 255, 255, 0.05);
 
 // Mixin/state colors
 $state-success-color: #3e9e49;
 $state-error-color: #e45f5f;
 
 // DText
-$dtext-code-background: rgba(255,255,255,0.2);
+$dtext-code-background: rgba(255, 255, 255, 0.2);
 
 // Forms
 $form-focus-color: black;
@@ -26,8 +26,6 @@ $page-header-sign-in-link-color: #e00;
 $preview-has-children-color: palette("plain-green");
 $preview-has-parent-color: palette("plain-yellow");
 $preview-deleted-color: palette("plain-black");
-$preview-pending-color: palette("plain-blue");
-$preview-flagged-color: palette("plain-red");
 
 // Autocomplete
 $autocomplete-border: #C5C5C5;
@@ -54,7 +52,7 @@ $diff-tag-removed-obsolete-color: darkRed;
 $diff-text-added-color: rgba(46, 160, 67, 0.25);
 $diff-text-added-strong-color: rgba(46, 160, 67, 0.4);
 $diff-text-removed-color: rgba(248, 81, 73, 0.25);
-$diff-text-removed-strong-color: rgba(248 ,81, 73, 0.4);
+$diff-text-removed-strong-color: rgba(248, 81, 73, 0.4);
 
 // Notices
 $error-notice-color: #a00;
@@ -73,7 +71,7 @@ $positive-record-color: #006e19;
 $negative-record-color: #861011;
 $neutral-record-color: #5b5c79;
 
-$comment-highlight-background: rgba(255,255,255,0.25);
+$comment-highlight-background: rgba(255, 255, 255, 0.25);
 $comment-vote-background: rgba(255, 255, 255, 0.2);
 
 // Keyboard shortcuts
@@ -90,7 +88,7 @@ $widget-button-hover-background: $button-hover-background;
 $widget-button-shadow: grey;
 
 // Forum
-$forum-post-highlight-background: rgba(255,255,255,0.25);
+$forum-post-highlight-background: rgba(255, 255, 255, 0.25);
 $forum-vote-up-color: green;
 $forum-vote-down-color: red;
 $forum-vote-meh-color: goldenrod;
@@ -103,19 +101,6 @@ $notification-new-color: red;
 // IQDB lookup
 $iqdb-post-border: lightgrey;
 
-// Notes
-$note-color: $inverted-text-color;
-$note-highlight-color: $preview-pending-color;
-$note-background: #FFE;
-$note-border: black;
-$note-box-border: white;
-$note-box-background: transparent;
-$note-box-inner-border: black;
-$note-box-inner-background: #FFE;
-$note-box-inner-unsaved-border: red;
-$note-box-highlighted-outline: $note-highlight-color;
-$note-preview-background: white;
-
 // Edit History / Post Versions
 $post-version-grid-border: black;
 $post-version-content-background: inherit;
@@ -124,7 +109,7 @@ $post-version-content-background: inherit;
 $post-rating-explicit-color: $red-color;
 $post-rating-questionable-color: hsl(50, 100%, 70%);
 $post-rating-safe-color: $green-color;
-$post-preview-highlight-background: rgba(0,0,0,0.1);
+$post-preview-highlight-background: rgba(0, 0, 0, 0.1);
 $post-tag-low-count-color: red;
 
 // Post Mode
@@ -135,30 +120,16 @@ $post-mode-remove-fav: darken($post-mode-add-fav, 10%);
 $post-mode-vote-up: palette("background-green");
 $post-mode-vote-down: palette("background-red");
 $post-mode-add-pool: #104b57;
-$post-mode-lock-rating: #AA3;
-$post-mode-lock-note: #3AA;
-$post-mode-approve: #48C;
 $post-mode-delete: #4e1010;
-$post-mode-add-to-set: #A51;
-$post-mode-remove-from-set: darken($post-mode-add-to-set, 10%);
 $post-mode-rating-s: darken($post-rating-safe-color, 25%);
 $post-mode-rating-q: darken($post-rating-questionable-color, 50%);
 $post-mode-rating-e: darken($post-rating-explicit-color, 25%);
 $post-mode-remove-parent: #38F;
 $post-mode-undelete: #818;
-$post-mode-unflag: #304;
-
-// Tags
-$tags-vote-down-color: red;
-$tags-vote-meh-color: darkkhaki;
-$tags-vote-up-color: green;
-
-// Users
-$user-home-greeting-color: gold;
 
 $tag-categories: (
   "0": "general",
-  "1": "artist",
+  "1": "creator",
   "2": "contributor",
   "3": "copyright",
   "4": "character",
@@ -171,7 +142,8 @@ $tag-categories: (
 
 $tag-categories-short: (
   "gen": "general",
-  "art": "artist",
+  "cr": "creator",
+  "create": "creator",
   "cont": "contributor",
   "copy": "copyright",
   "co": "copyright",

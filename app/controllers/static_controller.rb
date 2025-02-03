@@ -2,31 +2,6 @@
 
 class StaticController < ApplicationController
   respond_to :text, only: %i[robots]
-  respond_to :xml, only: %i[site_map]
-
-  def privacy
-    @page = view_context.safe_wiki("help:privacy_policy")
-  end
-
-  def terms_of_service
-    @page = view_context.safe_wiki("help:terms_of_service")
-  end
-
-  def contact
-    @page = view_context.safe_wiki("help:contact")
-  end
-
-  def takedown
-    @page = view_context.safe_wiki("help:takedown")
-  end
-
-  def staff
-    @page = view_context.safe_wiki("help:staff")
-  end
-
-  def avoid_posting
-    @page = view_context.safe_wiki(FemboyFans.config.avoid_posting_notice_wiki_page)
-  end
 
   def not_found
     render("static/404", formats: [:html], status: 404)
@@ -35,23 +10,16 @@ class StaticController < ApplicationController
   def error
   end
 
-  def site_map
-    expires_in(1.day, public: true)
-  end
-
   def home
-    render(layout: "blank")
+    redirect_to(posts_path)
+    # render(layout: "blank")
   end
 
   def theme
   end
 
   def toggle_mobile_mode
-    if CurrentUser.is_member?
-      user = CurrentUser.user
-      user.disable_responsive_mode = !user.disable_responsive_mode
-      user.save
-    elsif cookies[:nmm]
+    if cookies[:nmm]
       cookies.delete(:nmm)
     else
       cookies.permanent[:nmm] = "1"
@@ -59,41 +27,7 @@ class StaticController < ApplicationController
     redirect_back(fallback_location: posts_path)
   end
 
-  def discord
-    unless CurrentUser.can_discord?
-      raise(User::PrivilegeError, "You must have an account for at least one week in order to join the Discord server.")
-    end
-    if request.post?
-      time = (Time.now + 5.minutes).to_i
-      secret = FemboyFans.config.discord_secret
-      # TODO: Proper HMAC
-      hashed_values = Digest::SHA256.hexdigest("#{CurrentUser.id};#{CurrentUser.name};#{time};#{secret};index")
-      user_hash = "?user_id=#{CurrentUser.id}&user_name=#{CurrentUser.name}&time=#{time}&hash=#{hashed_values}"
-
-      redirect_to(FemboyFans.config.discord_site + user_hash, allow_other_host: true)
-    else
-      @page = view_context.safe_wiki(FemboyFans.config.discord_notice_wiki_page)
-    end
-  end
-
   def robots
     expires_in(1.day, public: true)
-  end
-
-  def recognize_route
-    method = params[:method]&.upcase || "GET"
-    route = Rails.application.routes.recognize_path(params[:url], method: method)
-    route[:api] = "#{route[:controller]}:#{route[:action]}"
-    render(json: route)
-  rescue ActionController::RoutingError
-    render_expected_error(400, "Invalid url: #{method} #{params[:url]}", format: :json)
-  end
-
-  private
-
-  def format_wiki_page(name)
-    wiki = WikiPage.titled(name)
-    return WikiPage.new(body: "Wiki page \"#{name}\" not found.") if wiki.blank?
-    wiki
   end
 end

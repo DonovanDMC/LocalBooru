@@ -6,7 +6,7 @@ def cache_store
   elsif FemboyFans.config.disable_cache_store?
     :null_store
   else
-    [:mem_cache_store, FemboyFans.config.memcached_servers, { namespace: FemboyFans.config.safe_app_name }]
+    raise(StandardError, "Cache store not implemented")
   end
 end
 

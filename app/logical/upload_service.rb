@@ -25,6 +25,7 @@ class UploadService
       @post = create_post_from_upload(@upload)
       @upload
     rescue Exception => e
+      Rails.logger.error(e)
       @upload.update(status: "error: #{e.class} - #{e.message}", backtrace: e.backtrace.join("\n"))
       @upload
     end
@@ -49,8 +50,6 @@ class UploadService
     Post.new.tap do |p|
       p.tag_string = upload.tag_string
       p.original_tag_string = upload.tag_string
-      p.locked_tags = upload.locked_tags
-      p.is_rating_locked = upload.locked_rating if upload.locked_rating.present?
       p.description = upload.description.strip
       p.md5 = upload.md5
       p.file_ext = upload.file_ext
@@ -59,17 +58,12 @@ class UploadService
       p.rating = upload.rating
       p.source = upload.source
       p.file_size = upload.file_size
-      p.uploader_id = upload.uploader_id
       p.uploader_ip_addr = upload.uploader_ip_addr
       p.parent_id = upload.parent_id
       p.has_cropped = upload.is_image?
       p.duration = upload.video_duration(upload.file.path)
       p.framecount = upload.video_framecount(upload.file.path)
       p.upload_url = upload.direct_url
-
-      if !upload.uploader.unrestricted_uploads? || (!upload.uploader.can_approve_posts? && p.avoid_posting_artists.any?) || (!upload.uploader.can_approve_posts? && p.avoid_posting_artists.any?) || upload.upload_as_pending?
-        p.is_pending = true
-      end
     end
   end
 end

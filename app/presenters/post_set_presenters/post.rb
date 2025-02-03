@@ -23,7 +23,7 @@ module PostSetPresenters
     end
 
     def post_index_sidebar_tag_list_html(current_query:)
-      tag_set_presenter.post_index_sidebar_tag_list_html(current_query: current_query, followed_tags: CurrentUser.user.followed_tags.joins(:tag).where("tags.name": related_tags).map(&:tag_name))
+      tag_set_presenter.post_index_sidebar_tag_list_html(current_query: current_query)
     end
   end
 end

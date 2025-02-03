@@ -3,12 +3,9 @@
 class TagRelationship < ApplicationRecord
   self.abstract_class = true
 
-  SUPPORT_HARD_CODED = true
-
   belongs_to_creator
-  belongs_to :approver, class_name: "User", optional: true
-  belongs_to :forum_post, optional: true
-  belongs_to :forum_topic, optional: true
+  belongs_to_user :approver
+  belongs_to_user :rejector
   belongs_to :antecedent_tag, class_name: "Tag", foreign_key: "antecedent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(antecedent_name) }
   belongs_to :consequent_tag, class_name: "Tag", foreign_key: "consequent_name", primary_key: "name", default: -> { Tag.find_or_create_by_name(consequent_name) }
 
@@ -19,35 +16,19 @@ class TagRelationship < ApplicationRecord
   scope :retired, -> { where(status: "retired") }
   scope :duplicate_relevant, -> { where(status: %w[active processing queued pending]) }
 
-  before_validation :initialize_creator, on: :create # TODO: see if we need this
-  before_validation :normalize_names
   validates :status, format: { with: /\A(active|deleted|pending|processing|queued|retired|error: .*)\Z/ }
-  validates :creator_id, :antecedent_name, :consequent_name, presence: true
-  validates :creator, presence: { message: "must exist" }, if: -> { creator_id.present? }
-  validates :approver, presence: { message: "must exist" }, if: -> { approver_id.present? }
-  validates :forum_topic, presence: { message: "must exist" }, if: -> { forum_topic_id.present? }
-  validate :validate_creator_is_not_limited, on: :create
+  validates :antecedent_name, :consequent_name, presence: true
   validates :antecedent_name, tag_name: { disable_ascii_check: true }, if: :antecedent_name_changed?
   validates :consequent_name, tag_name: true, if: :consequent_name_changed?
   validate :antecedent_and_consequent_are_different
 
   def initialize_creator
-    self.creator_id = CurrentUser.user.id
     self.creator_ip_addr = CurrentUser.ip_addr
   end
 
   def normalize_names
     self.antecedent_name = antecedent_name.downcase.tr(" ", "_")
     self.consequent_name = consequent_name.downcase.tr(" ", "_")
-  end
-
-  def validate_creator_is_not_limited
-    allowed = creator.can_suggest_tag_with_reason
-    if allowed != true
-      errors.add(:creator, User.throttle_reason(allowed))
-      return false
-    end
-    true
   end
 
   def is_approved?
@@ -74,20 +55,16 @@ class TagRelationship < ApplicationRecord
     status =~ /\Aerror:/
   end
 
-  def approvable_by?(user)
-    return false unless is_pending? && user.can_manage_aibur?
-    return false unless user.is_owner? || !(consequent_tag&.artist&.is_dnp? || antecedent_tag&.artist&.is_dnp?)
-    return false unless user.is_admin? || creator_id != user.id
-    FemboyFans.config.tag_change_request_update_limit(user) >= estimate_update_count
+  def approvable_by?(_user)
+    is_pending?
   end
 
-  def rejectable_by?(user)
-    return true if !is_deleted? && user.can_manage_aibur?
-    is_pending? && creator_id == user.id
+  def rejectable_by?(_user)
+    !is_deleted?
   end
 
-  def editable_by?(user)
-    is_pending? && user.can_manage_aibur?
+  def editable_by?(_user)
+    is_pending?
   end
 
   module SearchMethods
@@ -103,10 +80,6 @@ class TagRelationship < ApplicationRecord
       else
         where(status: status)
       end
-    end
-
-    def for_creator(id)
-      where("creator_id = ?", id)
     end
 
     def pending_first
@@ -132,6 +105,9 @@ class TagRelationship < ApplicationRecord
     def search(params)
       q = super
 
+      q = q.where_user(:creator_ip_addr, :creator_ip_addr, params)
+      q = q.where_user(:approver_ip_addr, :approver_ip_addr, params)
+      q = q.where_user(:rejector_ip_addr, :rejector_ip_addr, params)
       if params[:name_matches].present?
         q = q.name_matches(params[:name_matches])
       end
@@ -157,9 +133,6 @@ class TagRelationship < ApplicationRecord
         q = q.join_consequent.where("consequent_tag.category": params[:consequent_tag_category].split(",").first(100))
       end
 
-      q = q.where_user(:creator_id, :creator, params)
-      q = q.where_user(:approver_id, :approver, params)
-
       case params[:order]
       when "created_at"
         q = q.order("#{table_name}.created_at desc nulls last, #{table_name}.id desc")
@@ -174,41 +147,6 @@ class TagRelationship < ApplicationRecord
       end
 
       q
-    end
-  end
-
-  module MessageMethods
-    def relationship
-      # "TagAlias" -> "tag alias", "TagImplication" -> "tag implication"
-      self.class.name.underscore.tr("_", " ")
-    end
-
-    def approval_message(approver)
-      "The #{relationship} [[#{antecedent_name}]] -> [[#{consequent_name}]] #{forum_link} has been approved by @#{approver.name}."
-    end
-
-    def failure_message(error = nil)
-      "The #{relationship} [[#{antecedent_name}]] -> [[#{consequent_name}]] #{forum_link} failed during processing. Reason: #{error}"
-    end
-
-    def reject_message(rejector)
-      "The #{relationship} [[#{antecedent_name}]] -> [[#{consequent_name}]] #{forum_link} has been rejected by @#{rejector.name}."
-    end
-
-    def retirement_message
-      "The #{relationship} [[#{antecedent_name}]] -> [[#{consequent_name}]] #{forum_link} has been retired."
-    end
-
-    def forum_link
-      "(forum ##{forum_post.id})" if forum_post.present?
-    end
-  end
-
-  concerning :EmbeddedText do
-    class_methods do
-      def embedded_pattern
-        raise(NotImplementedError)
-      end
     end
   end
 
@@ -235,9 +173,8 @@ class TagRelationship < ApplicationRecord
   end
 
   extend SearchMethods
-  include MessageMethods
 
   def self.available_includes
-    %i[antecedent_tag approver consequent_tag creator forum_post forum_topic]
+    %i[antecedent_tag consequent_tag]
   end
 end

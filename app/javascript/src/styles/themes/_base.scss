@@ -1,124 +1,124 @@
-$base-color-background:        #000000;
-$base-color-foreground:        #333333;
-$base-color-link:              #b4c7d9;
-$base-color-link-hover:        #e9f2fa;
-$base-color-text:              #ffffff;
-$base-color-text-muted:        #999999;
-$base-color-section:           #222222;
-$base-color-section-border:    $base-color-background;
+$base-color-background: #000000;
+$base-color-foreground: #333333;
+$base-color-link: #b4c7d9;
+$base-color-link-hover: #e9f2fa;
+$base-color-text: #ffffff;
+$base-color-text-muted: #999999;
+$base-color-section: #222222;
+$base-color-section-border: $base-color-background;
 
 body {
   // Theme-specific images
-  --image-background:             url("themes/base/background.png");
+  --image-background: url("themes/base/background.png");
 
   // Layout Colors
-  --color-background:             #{$base-color-background}; // Main background (dark blue, large hexagons)
-  --color-foreground:             #{$base-color-foreground}; // Foreground (lighter blue, small hexagons)
-  --color-section:                #{$base-color-section};    // Foreground sections - boxes, sections, etc
-  --color-section-lighten-5:      #{lighten($base-color-section, 5%)};
-  --color-section-lighten-10:     #{lighten($base-color-section, 10%)};
-  --color-section-darken-5:       #{darken($base-color-section, 5%)};
-  --color-table-border:           #{lighten($base-color-section, 10%)};
+  --color-background: #{$base-color-background}; // Main background (dark blue, large hexagons)
+  --color-foreground: #{$base-color-foreground}; // Foreground (lighter blue, small hexagons)
+  --color-section: #{$base-color-section}; // Foreground sections - boxes, sections, etc
+  --color-section-lighten-5: #{lighten($base-color-section, 5%)};
+  --color-section-lighten-10: #{lighten($base-color-section, 10%)};
+  --color-section-darken-5: #{darken($base-color-section, 5%)};
+  --color-table-border: #{lighten($base-color-section, 10%)};
 
-  --color-section-pending:        #{$base-color-section};
+  --color-section-pending: #{$base-color-section};
   --color-section-pending-border: #{$base-color-section-border};
 
   // Main Colors
-  --color-text:                   #{$base-color-text};
-  --color-text-muted:             #999999;
-  --color-text-white:             #{$base-color-text};
-  --color-text-table-header:      #{darken($base-color-text, 10%)};
+  --color-text: #{$base-color-text};
+  --color-text-muted: #999999;
+  --color-text-white: #{$base-color-text};
+  --color-text-table-header: #{darken($base-color-text, 10%)};
 
-  --color-link:                   #{$base-color-link};
-  --color-link-hover:             #{$base-color-link-hover};
-  --color-link-active:            #e8c446;
-  --color-button-active:          #e8c446;
+  --color-link: #{$base-color-link};
+  --color-link-hover: #{$base-color-link-hover};
+  --color-link-active: #e8c446;
+  --color-button-active: #e8c446;
 
-  --color-link-last-page:         #666;
+  --color-link-last-page: #666;
 
-  --color-success:                darkgreen;
-  --color-success-darken-5:       #{darken(darkgreen, 5%)};
-  --color-danger:                 maroon;
-  --color-danger-darken-5:        #{darken(maroon, 5%)};
-  --color-danger-darken-10:       #{darken(maroon, 10%)};
-  --color-warning:                sienna;
-  --color-warning-darken-5:       #{darken(sienna, 5%)};
+  --color-success: darkgreen;
+  --color-success-darken-5: #{darken(darkgreen, 5%)};
+  --color-danger: maroon;
+  --color-danger-darken-5: #{darken(maroon, 5%)};
+  --color-danger-darken-10: #{darken(maroon, 10%)};
+  --color-warning: sienna;
+  --color-warning-darken-5: #{darken(sienna, 5%)};
 
-  --color-rating-explicit:        #e45f5f;
-  --color-rating-questionable:    hsl(50, 100%, 70%);
-  --color-rating-safe:            #3e9e49;
+  --color-rating-explicit: #e45f5f;
+  --color-rating-questionable: hsl(50, 100%, 70%);
+  --color-rating-safe: #3e9e49;
 
-  --color-score-positive:         #3e9e49;
-  --color-score-negative:         #e45f5f;
+  --color-score-positive: #3e9e49;
+  --color-score-negative: #e45f5f;
 
-  --color-active-tag:             #006ffa;
+  --color-active-tag: #006ffa;
 
   // DText Colors
-  --color-dtext-quote:            #b4c7d9;
-  --color-dtext-code:             #ffe380;
-  --color-dtext-section:          #17a2b8;
+  --color-dtext-quote: #b4c7d9;
+  --color-dtext-code: #ffe380;
+  --color-dtext-section: #17a2b8;
 
   $user-color: #b4c7d9;
   $user-color-alt: #2e76b4;
 
   // User Groups
-  --color-user-banned:            #{$user-color};
-  --color-user-banned-alt:        #{$user-color-alt};
-  --color-user-restricted:        #{$user-color};
-  --color-user-restricted-alt:    #{$user-color-alt};
-  --color-user-member:            #{$user-color};
-  --color-user-member-alt:        #{$user-color-alt};
-  --color-user-trusted:           #{$user-color};
-  --color-user-trusted-alt:       #{$user-color-alt};
+  --color-user-banned: #{$user-color};
+  --color-user-banned-alt: #{$user-color-alt};
+  --color-user-restricted: #{$user-color};
+  --color-user-restricted-alt: #{$user-color-alt};
+  --color-user-member: #{$user-color};
+  --color-user-member-alt: #{$user-color-alt};
+  --color-user-trusted: #{$user-color};
+  --color-user-trusted-alt: #{$user-color-alt};
 
-  --color-user-former-staff:      #78dca5;
-  --color-user-former-staff-alt:  #4da073;
-  --color-user-janitor:           #d82828;
-  --color-user-janitor-alt:       #cc5151;
-  --color-user-moderator:         #1e90ff;
-  --color-user-moderator-alt:     #{darken(#1e90ff, 10%)};
-  --color-user-system:            #708090;
-  --color-user-system-alt:        #{darken(#708090, 10%)};
-  --color-user-admin:             #e69500;
-  --color-user-admin-alt:         #9d6703;
-  --color-user-owner:             #da70d6;
-  --color-user-owner-alt:         #{darken(#da70d6, 10%)};
+  --color-user-former-staff: #78dca5;
+  --color-user-former-staff-alt: #4da073;
+  --color-user-janitor: #d82828;
+  --color-user-janitor-alt: #cc5151;
+  --color-user-moderator: #1e90ff;
+  --color-user-moderator-alt: #{darken(#1e90ff, 10%)};
+  --color-user-system: #708090;
+  --color-user-system-alt: #{darken(#708090, 10%)};
+  --color-user-admin: #e69500;
+  --color-user-admin-alt: #9d6703;
+  --color-user-owner: #da70d6;
+  --color-user-owner-alt: #{darken(#da70d6, 10%)};
 
   // Tag Categories
-  --color-tag-general:            #b4c7d9;
-  --color-tag-general-alt:        #2e76b4;
+  --color-tag-general: #b4c7d9;
+  --color-tag-general-alt: #2e76b4;
 
-  --color-tag-contributor:        #c0c0c0;
-  --color-tag-contributor-alt:    #71706e;
+  --color-tag-contributor: #c0c0c0;
+  --color-tag-contributor-alt: #71706e;
 
-  --color-tag-artist:             #f2ac08;
-  --color-tag-artist-alt:         #fbd67f;
+  --color-tag-creator: #f2ac08;
+  --color-tag-creator-alt: #fbd67f;
 
-  --color-tag-copyright:          #d0d;
-  --color-tag-copyright-alt:      #ff5eff;
+  --color-tag-copyright: #d0d;
+  --color-tag-copyright-alt: #ff5eff;
 
-  --color-tag-character:          #0a0;
-  --color-tag-character-alt:      #2bff2b;
+  --color-tag-character: #0a0;
+  --color-tag-character-alt: #2bff2b;
 
-  --color-tag-species:            #ed5d1f;
-  --color-tag-species-alt:        #f6b295;
+  --color-tag-species: #ed5d1f;
+  --color-tag-species-alt: #f6b295;
 
-  --color-tag-invalid:            #ff3d3d;
-  --color-tag-invalid-alt:        #{lighten(#ff3d3d, 25%)};
+  --color-tag-invalid: #ff3d3d;
+  --color-tag-invalid-alt: #{lighten(#ff3d3d, 25%)};
 
-  --color-tag-meta:               #fff;
-  --color-tag-meta-alt:           #666;
+  --color-tag-meta: #fff;
+  --color-tag-meta-alt: #666;
 
-  --color-tag-lore:               #282;
-  --color-tag-lore-alt:           #5fdb5f;
+  --color-tag-lore: #282;
+  --color-tag-lore-alt: #5fdb5f;
 
-  --color-tag-gender:             #dad88b;
-  --color-tag-gender-alt:         #ede660;
+  --color-tag-gender: #dad88b;
+  --color-tag-gender-alt: #ede660;
 
-  --color-tag-pool:               wheat;
-  --color-tag-pool-alt:           #d0b27a;
+  --color-tag-pool: wheat;
+  --color-tag-pool-alt: #d0b27a;
 
   // Spoilers
-  --color-spoiler-link:           #{$base-color-link};
-  --color-spoiler-link-hover:     #{$base-color-link-hover};
+  --color-spoiler-link: #{$base-color-link};
+  --color-spoiler-link-hover: #{$base-color-link-hover};
 }

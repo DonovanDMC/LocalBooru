@@ -2,10 +2,19 @@
   display: block;
   max-width: 800px;
 
-  &[file-enabled="true"] label.fileinput { border-radius: 6px; }
-  &[link-enabled="true"] label.linkinput { border-radius: 6px; }
+  &[file-enabled="true"] label.fileinput {
+    border-radius: 6px;
+  }
+
+  &[link-enabled="true"] label.linkinput {
+    border-radius: 6px;
+  }
+
   &[file-enabled="true"][link-enabled="true"] {
-    label.fileinput { border-radius: 6px 6px 0 0; }
+    label.fileinput {
+      border-radius: 6px 6px 0 0;
+    }
+
     label.linkinput {
       border-radius: 0 0 6px 6px;
       flex-flow: column;
@@ -20,7 +29,7 @@
     align-items: center;
     position: relative;
     gap: 0.5em;
-    
+
     padding: 1em;
     font-weight: unset;
 
@@ -42,11 +51,12 @@
     & > span {
       pointer-events: none;
       text-align: center;
-      text-wrap: wrap;  // Fix for the file name overflow
+      text-wrap: wrap; // Fix for the file name overflow
 
       &.title {
         font-size: 1.3em;
       }
+
       &.subtitle {
         color: var(--palette-text-grey);
 

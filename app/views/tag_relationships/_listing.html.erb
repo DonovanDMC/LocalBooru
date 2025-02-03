@@ -3,13 +3,13 @@
 <%= table_for(tag_relations) do |t| %>
   <% t.column("From") do |tag_relation| %>
     <span class="category-<%= tag_relation.antecedent_tag.try(:category) %>">
-      <%= link_to_wiki_or_new(tag_relation.antecedent_name) %>
+      <%= link_to_tag(tag_relation.antecedent_tag) %>
       <span class="count"><%= tag_relation.antecedent_tag.post_count rescue 0 %></span>
     </span>
   <% end %>
   <% t.column("To") do |tag_relation| %>
     <span class="category-<%= tag_relation.consequent_tag.try(:category) %>">
-      <%= link_to_wiki_or_new(tag_relation.consequent_name) %>
+      <%= link_to_tag(tag_relation.consequent_tag) %>
       <span class="count"><%= tag_relation.consequent_tag.post_count rescue 0 %></span>
       <% if tag_relation.is_a?(TagAlias) %>
       <% if CurrentUser.user.is_member? && tag_relation.status == "pending" && tag_relation.has_transitives %>
@@ -18,16 +18,14 @@
     <% end %>
     </span>
   <% end %>
-  <% t.column("Forum") do |tag_relation| %>
-    <% if tag_relation.forum_topic_id %>
-      <%= link_to(tag_relation.forum_topic_id, forum_topic_path(tag_relation.forum_topic_id)) %>
-    <% end %>
-  <% end %>
   <% t.column("Creator") do |tag_relation| %>
     <%= link_to_user(tag_relation.creator) %>
   <% end %>
   <% t.column("Approver") do |tag_relation| %>
     <%= link_to_user(tag_relation.approver) if tag_relation.approver %>
+  <% end %>
+  <% t.column("Rejector") do |tag_relation| %>
+    <%= link_to_user(tag_relation.rejector) if tag_relation.rejector %>
   <% end %>
   <% t.column("Status") do |tag_relation| %>
     <%= tag_relation.status %>

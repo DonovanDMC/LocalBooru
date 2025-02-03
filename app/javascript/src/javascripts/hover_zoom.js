@@ -32,11 +32,13 @@ HoverZoom.init_listeners = function () {
   $(document).on("mousemove.femboyfans.zoom", (event) => {
     if (throttle) return;
     throttle = true;
-    setTimeout(() => { throttle = false; }, 25);
+    setTimeout(() => {
+      throttle = false;
+    }, 25);
 
     HoverZoom.pageX = event.pageX;
     HoverZoom.pageY = event.pageY;
-    HoverZoom.emit("mousemove", { x: event.pageX, y: event.pageY });
+    HoverZoom.emit("mousemove", {x: event.pageX, y: event.pageY});
   });
 
   let scrolling = false;
@@ -50,7 +52,7 @@ HoverZoom.init_listeners = function () {
       const post = HoverZoom.post_from_element(ref);
       HoverZoom.current = post;
       setTimeout(() => {
-        HoverZoom.emit("zoom.start", { post: post.id, pageX: this.pageX, pageY: this.pageY });
+        HoverZoom.emit("zoom.start", {post: post.id, pageX: this.pageX, pageY: this.pageY});
       }, 0);
     })
     .on("mouseleave.femboyfans.zoom", ".post-preview, div.post-thumbnail", (event) => {
@@ -59,7 +61,7 @@ HoverZoom.init_listeners = function () {
 
       HoverZoom.current = null;
 
-      HoverZoom.emit("zoom.stop", { post: ref.attr("data-id"), pageX: event.pageX, pageY: event.pageY });
+      HoverZoom.emit("zoom.stop", {post: ref.attr("data-id"), pageX: event.pageX, pageY: event.pageY});
     });
 
   let scrollTimer = 0;
@@ -98,9 +100,9 @@ HoverZoom.init_listeners = function () {
       if (!HoverZoom.stickyShift) resetOnUnshift();
     });
 
-  function resetOnUnshift () {
+  function resetOnUnshift() {
     if (!HoverZoom.current) return;
-    HoverZoom.emit("zoom.stop", { post: HoverZoom.current.id, pageX: null, pageY: null });
+    HoverZoom.emit("zoom.stop", {post: HoverZoom.current.id, pageX: null, pageY: null});
     HoverZoom.current = null;
   }
 };
@@ -120,7 +122,6 @@ HoverZoom.init_functionality = function () {
     if (HoverZoom.shiftRequired && !this.shiftPressed) return;
 
     const ref = $(`#post_${data.post}, div.post-thumbnail[data-id=${data.post}]`).first();
-    if (ref.hasClass("blacklisted")) return;
     const post = HoverZoom.post_from_element(ref);
 
     const isApprover = $("body").attr("data-user-is-approver");
@@ -209,8 +210,9 @@ HoverZoom.init_functionality = function () {
     });
     alignWindow(HoverZoom.pageX, HoverZoom.pageY);
 
-    function alignWindow (x, y) {
-      const height = zoomContainer.height(), width = zoomContainer.width(), cursorX = x, cursorY = y - viewport.scrollTop();
+    function alignWindow(x, y) {
+      const height = zoomContainer.height(), width = zoomContainer.width(), cursorX = x,
+        cursorY = y - viewport.scrollTop();
 
       const left = (cursorX < (viewport.width() / 2))
         ? cursorX + 50
@@ -384,7 +386,7 @@ HoverZoom.off = function (event, callback = null) {
 };
 
 HoverZoom.emit = function (name, data) {
-  HoverZoom.dispatchEvent(new CustomEvent(name, { detail: data }));
+  HoverZoom.dispatchEvent(new CustomEvent(name, {detail: data}));
   return this;
 };
 

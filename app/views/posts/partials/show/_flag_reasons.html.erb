@@ -1,25 +1,6 @@
-<%# locals: (post:, deletion: false) -%>
+<%# locals: (post:) -%>
 <ul>
-  <% post.flags.order(id: :desc).each do |flag| %>
     <li>
-      <%= flag.is_deletion ? "[DELETION]" : "[FLAG]" %>
-      <%= format_text(flag.reason, inline: true) %>
-
-      <% if CurrentUser.can_view_flagger_on_post?(flag) %>
-        - <%= link_to_user(flag.creator) %>
-        <% if policy(flag).can_see_ip_addr? %>
-          (<%= link_to_ip(flag.creator_ip_addr) %>)
-        <% end %>
-      <% end %>
-
-      - <%= time_ago_in_words_tagged(flag.created_at) %>
-
-      <% if flag.is_resolved? %>
-        <span class="resolved">RESOLVED</span>
-      <% end %>
+      [DELETION] <%= format_text(post.deletion_reason, inline: true) %>
     </li>
-    <% if post.is_deleted? && flag.is_deletion? && !CurrentUser.is_janitor? %>
-      <% break %>
-    <% end %>
-  <% end %>
 </ul>

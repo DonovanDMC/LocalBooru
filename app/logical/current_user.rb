@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 class CurrentUser
-  def self.scoped(user, ip_addr = "127.0.0.1")
+  def self.scoped(user: nil, ip_addr: "127.0.0.1")
     old_user = self.user
     old_ip_addr = self.ip_addr
 
-    self.user = user
-    self.ip_addr = ip_addr
+    self.user = user || User.new(ip_addr)
+    self.ip_addr = user.try(:ip_addr) || ip_addr
 
     begin
       yield
@@ -17,7 +17,7 @@ class CurrentUser
   end
 
   def self.as_system(&)
-    scoped(::User.system, &)
+    scoped(user: User.system, &)
   end
 
   def self.user=(user)
@@ -36,27 +36,11 @@ class CurrentUser
     RequestStore[:current_ip_addr]
   end
 
-  def self.id
-    if user.nil?
-      nil
-    else
-      user.id
-    end
-  end
-
   def self.name
     user.name
   end
 
-  def self.safe_mode?
-    RequestStore[:safe_mode]
-  end
-
-  def self.safe_mode=(safe_mode)
-    RequestStore[:safe_mode] = safe_mode
-  end
-
-  def self.method_missing(method, *, &)
-    user.__send__(method, *, &)
+  def self.method_missing(...)
+    user.__send__(...)
   end
 end

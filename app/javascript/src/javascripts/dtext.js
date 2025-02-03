@@ -1,4 +1,4 @@
-import { SendQueue } from "./send_queue";
+import {SendQueue} from "./send_queue";
 
 const DText = {};
 
@@ -48,7 +48,7 @@ DText.initialize_formatting_buttons = function (element) {
 };
 
 /** Refreshes the preview field to match the provided input */
-function update_preview (input, preview, allowColor = false) {
+function update_preview(input, preview, allowColor = false) {
   const currentText = input.val().trim();
 
   // The input is empty, reset everything
@@ -70,7 +70,7 @@ function update_preview (input, preview, allowColor = false) {
       type: "post",
       url: "/dtext_preview.json",
       dataType: "json",
-      data: { body: currentText, allow_color: allowColor },
+      data: {body: currentText, allow_color: allowColor},
       success: (response) => {
 
         // The loading was cancelled, since the user toggled back

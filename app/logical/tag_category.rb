@@ -25,21 +25,21 @@ module TagCategory
     end
 
     def admin_only?
-      is_a?(AdminCategory)
+      false
     end
   end
   class AdminCategory < Category; end
 
   GENERAL = Category.new(0, "general", %w[gen])
-  ARTIST = Category.new(1, "artist", %w[art], header: "Artists", exclusion: FemboyFans.config.artist_exclusion_tags, formatstr: "created by %s")
+  CREATOR = Category.new(1, "creator", %w[create cr], header: "Creators", formatstr: "created by %s")
   CONTRIBUTOR = Category.new(2, "contributor", %w[cont], header: "Contributors")
   COPYRIGHT = Category.new(3, "copyright", %w[copy co], header: "Copyrights", limit: 1, formatstr: "(%s)")
   CHARACTER = Category.new(4, "character", %w[char ch oc], header: "Characters", limit: 5, regex: /^(.+?)(?:_\(.+\))?$/)
   SPECIES = Category.new(5, "species", %w[spec])
-  INVALID = AdminCategory.new(6, "invalid", %w[inv])
-  META = AdminCategory.new(7, "meta")
-  LORE = AdminCategory.new(8, "lore", %w[lor], suffix: "_(lore)")
-  GENDER = AdminCategory.new(9, "gender")
+  INVALID = Category.new(6, "invalid", %w[inv])
+  META = Category.new(7, "meta")
+  LORE = Category.new(8, "lore", %w[lor], suffix: "_(lore)")
+  GENDER = Category.new(9, "gender")
 
   def categories
     @categories ||= constants.map { |c| const_get(c) }.select { |c| c.is_a?(Category) }
@@ -96,7 +96,7 @@ module TagCategory
     end
   end
 
-  SPLIT_HEADER_LIST = %w[invalid artist contributor copyright character species gender general meta lore].freeze
-  CATEGORIZED_LIST = %w[invalid artist contributor copyright character species gender meta general lore].freeze
-  HUMANIZED_LIST = %w[character copyright artist].freeze
+  SPLIT_HEADER_LIST = %w[invalid creator contributor copyright character species gender general meta lore].freeze
+  CATEGORIZED_LIST = %w[invalid creator contributor copyright character species gender meta general lore].freeze
+  HUMANIZED_LIST = %w[character copyright creator].freeze
 end

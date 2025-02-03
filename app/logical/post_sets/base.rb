@@ -10,10 +10,6 @@ module PostSets
       ""
     end
 
-    def ad_tag_string
-      ""
-    end
-
     def fill_tag_types(posts)
       tag_array = []
       posts.each do |p|
@@ -36,13 +32,6 @@ module PostSets
 
     def presenter
       raise(NotImplementedError)
-    end
-
-    def load_view_counts!
-      daily = Reports.get_bulk_post_views(posts.map(&:id), date: Time.now, unique: CurrentUser.user.unique_views?)
-      total = Reports.get_bulk_post_views(posts.map(&:id), unique: CurrentUser.user.unique_views?)
-      ViewCountCache.add_all!(daily, :daily)
-      ViewCountCache.add_all!(total, :total)
     end
   end
 end

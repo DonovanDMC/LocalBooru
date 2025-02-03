@@ -59,27 +59,6 @@ Rails.application.configure do
   # config.active_job.queue_adapter = :resque
   # config.active_job.queue_name_prefix = "femboyfans_production"
 
-  # Disable caching for Action Mailer templates even if Action Controller
-  # caching is enabled.
-  config.action_mailer.perform_caching = false
-
-  config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = {
-    address:              FemboyFans.config.smtp_address,
-    port:                 FemboyFans.config.smtp_port,
-    domain:               FemboyFans.config.smtp_domain,
-    user_name:            FemboyFans.config.smtp_username,
-    password:             FemboyFans.config.smtp_password,
-    authentication:       FemboyFans.config.smtp_authentication,
-    enable_starttls_auto: FemboyFans.config.smtp_tls,
-    open_timeout:         5,
-    read_timeout:         5,
-  }
-
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  config.action_mailer.raise_delivery_errors = true
-
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true

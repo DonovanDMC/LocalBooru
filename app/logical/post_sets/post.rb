@@ -8,7 +8,6 @@ module PostSets
       super()
       tags ||= ""
       @public_tag_array = apply_ratio_tags(TagQuery.scan(tags))
-      tags += " rating:s" if CurrentUser.safe_mode?
       tags += " -status:deleted" unless TagQuery.has_metatag?(tags, "status", "-status")
       @tag_array = apply_ratio_tags(TagQuery.scan(tags))
       @page = page
@@ -36,7 +35,7 @@ module PostSets
     end
 
     def has_explicit?
-      !CurrentUser.safe_mode?
+      true
     end
 
     def hidden_posts
@@ -63,7 +62,7 @@ module PostSets
 
     def posts
       @posts ||= begin
-        temp = ::Post.tag_match(tag_string).paginate_posts(page, limit: limit, includes: [:uploader])
+        temp = ::Post.tag_match(tag_string).paginate_posts(page, limit: limit)
 
         @post_count = temp.total_count
         temp

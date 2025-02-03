@@ -1,9 +1,7 @@
 import Utility from "./utility";
 import Post from "./posts";
 import Favorite from "./favorites";
-import PostSet from "./post_sets";
 import TagScript from "./tag_script";
-import { SendQueue } from "./send_queue";
 import Rails from "@rails/ujs";
 import Shortcuts from "./shortcuts";
 import LStorage from "./utility/storage";
@@ -110,32 +108,6 @@ PostModeMenu.tag_script_apply_all = function (event) {
   $("article.post-preview").trigger("click");
 };
 
-PostModeMenu.update_sets_menu = function () {
-  let target = $("#set-id");
-  target.off("change");
-  SendQueue.add(function () {
-    $.ajax({
-      type: "GET",
-      url: "/post_sets/for_select.json",
-    }).fail(function (data) {
-      $(window).trigger("danbooru:error", "Error getting sets list: " + data.message);
-    }).done(function (data) {
-      target.on("change", function (e) {
-        LStorage.Posts.Set = e.target.value;
-      });
-      target.empty();
-      const target_set = LStorage.Posts.Set;
-      ["Owned", "Maintained"].forEach(function (v) {
-        let group = $("<optgroup>", {label: v});
-        data[v].forEach(function (gi) {
-          group.append($("<option>", {value: gi[1], selected: (gi[1] == target_set)}).text(gi[0]));
-        });
-        target.append(group);
-      });
-    });
-  });
-};
-
 PostModeMenu.change = function () {
   $("#quick-edit-div").slideUp("fast");
   const s = $("#mode-box-mode").val();
@@ -152,9 +124,6 @@ PostModeMenu.change = function () {
     $("#tag-script-ui").show();
     $("#tag-script-field").val(LStorage.Posts.TagScript.Content).show();
     PostModeMenu.show_notice(LStorage.Posts.TagScript.ID);
-  } else if (s === "add-to-set" || s === "remove-from-set") {
-    PostModeMenu.update_sets_menu();
-    $("#set-id").show();
   } else if (s === "delete") {
     $("#quick-mode-reason").show();
   }
@@ -179,24 +148,33 @@ PostModeMenu.click = function (e) {
   const post_id = $(e.currentTarget).data("id");
 
   switch (mode) {
-    case "add-fav": Favorite.create(post_id); break;
-    case "remove-fav": Favorite.destroy(post_id); break;
-    case "edit": PostModeMenu.open_edit(post_id); break;
-    case "vote-down": Post.vote(post_id, -1, true); break;
-    case "vote-up": Post.vote(post_id, 1, true); break;
-    case "remove-vote": Post.unvote(post_id); break;
-    case "add-to-set": PostSet.add_post($("#set-id").val(), post_id); break;
-    case "remove-from-set": PostSet.remove_post($("#set-id").val(), post_id, undefined); break;
-    case "rating-s": Post.update(post_id, { "post[rating]": "s"}); break;
-    case "rating-q": Post.update(post_id, { "post[rating]": "q"}); break;
-    case "rating-e": Post.update(post_id, { "post[rating]": "e"}); break;
-    case "lock-rating": Post.update(post_id, { "post[is_rating_locked]": "1" }); break;
-    case "lock-note": Post.update(post_id, { "post[is_note_locked]": "1" }); break;
-    case "delete": Post.delete_with_reason(post_id, $("#quick-mode-reason").val(), false); break;
-    case "undelete": Post.undelete(post_id); break;
-    case "unflag": Post.unflag(post_id, "none", false); break;
-    case "approve": Post.approve(post_id); break;
-    case "remove-parent": Post.update(post_id, { "post[parent_id]": "" }); break;
+    case "add-fav":
+      Favorite.create(post_id);
+      break;
+    case "remove-fav":
+      Favorite.destroy(post_id);
+      break;
+    case "edit":
+      PostModeMenu.open_edit(post_id);
+      break;
+    case "rating-s":
+      Post.update(post_id, {"post[rating]": "s"});
+      break;
+    case "rating-q":
+      Post.update(post_id, {"post[rating]": "q"});
+      break;
+    case "rating-e":
+      Post.update(post_id, {"post[rating]": "e"});
+      break;
+    case "delete":
+      Post.delete_with_reason(post_id, $("#quick-mode-reason").val(), false);
+      break;
+    case "undelete":
+      Post.undelete(post_id);
+      break;
+    case "remove-parent":
+      Post.update(post_id, {"post[parent_id]": ""});
+      break;
     case "tag-script": {
       const tag_script = LStorage.Posts.TagScript.Content;
       if (!tag_script) {
@@ -209,7 +187,8 @@ PostModeMenu.click = function (e) {
       Post.tagScript(post_id, changes);
       break;
     }
-    default: return;
+    default:
+      return;
   }
 
   e.preventDefault();

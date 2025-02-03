@@ -5,32 +5,8 @@ en:
   hello: "Hello world"
   activerecord:
     attributes:
-      artist_url:
+      creator_url:
         url: ""
-      forum_post_vote:
-        creator_id: "Your vote"
-      post:
-        approver: "You"
-        approver_id: "You"
-        updater_id: "You"
-      post_flag:
-        creator: "You"
-        creator_id: "You"
-      post_vote:
-        user: "You"
-        user_id: "You"
-      post_disapproval:
-        post: "You"
-        post_id: "You"
-      comment:
-        post: "You"
-        post_id: "You"
-      comment_vote:
-        comment: "You"
-        user_id: "You"
       upload:
         uploader: "You"
         uploader_id: "You"
-      user_feedback:
-        creator: "You"
-        creator_id: "You"

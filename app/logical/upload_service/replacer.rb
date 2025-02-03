@@ -11,7 +11,7 @@ class UploadService
 
     def create_backup_replacement
       begin
-        repl = post.replacements.new(creator_id: post.uploader_id, creator_ip_addr: post.uploader_ip_addr, status: "original",
+        repl = post.replacements.new(creator_ip_addr: post.uploader_ip_addr, status: "original",
                                      image_width: post.image_width, image_height: post.image_height, file_ext: post.file_ext,
                                      file_size: post.file_size, md5: post.md5, file_name: "#{post.md5}.#{post.file_ext}",
                                      source: post.source, reason: "Original File", is_backup: true)
@@ -23,7 +23,7 @@ class UploadService
       raise(ProcessingError, "Could not create post file backup?") unless repl.valid?
     end
 
-    def process!(penalize_current_uploader:)
+    def process!
       # Prevent trying to replace deleted posts
       raise(ProcessingError, "Cannot replace post: post is deleted.") if post.is_deleted?
 
@@ -32,7 +32,6 @@ class UploadService
         replacement.replacement_file = FemboyFans.config.storage_manager.open(FemboyFans.config.storage_manager.replacement_path(replacement, replacement.file_ext, :original))
 
         upload = Upload.create(
-          uploader_id:      CurrentUser.id,
           uploader_ip_addr: CurrentUser.ip_addr,
           rating:           post.rating,
           tag_string:       (post.tag_array - PostReplacement::TAGS_TO_REMOVE_AFTER_ACCEPT).join(" "),
@@ -65,7 +64,7 @@ class UploadService
         md5_changed = upload.md5 != post.md5
 
         # TODO: Fix this mess
-        previous_uploader = post.uploader_id
+        previous_uploader = post.uploader_ip_addr
         previous_md5 = post.md5
         previous_file_ext = post.file_ext
 
@@ -81,26 +80,14 @@ class UploadService
         post.source = "#{replacement.source}\n" + post.source
         post.tag_string = upload.tag_string
         # Reset ownership information on post.
-        post.uploader_id = replacement.creator_id
         post.uploader_ip_addr = replacement.creator_ip_addr
-        # Change approver to whoever approved the replacement.
-        post.approver_id = CurrentUser.id
         post.save!
 
-        # rescaling notes reloads the post, be careful when accessing previous values
-        rescale_notes(post)
-
-        replacement.update({
-          status:                       "approved",
-          approver_id:                  CurrentUser.id,
-          uploader_id_on_approve:       previous_uploader,
-          penalize_uploader_on_approve: penalize_current_uploader.to_s.truthy?,
-        })
-
-        User.where(id: previous_uploader).update_all("own_post_replaced_count = own_post_replaced_count + 1")
-        if penalize_current_uploader.to_s.truthy?
-          User.where(id: previous_uploader).update_all("own_post_replaced_penalize_count = own_post_replaced_penalize_count + 1")
-        end
+        replacement.update(
+          status:                      "approved",
+          uploader_ip_addr_on_approve: previous_uploader,
+          approver_ip_addr:            CurrentUser.ip_addr,
+        )
 
         # Everything went through correctly, the old files can now be removed
         if md5_changed
@@ -113,15 +100,6 @@ class UploadService
       end
 
       post.update_iqdb_async
-    end
-
-    def rescale_notes(post)
-      x_scale = post.image_width.to_f / post.image_width_before_last_save.to_f
-      y_scale = post.image_height.to_f / post.image_height_before_last_save.to_f
-
-      post.notes.each do |note|
-        note.rescale!(x_scale, y_scale)
-      end
     end
   end
 end

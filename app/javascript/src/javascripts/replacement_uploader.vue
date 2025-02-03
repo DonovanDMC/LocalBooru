@@ -1,12 +1,13 @@
 <template>
   <file-input @previewChanged="previewData = $event"
-    @uploadValueChanged="uploadValue = $event"></file-input>
+              @uploadValueChanged="uploadValue = $event"></file-input>
   <br>
 
   <div class="input">
     <label>
       Additional Source
-      <sources :maxSources="1" :showErrors="showErrors" @sourceWarning="sourceWarning = $event" v-model:sources="sources"></sources>
+      <sources :maxSources="1" :showErrors="showErrors" @sourceWarning="sourceWarning = $event"
+               v-model:sources="sources"></sources>
     </label>
     <span class="hint">The submission page the replacement file came from</span>
   </div>
@@ -14,12 +15,14 @@
   <div class="input">
     <label>
       <div>Reason</div>
-      <autocompletable-input listId="reason-datalist" :addToList="submittedReason" size="50" placeholder="Higher quality, artwork updated, official uncensored version, ..." v-model="reason"></autocompletable-input>
+      <autocompletable-input listId="reason-datalist" :addToList="submittedReason" size="50"
+                             placeholder="Higher quality, artwork updated, official uncensored version, ..."
+                             v-model="reason"></autocompletable-input>
     </label>
     <span class="hint">Tell us why this file should replace the original.</span>
   </div>
 
-  <div v-if="allowUploadAsPending" class="input">
+  <div class="input">
     <label><input type="checkbox" v-model="uploadAsPending"/> Upload as Pending</label>
     <span class="hint">If you aren't sure if this replacement is correct, checking this box will put it into the moderation queue.</span>
   </div>
@@ -29,7 +32,7 @@
   </div>
 
   <button @click="submit" :disabled="(showErrors && preventUpload) || submitting">
-      {{ submitting ? "Uploading..." : "Upload" }}
+    {{ submitting ? "Uploading..." : "Upload" }}
   </button>
 
   <file-preview :data="previewData"></file-preview>
@@ -40,7 +43,6 @@ import autocompletableInput from "./autocompletable_input.vue";
 import filePreview from "./uploader/file_preview.vue";
 import fileInput from "./uploader/file_input.vue";
 import sources from "./uploader/sources.vue";
-import Utility from "./utility";
 
 export default {
   components: {
@@ -58,14 +60,12 @@ export default {
       sources: [""],
       uploadValue: "",
       reason: "",
-      allowUploadAsPending: Utility.meta("current-user-can-approve-posts") === "true",
       uploadAsPending: false,
       errorMessage: undefined,
       showErrors: false,
       sourceWarning: false,
       submitting: false,
       submittedReason: undefined,
-      canApprove: Utility.meta("current-user-can-approve-posts") === "true",
     };
   },
   mounted() {
@@ -82,9 +82,9 @@ export default {
     }
   },
   methods: {
-    submit: function() {
+    submit: function () {
       this.showErrors = true;
-      if(this.preventUpload || this.submitting) {
+      if (this.preventUpload || this.submitting) {
         return;
       }
       this.submitting = true;
@@ -96,9 +96,7 @@ export default {
       }
       formData.append("post_replacement[source]", this.sources[0]);
       formData.append("post_replacement[reason]", this.reason);
-      if (this.allowUploadAsPending) {
-        formData.append("post_replacement[as_pending]", this.uploadAsPending);
-      }
+      formData.append("post_replacement[as_pending]", this.uploadAsPending);
 
       this.submittedReason = this.reason;
 

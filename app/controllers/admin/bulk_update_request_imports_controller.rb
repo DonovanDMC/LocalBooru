@@ -3,14 +3,14 @@
 module Admin
   class BulkUpdateRequestImportsController < ApplicationController
     def new
-      authorize(BulkUpdateRequestImporter)
     end
 
     def create
       bparams = params[:batch].presence || params
-      @importer = authorize(BulkUpdateRequestImporter.new(bparams[:script], bparams[:forum_id]))
+      @importer = BulkUpdateRequestImporter.new(bparams[:script])
+      @importer.validate!
       begin
-        BulkUpdateRequest.transaction { @importer.process! }
+        ApplicationRecord.transaction { @importer.process! }
       rescue BulkUpdateRequestImporter::Error => e
         @error = e
         notice("Import failed")

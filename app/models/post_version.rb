@@ -4,20 +4,12 @@ class PostVersion < ApplicationRecord
   class UndoError < StandardError; end
   class MergeError < StandardError; end
   belongs_to :post
-  belongs_to_updater counter_cache: "post_update_count"
+  belongs_to_updater
 
   before_validation :fill_version, on: :create
   before_validation :fill_changes, on: :create
 
   module SearchMethods
-    def for_user(user_id)
-      if user_id
-        where("updater_id = ?", user_id)
-      else
-        none
-      end
-    end
-
     def search(params)
       ElasticPostVersionQueryBuilder.new(params).search
     end
@@ -33,11 +25,9 @@ class PostVersion < ApplicationRecord
       rating:          post.rating,
       parent_id:       post.parent_id,
       source:          post.source,
-      updater_id:      CurrentUser.id,
       updater_ip_addr: CurrentUser.ip_addr,
       tags:            post.tag_string,
       original_tags:   post.tag_string_before_parse || "",
-      locked_tags:     post.locked_tags,
       description:     post.description,
       reason:          post.edit_reason,
     })
@@ -46,10 +36,9 @@ class PostVersion < ApplicationRecord
   def self.merge(version, post, updater = CurrentUser.user)
     raise(MergeError, "Attempted to merge post ##{post.id} into its first version (#{version.id})") if version.first?
     raise(MergeError, "Attempted to merge post ##{post.id} into non-basic post version ##{version.id}") unless version.basic?
-    raise(MergeError, "Attempted to merge post ##{post.id} into post version ##{version.id} created by different updater (#{version.updater_id}/#{updater.id})") unless version.updater_id == updater.id
+    raise(MergeError, "Attempted to merge post ##{post.id} into post version ##{version.id} created by different updater (#{version.updater_ip_addr}/#{updater.ip_addr})") unless version.updater_ip_addr == updater.ip_addr
     version.source = post.source
     version.tags = post.tag_string
-    version.locked_tags = post.locked_tags
     # Don't even bother merging, just toss it out entirely. We should only be merging system edits, which
     # won't have an original tag string either way
     version.original_tags = ""
@@ -75,13 +64,9 @@ class PostVersion < ApplicationRecord
     if prev
       self.added_tags = tag_array - prev.tag_array
       self.removed_tags = prev.tag_array - tag_array
-      self.added_locked_tags = locked_tag_array - prev.locked_tag_array
-      self.removed_locked_tags = prev.locked_tag_array - locked_tag_array
     else
       self.added_tags = tag_array
       self.removed_tags = []
-      self.added_locked_tags = locked_tag_array
-      self.removed_locked_tags = []
     end
 
     self.rating_changed = prev.nil? || rating != prev.try(:rating)
@@ -99,15 +84,11 @@ class PostVersion < ApplicationRecord
   end
 
   def empty?
-    added_tags.empty? && removed_tags.empty? && added_locked_tags.empty? && removed_locked_tags.empty? && !source_changed && !description_changed && !parent_changed && !rating_changed
+    added_tags.empty? && removed_tags.empty? && !source_changed && !description_changed && !parent_changed && !rating_changed
   end
 
   def tag_array
     @tag_array ||= tags.split
-  end
-
-  def locked_tag_array
-    (locked_tags || "").split
   end
 
   def presenter
@@ -129,10 +110,6 @@ class PostVersion < ApplicationRecord
     else
       @previous = PostVersion.where("post_id = ? and version < ?", post_id, version).order("version desc").first
     end
-  end
-
-  def visible?(user = CurrentUser.user)
-    post.try(:visible?, user) || false
   end
 
   def diff_sources(version = nil)
@@ -162,21 +139,12 @@ class PostVersion < ApplicationRecord
     added_tags = new_tags - old_tags
     removed_tags = old_tags - new_tags
 
-    new_locked = locked_tag_array
-    old_locked = version.present? ? version.locked_tag_array : []
-
-    added_locked = new_locked - old_locked
-    removed_locked = old_locked - new_locked
-
     {
       added_tags:            added_tags,
       removed_tags:          removed_tags,
       obsolete_added_tags:   added_tags - latest_tags,
       obsolete_removed_tags: removed_tags & latest_tags,
       unchanged_tags:        new_tags & old_tags,
-      added_locked_tags:     added_locked,
-      removed_locked_tags:   removed_locked,
-      unchanged_locked_tags: new_locked & old_locked,
     }
   end
 
@@ -250,7 +218,7 @@ class PostVersion < ApplicationRecord
       post.description = previous.description
     end
 
-    if rating_changed && !post.is_rating_locked?
+    if rating_changed
       post.rating = previous.rating
     end
 
@@ -299,6 +267,6 @@ class PostVersion < ApplicationRecord
   end
 
   def self.available_includes
-    %i[post updater]
+    %i[post]
   end
 end

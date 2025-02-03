@@ -3,34 +3,27 @@
 class TagQuery
   class CountExceededError < StandardError; end
 
-  COUNT_METATAGS = %w[
-    comment_count
-  ].freeze
+  # COUNT_METATAGS = %w[].freeze
 
   BOOLEAN_METATAGS = %w[
-    hassource hasdescription isparent ischild inpool pending_replacements artverified
+    hassource hasdescription isparent ischild inpool pending_replacements fav favoritedby
   ].freeze
 
   NEGATABLE_METATAGS = %w[
-    id filetype type rating description parent user user_id approver disapprover flagger deletedby delreason
-    source status pool set fav favoritedby note locked upvote votedup downvote voteddown voted
-    width height mpixels ratio filesize duration score favcount framecount views date age change tagcount
-    commenter comm noter noteupdater disapprovals
+    id filetype type rating description parent delreason
+    source status pool
+    width height mpixels ratio filesize duration framecount date age change tagcount
   ] + TagCategory.short_name_list.map { |tag_name| "#{tag_name}tags" }
 
   METATAGS = %w[
-    md5 order limit child randseed ratinglocked notelocked statuslocked
-  ] + NEGATABLE_METATAGS + COUNT_METATAGS + BOOLEAN_METATAGS
+    md5 order limit child randseed
+  ] + NEGATABLE_METATAGS + BOOLEAN_METATAGS # + COUNT_METATAGS
 
   ORDER_METATAGS = %w[
     id id_desc
     score score_asc
-    favcount favcount_desc favcount_asc
     created_at created_at_asc
     updated updated_desc updated_asc
-    comment comment_asc
-    comment_bumped comment_bumped_asc
-    note note_asc
     mpixels mpixels_asc
     portrait landscape
     filesize filesize_asc
@@ -38,15 +31,14 @@ class TagQuery
     change change_desc change_asc
     duration duration_desc duration_asc
     framecount framecount_desc framecount_asc
-    views views_desc views_asc
     rank
     random
-  ] + COUNT_METATAGS + TagCategory.short_name_list.flat_map { |str| %W[#{str}tags #{str}tags_asc] }
+  ] + TagCategory.short_name_list.flat_map { |str| %W[#{str}tags #{str}tags_asc] } # + COUNT_METATAGS
 
   delegate :[], :include?, to: :@q
   attr_reader :q, :resolve_aliases
 
-  def initialize(query, resolve_aliases: true, free_tags_count: 0)
+  def initialize(query, resolve_aliases: true)
     @q = {
       tags: {
         must:     [],
@@ -55,12 +47,8 @@ class TagQuery
       },
     }
     @resolve_aliases = resolve_aliases
-    @tag_count = 0
 
     parse_query(query)
-    if @tag_count > FemboyFans.config.tag_query_limit - free_tags_count
-      raise(CountExceededError, "You cannot search for more than #{FemboyFans.config.tag_query_limit} tags at a time")
-    end
   end
 
   def self.normalize(query)
@@ -102,10 +90,6 @@ class TagQuery
     tags.select { |tag| tag_array.include?(tag) }
   end
 
-  def self.ad_tag_string(tag_array)
-    fetch_tags(tag_array, *FemboyFans.config.ads_keyword_tags).join(" ")
-  end
-
   private
 
   METATAG_SEARCH_TYPE = {
@@ -115,7 +99,6 @@ class TagQuery
 
   def parse_query(query)
     TagQuery.scan(query).each do |token| # rubocop:disable Metrics/BlockLength
-      @tag_count += 1 unless FemboyFans.config.is_unlimited_tag?(token)
       metatag_name, g2 = token.split(":", 2)
 
       # Short-circuit when there is no metatag or the metatag has no value
@@ -129,75 +112,9 @@ class TagQuery
 
       type = METATAG_SEARCH_TYPE.fetch(metatag_name[0], :must)
       case metatag_name.downcase
-      when "user", "-user", "~user"
-        add_to_query(type, :uploader_ids) do
-          user_id = User.name_or_id_to_id(g2)
-          id_or_invalid(user_id)
-        end
-
-      when "user_id", "-user_id", "~user_id"
-        add_to_query(type, :uploader_ids) do
-          g2.to_i
-        end
-
-      when "approver", "-approver", "~approver"
-        add_to_query(type, :approver_ids, any_none_key: :approver, value: g2) do
-          user_id = User.name_or_id_to_id(g2)
-          id_or_invalid(user_id)
-        end
-
-      when "disapprover", "-disapprover", "~disapprover"
-        if CurrentUser.user.can_approve_posts?
-          add_to_query(type, :disapprover_ids, any_none_key: :disapprover, value: g2) do
-            user_id = User.name_or_id_to_id(g2)
-            id_or_invalid(user_id)
-          end
-        end
-
-      when "commenter", "-commenter", "~commenter", "comm", "-comm", "~comm"
-        add_to_query(type, :commenter_ids, any_none_key: :commenter, value: g2) do
-          user_id = User.name_or_id_to_id(g2)
-          id_or_invalid(user_id)
-        end
-
-      when "noter", "-noter", "~noter"
-        add_to_query(type, :noter_ids, any_none_key: :noter, value: g2) do
-          user_id = User.name_or_id_to_id(g2)
-          id_or_invalid(user_id)
-        end
-
-      when "noteupdater", "-noteupdater", "~noteupdater"
-        add_to_query(type, :note_updater_ids) do
-          user_id = User.name_or_id_to_id(g2)
-          id_or_invalid(user_id)
-        end
-
       when "pool", "-pool", "~pool"
         add_to_query(type, :pool_ids, any_none_key: :pool, value: g2) do
           Pool.name_to_id(g2)
-        end
-
-      when "set", "-set", "~set"
-        add_to_query(type, :set_ids) do
-          post_set_id = PostSet.name_to_id(g2)
-          post_set = PostSet.find_by(id: post_set_id)
-
-          next 0 unless post_set
-          unless post_set.can_view?(CurrentUser.user)
-            raise(User::PrivilegeError)
-          end
-
-          post_set_id
-        end
-
-      when "fav", "-fav", "~fav", "favoritedby", "-favoritedby", "~favoritedby"
-        add_to_query(type, :fav_ids) do
-          favuser = User.find_by_normalized_name_or_id(g2)
-
-          next 0 unless favuser
-          raise(User::PrivacyModeError) if favuser.hide_favorites?
-
-          favuser.id
         end
 
       when "md5"
@@ -205,25 +122,6 @@ class TagQuery
 
       when "rating", "-rating", "~rating"
         add_to_query(type, :rating) { g2[0]&.downcase || "miss" }
-
-      when "locked", "-locked", "~locked"
-        add_to_query(type, :locked) do
-          case g2.downcase
-          when "rating"
-            :rating
-          when "note", "notes"
-            :note
-          when "status"
-            :status
-          end
-        end
-
-      when "ratinglocked"
-        add_to_query(parse_boolean(g2) ? :must : :must_not, :locked) { :rating }
-      when "notelocked"
-        add_to_query(parse_boolean(g2) ? :must : :must_not, :locked) { :note }
-      when "statuslocked"
-        add_to_query(parse_boolean(g2) ? :must : :must_not, :locked) { :status }
 
       when "id", "-id", "~id"
         add_to_query(type, :post_id) { ParseValue.range(g2) }
@@ -243,17 +141,8 @@ class TagQuery
       when "duration", "-duration", "~duration"
         add_to_query(type, :duration) { ParseValue.range(g2, :float) }
 
-      when "score", "-score", "~score"
-        add_to_query(type, :score) { ParseValue.range(g2) }
-
       when "framecount", "-framecount", "~framecount"
         add_to_query(type, :framecount) { ParseValue.range(g2) }
-
-      when "views", "-views", "~views"
-        add_to_query(type, :views) { ParseValue.range(g2) }
-
-      when "favcount", "-favcount", "~favcount"
-        add_to_query(type, :fav_count) { ParseValue.range(g2) }
 
       when "filesize", "-filesize", "~filesize"
         add_to_query(type, :filesize) { ParseValue.range_fudged(g2, :filesize) }
@@ -307,57 +196,13 @@ class TagQuery
       when "description", "-description", "~description"
         add_to_query(type, :description) { g2 }
 
-      when "note", "-note", "~note"
-        add_to_query(type, :note) { g2 }
-
       when "delreason", "-delreason", "~delreason"
         q[:status] ||= "any"
         add_to_query(type, :delreason, wildcard: true) { g2 }
 
-      when "deletedby", "-deletedby", "~deletedby"
-        q[:status] ||= "any"
-        add_to_query(type, :deleter) do
-          user_id = User.name_or_id_to_id(g2)
-          id_or_invalid(user_id)
-        end
-
-      when "upvote", "-upvote", "~upvote", "votedup", "-votedup", "~votedup"
-        add_to_query(type, :upvote) do
-          if CurrentUser.is_moderator?
-            user_id = User.name_or_id_to_id(g2)
-          elsif CurrentUser.is_member?
-            user_id = CurrentUser.id
-          end
-          id_or_invalid(user_id)
-        end
-
-      when "downvote", "-downvote", "~downvote", "voteddown", "-voteddown", "~voteddown"
-        add_to_query(type, :downvote) do
-          if CurrentUser.is_moderator?
-            user_id = User.name_or_id_to_id(g2)
-          elsif CurrentUser.is_member?
-            user_id = CurrentUser.id
-          end
-          id_or_invalid(user_id)
-        end
-
-      when "voted", "-voted", "~voted"
-        add_to_query(type, :voted) do
-          if CurrentUser.is_moderator?
-            user_id = User.name_or_id_to_id(g2)
-          elsif CurrentUser.is_member?
-            user_id = CurrentUser.id
-          end
-          id_or_invalid(user_id)
-        end
-
-      when "disapprovals", "-disapprovals", "~disapprovals"
-        if CurrentUser.user.can_approve_posts?
-          add_to_query(type, :disapproval_count, any_none_key: :disapprover, value: g2) { ParseValue.range(g2) }
-        end
-
-      when /[-~]?(#{TagQuery::COUNT_METATAGS.join('|')})/
-        q[:"#{$1.downcase}#{type == :must ? '' : "_#{type}"}"] = ParseValue.range(g2)
+        # We have no count tags, this cannot be present else it will swallow up all tags: /[-~]?()/
+        # when /[-~]?(#{TagQuery::COUNT_METATAGS.join('|')})/
+        # q[:"#{$1.downcase}#{type == :must ? '' : "_#{type}"}"] = ParseValue.range(g2)
 
       when /[-~]?(#{TagQuery::BOOLEAN_METATAGS.join('|')})/
         q[:"#{$1.downcase}#{type == :must ? '' : "_#{type}"}"] = parse_boolean(g2)
@@ -428,7 +273,7 @@ class TagQuery
   end
 
   def pull_wildcard_tags(tag)
-    matches = Tag.name_matches(tag).limit(FemboyFans.config.tag_query_limit).order("post_count DESC").pluck(:name)
+    matches = Tag.name_matches(tag).order("post_count DESC").pluck(:name)
     matches = ["~~not_found~~"] if matches.empty?
     matches
   end

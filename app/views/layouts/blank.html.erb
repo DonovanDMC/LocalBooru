@@ -5,9 +5,6 @@
 </head>
 <%= tag.body(**body_attributes(CurrentUser.user)) do %>
   <%= render "layouts/theme_include" %>
-  <% if CurrentUser.user.is_anonymous? %>
-    <%= render "static/guest_warning" %>
-  <% end %>
   <div id="page">
     <div id="c-<%= params[:controller].parameterize.dasherize %>">
       <div id="a-<%= params[:action].parameterize.dasherize %>">

@@ -9,8 +9,6 @@ module GitHelper
     else
       @hash = ""
     end
-
-    @public_hash = `git merge-base internal/master upstream/master`.strip
   end
 
   def self.hash
@@ -26,14 +24,6 @@ module GitHelper
   end
 
   def self.current_commit_url
-    commit_url(@public_hash)
-  end
-
-  def self.public_hash
-    @public_hash
-  end
-
-  def self.short_public_hash
-    @public_hash[0..8]
+    commit_url(@hash)
   end
 end

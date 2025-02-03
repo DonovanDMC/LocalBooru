@@ -5,8 +5,6 @@ class TagImplication < TagRelationship
 
   array_attribute :descendant_names
 
-  attr_accessor :skip_forum
-
   before_save :update_descendant_names
   after_destroy :update_descendant_names_for_parents
   after_save :update_descendant_names_for_parents
@@ -120,16 +118,15 @@ class TagImplication < TagRelationship
   end
 
   module ApprovalMethods
-    def process!(update_topic: true)
+    def process!
       tries = 0
 
       begin
-        CurrentUser.scoped(approver) do
+        CurrentUser.scoped(user: approver) do
           update!(status: "processing")
           CurrentUser.as_system { update_posts }
           update(status: "active")
           update_descendant_names_for_parents
-          forum_updater.update(approval_message(approver), "APPROVED") if update_topic
         end
       rescue Exception => e
         if tries < 5 && !Rails.env.test?
@@ -138,7 +135,6 @@ class TagImplication < TagRelationship
           retry
         end
 
-        forum_updater.update(failure_message(e), "FAILED") if update_topic
         update_columns(status: "error: #{e}")
       end
     end
@@ -155,17 +151,15 @@ class TagImplication < TagRelationship
       end
     end
 
-    def approve!(approver: CurrentUser.user, update_topic: true)
-      update(status: "queued", approver_id: approver.id)
-      create_undo_information
+    def approve!(approver = CurrentUser.user)
+      update(status: "queued", approver_ip_addr: approver.ip_addr)
       invalidate_cached_descendants
-      TagImplicationJob.perform_later(id, update_topic)
+      TagImplicationJob.perform_later(id)
     end
 
-    def reject!(update_topic: true)
-      update(status: "deleted")
+    def reject!(rejector = CurrentUser.user)
+      update(status: "deleted", rejector_ip_addr: rejector.ip_addr)
       invalidate_cached_descendants
-      forum_updater.update(reject_message(CurrentUser.user), "REJECTED") if update_topic
     end
 
     def create_mod_action
@@ -188,62 +182,12 @@ class TagImplication < TagRelationship
         ModAction.log!(:tag_implication_update, self, implication_desc: implication, change_desc: change_desc)
       end
     end
-
-    def forum_updater
-      ForumUpdater.new(
-        forum_topic,
-        forum_post:     (forum_post if forum_topic),
-        expected_title: TagImplicationRequest.topic_title(antecedent_name, consequent_name),
-        skip_update:    !TagRelationship::SUPPORT_HARD_CODED,
-      )
-    end
-
-    def process_undo!(update_topic: true)
-      unless valid?
-        raise(errors.full_messages.join("; "))
-      end
-
-      CurrentUser.scoped(approver) do
-        update(status: "pending")
-        CurrentUser.as_system { update_posts_undo }
-        forum_updater.update(retirement_message, "UNDONE") if update_topic
-      end
-      tag_rel_undos.update_all(applied: true)
-    end
-
-    def update_posts_undo
-      Post.without_timeout do
-        tag_rel_undos.where(applied: false).find_each do |tu|
-          Post.where(id: tu.undo_data.keys).find_each do |post|
-            post.automated_edit = true
-            if TagQuery.scan(tu.undo_data[post.id]).include?(consequent_name)
-              Rails.logger.info("[TIU] Skipping post that already contains target tag.")
-              next
-            end
-            post.tag_string_diff = "-#{consequent_name}"
-            post.save
-          end
-        end
-
-        # TODO: Race condition with indexing jobs here.
-        antecedent_tag&.fix_post_count
-        consequent_tag&.fix_post_count
-      end
-    end
   end
 
   include DescendantMethods
   include ParentMethods
   include ValidationMethods
   include ApprovalMethods
-
-  concerning :EmbeddedText do
-    class_methods do
-      def embedded_pattern
-        /\[ti:(?<id>\d+)\]/m
-      end
-    end
-  end
 
   def reload(options = {})
     flush_cache

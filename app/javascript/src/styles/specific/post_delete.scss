@@ -1,8 +1,13 @@
 div#c-posts div#a-delete, div#c-posts-replacements div#a-reject-with-reason {
 
   // Raw text input and clear-all button
-  #reason { width: 100%; }
-  #delreason-clear, #rejection-reason-clear { width: 5rem; }
+  #reason {
+    width: 100%;
+  }
+
+  #delreason-clear, #rejection-reason-clear {
+    width: 5rem;
+  }
 
   // "Move to parent" checkboxes
   .post_delete_options {
@@ -35,12 +40,15 @@ div#c-posts div#a-delete, div#c-posts-replacements div#a-reject-with-reason {
       }
 
       // Highlight enabled elements
-      &.enabled::before { content: "-"; }
+      &.enabled::before {
+        content: "-";
+      }
 
       color: themed("color-link");
 
       &:hover {
         color: themed("color-link-hover");
+
         input[type="text"] {
           color: themed("color-link-hover");
           border-color: themed("color-link-hover");
@@ -50,11 +58,15 @@ div#c-posts div#a-delete, div#c-posts-replacements div#a-reject-with-reason {
       input[type="text"] {
         border-bottom: 1px solid themed("color-link");
         color: themed("color-link");
-        &:focus { color: themed("color-link") !important; }
+
+        &:focus {
+          color: themed("color-link") !important;
+        }
       }
 
       &.enabled {
         color: themed("color-link-active");
+
         input[type="text"] {
           color: themed("color-link-active");
           border-color: themed("color-link-active");

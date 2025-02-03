@@ -11,32 +11,13 @@
     </li>
   <% end %>
   <li>Rating: <%= pretty_html_rating(post) %></li>
-  <li>Score: <%= post_vote_block(post, post.own_vote) %>
-    <% if PostVotePolicy.new(CurrentUser.user, post).index? %>
-      <span><%= link_to "(votes)", controller: "posts/votes", search: { post_id: post.id } %></span>
-    <% end %>
-  </li>
   <li>
     Posted: <%= link_to time_ago_in_words_tagged(post.created_at), posts_path(tags: "date:#{post.created_at.to_date}"), rel: "nofollow" %>
     <meta itemprop="uploadDate" content="<%= post.created_at.iso8601 %>">
   </li>
-  <% if CurrentUser.user.is_janitor? %>
-    <li>
-      Uploader: <%= link_to_user(post.uploader) %> <%= user_record_meta(post.uploader) %>
-      <% if post.uploader_linked_artists.any? %>
-        <i class="uploader-is-artist fa-regular fa-circle-check" title="The uploader is linked to one of the artist tags"></i>
-      <% elsif post.uploader_name_matches_artists? %>
-        <span class="post-uploader-artist">(artist)</span>
-      <% end %>
-    </li>
-  <% elsif CurrentUser.user.show_post_uploader? %>
-    <li>
-      Uploader: <%= link_to_user(post.uploader) %>
-    </li>
-  <% end %>
-  <% if post.approver %>
-    <li>Approver: <%= link_to_user(post.approver) %></li>
-  <% end %>
+  <li>
+    Uploader: <%= link_to_user(post.uploader) %>
+  </li>
   <li>
     Size: <span itemprop="width"><%= post.image_width %></span>x<span itemprop="height"><%= post.image_height %></span> (<%= number_to_human_size(post.file_size) %>)
   </li>
@@ -49,22 +30,13 @@
   </li>
   <li>
     Status:
-    <% if @post.is_pending? %>
-      Pending
-    <% elsif @post.is_flagged? %>
-      Flagged
-    <% elsif @post.is_appealed? %>
-      Appealed
-    <% elsif @post.is_deleted? %>
+    <% if @post.is_deleted? %>
       Deleted
     <% else %>
       Active
     <% end %>
   </li>
   <li>
-    Favorites: <span id="favcount-for-post-<%= post.id %>"><%= post.fav_count %></span>
-    <%= link_to "Show", favorites_post_path(post), style: ("display: none;" if post.fav_count == 0) %>
+    Favorited: <%= post.is_favorited? ? "Yes" : "No" %>
   </li>
-  <li>Views Today: <span id="daily-viewcount-for-post-<%= post.id %>"><%= post.daily_views %></span></li>
-  <li>Total Views: <span id="total-viewcount-for-post-<%= post.id %>"><%= post.total_views %></span></li>
 </ul>

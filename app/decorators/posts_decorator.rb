@@ -9,17 +9,14 @@ class PostsDecorator < ApplicationDecorator
 
   delegate_all
 
-  def preview_class(options)
+  def preview_class(_options)
     klass = ["post-preview"]
-    klass << "post-status-pending" if post.is_pending?
-    klass << "post-status-flagged" if post.is_flagged?
     klass << "post-status-deleted" if post.is_deleted?
     klass << "post-status-has-parent" if post.parent_id
     klass << "post-status-has-children" if post.has_visible_children?
     klass << "post-rating-safe" if post.rating == "s"
     klass << "post-rating-questionable" if post.rating == "q"
     klass << "post-rating-explicit" if post.rating == "e"
-    klass << "blacklistable" unless options[:no_blacklist]
     klass
   end
 
@@ -46,7 +43,7 @@ class PostsDecorator < ApplicationDecorator
   def preview_html(template, options = {})
     return "" if post.nil?
 
-    if !options[:show_deleted] && post.is_deleted? && options[:tags] !~ /(?:status:(?:all|any|deleted|modqueue|appealed))|(?:deletedby:)|(?:delreason:)/i
+    if !options[:show_deleted] && post.is_deleted? && options[:tags] !~ /(?:status:(?:all|any|deleted))|(?:deletedby:)|(?:delreason:)/i
       return ""
     end
 
@@ -68,16 +65,11 @@ class PostsDecorator < ApplicationDecorator
     if options[:pool_id]
       link_params["pool_id"] = options[:pool_id]
     end
-    if options[:post_set_id]
-      link_params["post_set_id"] = options[:post_set_id]
-    end
 
-    tooltip = "Rating: #{post.rating}\nID: #{post.id}\nDate: #{post.created_at}\nStatus: #{post.status}\nScore: #{post.score}"
-    tooltip += "\nUploader: #{post.uploader_name}" if CurrentUser.user.is_janitor? || CurrentUser.user.show_post_uploader?
-    if CurrentUser.user.is_janitor? && (post.is_flagged? || post.is_deleted?)
-      flag = post.flags.order(id: :desc).first
-      tooltip += "\nFlag Reason: #{flag&.reason}" if post.is_flagged?
-      tooltip += "\nDel Reason: #{flag&.reason}" if post.is_deleted?
+    tooltip = "Rating: #{post.rating}\nID: #{post.id}\nDate: #{post.created_at}\nStatus: #{post.status}"
+    tooltip += "\nUploader: #{post.uploader_name}"
+    if post.is_deleted?
+      tooltip += "\nDel Reason: #{post.deletion_reason}"
     end
     tooltip += "\n\n#{post.tag_string}"
 
@@ -127,7 +119,7 @@ class PostsDecorator < ApplicationDecorator
   end
 
   def ribbons(template)
-    template.tag.div(class: "ribbons") do # rubocop:disable Metrics/BlockLength
+    template.tag.div(class: "ribbons") do
       [if post.parent_id.present?
          if post.has_visible_children?
            template.tag.div(class: "ribbon left has-parent has-children", title: "Has Parent\nHas Children") do
@@ -143,18 +135,8 @@ class PostsDecorator < ApplicationDecorator
            template.tag.span
          end
        end,
-       if post.is_flagged?
-         if post.is_pending?
-           template.tag.div(class: "ribbon right is-flagged is-pending", title: "Flagged\nPending") do
-             template.tag.span
-           end
-         else
-           template.tag.div(class: "ribbon right is-flagged", title: "Flagged") do
-             template.tag.span
-           end
-         end
-       elsif post.is_pending?
-         template.tag.div(class: "ribbon right is-pending", title: "Pending") do
+       if post.is_deleted?
+         template.tag.div(class: "ribbon right is-deleted", title: "Deleted") do
            template.tag.span
          end
        end,].join.html_safe
@@ -163,15 +145,9 @@ class PostsDecorator < ApplicationDecorator
 
   def vote_buttons(template)
     template.tag.div(id: "vote-buttons") do
-      template.tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?, data: { action: "up" }) do
-        template.tag.span(class: "post-vote-up-#{post.id} score-#{post.is_voted_up? ? 'positive' : 'neutral'}")
-      end +
-        template.tag.button("", class: "button vote-button vote score-neutral", disabled: post.is_vote_locked?, data: { action: "down" }) do
-          template.tag.span(class: "post-vote-down-#{post.id} score-#{post.is_voted_down? ? 'negative' : 'neutral'}")
-        end +
-        template.tag.button("", class: "button vote-button fav score-neutral", data: { action: "fav", state: post.is_favorited? }) do
-          template.tag.span(class: "post-favorite-#{post.id} score-neutral#{post.is_favorited? ? ' is-favorited' : ''}")
-        end
+      template.tag.button("", class: "button vote-button fav score-neutral", data: { action: "fav", state: post.is_favorited? }) do
+        template.tag.span(class: "post-favorite-#{post.id} score-neutral#{post.is_favorited? ? ' is-favorited' : ''}")
+      end
     end
   end
 end

@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
 class PostReplacement < ApplicationRecord
+  belongs_to_creator
+  belongs_to_user :approver
+  belongs_to_user :rejector
+  belongs_to_user :uploader_on_approve, :uploader_ip_addr_on_approve
   belongs_to :post
-  belongs_to :creator, class_name: "User"
-  belongs_to :approver, class_name: "User", optional: true
-  belongs_to :rejector, class_name: "User", optional: true
-  belongs_to :uploader_on_approve, class_name: "User", foreign_key: :uploader_id_on_approve, optional: true
-  attr_accessor :replacement_file, :replacement_url, :tags, :is_backup, :as_pending, :is_destroyed_reupload
+  attr_accessor :replacement_file, :replacement_url, :tags, :is_backup, :as_pending
 
-  validate :user_is_not_limited, on: :create
   validate :post_is_valid, on: :create
   validate :set_file_name, on: :create
   validate :fetch_source_file, on: :create
@@ -19,15 +18,14 @@ class PostReplacement < ApplicationRecord
   end
   validate :no_pending_duplicates, on: :create
   validate :write_storage_file, on: :create
-  validates :reason, length: { minimum: 5, maximum: 150 }, presence: true, on: :create
-  validates :rejection_reason, length: { maximum: 150 }, if: ->(rec) { rec.status == "rejected" }
+  validates :reason, length: { maximum: 150 }, on: :create
 
   after_create -> { post.update_index }
   before_destroy :remove_files
   after_destroy -> { post.update_index }
 
   TAGS_TO_REMOVE_AFTER_ACCEPT = %w[better_version_at_source].freeze
-  HIGHLIGHTED_TAGS = %w[better_version_at_source avoid_posting conditional_dnp].freeze
+  HIGHLIGHTED_TAGS = %w[better_version_at_source].freeze
 
   def replacement_url_parsed
     return nil unless replacement_url =~ %r{\Ahttps?://}i
@@ -35,13 +33,6 @@ class PostReplacement < ApplicationRecord
       Addressable::URI.heuristic_parse(replacement_url)
     rescue StandardError
       nil
-    end
-  end
-
-  def notify_reupload
-    return unless is_destroyed_reupload
-    if (destroyed_post = DestroyedPost.find_by(md5: md5))
-      destroyed_post.notify_reupload(creator, replacement_post_id: post_id)
     end
   end
 
@@ -57,12 +48,6 @@ class PostReplacement < ApplicationRecord
   def no_pending_duplicates
     return true if is_backup
 
-    if DestroyedPost.find_by(md5: md5)
-      errors.add(:base, "That image had been deleted from our site, and cannot be re-uploaded")
-      self.is_destroyed_reupload = true
-      return
-    end
-
     post = Post.where(md5: md5).first
     if post
       errors.add(:md5, "duplicate of existing post ##{post.id}")
@@ -75,46 +60,18 @@ class PostReplacement < ApplicationRecord
     replacements.empty?
   end
 
-  def user_is_not_limited
-    return true if status == "original"
-    uploadable = creator.can_upload_with_reason
-    if uploadable != true
-      errors.add(:creator, User.upload_reason_string(uploadable))
-      throw(:abort)
-    end
-
-    # Janitor bypass replacement limits
-    return true if creator.is_janitor?
-
-    if post.replacements.where(creator_id: creator.id).where("created_at > ?", 1.day.ago).count >= FemboyFans.config.post_replacement_per_day_limit
-      errors.add(:creator, "has already suggested too many replacements for this post today")
-      throw(:abort)
-    end
-    if post.replacements.where(creator_id: creator.id).count >= FemboyFans.config.post_replacement_per_post_limit
-      errors.add(:creator, "has already suggested too many total replacements for this post")
-      throw(:abort)
-    end
-    true
-  end
-
   def source_list
     source.split("\n").uniq.compact_blank
   end
 
   module StorageMethods
     def remove_files
-      PostEvent.add!(post_id, CurrentUser.user, :replacement_deleted, post_replacement_id: id, md5: md5, storage_id: storage_id)
+      PostEvent.add!(post_id, CurrentUser.ip_addr, :replacement_deleted, post_replacement_id: id, md5: md5, storage_id: storage_id)
       FemboyFans.config.storage_manager.delete_replacement(self)
     end
 
     def fetch_source_file
       return if replacement_file.present?
-
-      valid, reason = UploadWhitelist.is_whitelisted?(replacement_url_parsed)
-      unless valid
-        errors.add(:replacement_url, "is not whitelisted: #{reason}")
-        throw(:abort)
-      end
 
       download = Downloads::File.new(replacement_url_parsed)
       file = download.download!
@@ -178,7 +135,7 @@ class PostReplacement < ApplicationRecord
   end
 
   module ProcessingMethods
-    def approve!(penalize_current_uploader:)
+    def approve!
       unless %w[pending original rejected].include?(status)
         errors.add(:status, "must be pending, original, or rejected to approve")
         return
@@ -196,24 +153,9 @@ class PostReplacement < ApplicationRecord
       })
 
       processor = UploadService::Replacer.new(post: post, replacement: self)
-      processor.process!(penalize_current_uploader: penalize_current_uploader)
+      processor.process!
       PostEvent.add!(post.id, CurrentUser.user, :replacement_accepted, post_replacement_id: id, old_md5: post.md5, new_md5: md5)
-      creator.notify_for_upload(self, :replacement_approve) if creator_id != CurrentUser.id
       post.update_index
-    end
-
-    def toggle_penalize!
-      if status != "approved"
-        errors.add(:status, "must be approved to penalize")
-        return
-      end
-
-      if penalize_uploader_on_approve
-        User.where(id: uploader_on_approve).update_all("own_post_replaced_penalize_count = own_post_replaced_penalize_count - 1")
-      else
-        User.where(id: uploader_on_approve).update_all("own_post_replaced_penalize_count = own_post_replaced_penalize_count + 1")
-      end
-      update_attribute(:penalize_uploader_on_approve, !penalize_uploader_on_approve)
     end
 
     def promote!
@@ -231,21 +173,18 @@ class PostReplacement < ApplicationRecord
         end
         new_upload
       end
-      creator.notify_for_upload(self, :replacement_promote) if creator_id != CurrentUser.id
       post.update_index
       upload
     end
 
-    def reject!(user = CurrentUser.user, reason = "")
+    def reject!(user = CurrentUser.user)
       if status != "pending"
         errors.add(:status, "must be pending to reject")
         return
       end
 
       PostEvent.add!(post.id, user, :replacement_rejected, post_replacement_id: id)
-      update(status: "rejected", rejector: user, rejection_reason: reason)
-      User.where(id: creator_id).update_all("post_replacement_rejected_count = post_replacement_rejected_count + 1")
-      creator.notify_for_upload(self, :replacement_reject) if creator_id != CurrentUser.id
+      update(status: "rejected", rejector_ip_addr: user.ip_addr)
       post.update_index
     end
   end
@@ -253,7 +192,6 @@ class PostReplacement < ApplicationRecord
   module PromotionMethods
     def new_upload_params
       {
-        uploader_id:      creator_id,
         uploader_ip_addr: creator_ip_addr,
         file:             FemboyFans.config.storage_manager.open(FemboyFans.config.storage_manager.replacement_path(self, file_ext, :original)),
         tag_string:       post.tag_string,
@@ -261,7 +199,6 @@ class PostReplacement < ApplicationRecord
         source:           "#{source}\n" + post.source,
         parent_id:        post.id,
         description:      post.description,
-        locked_tags:      post.locked_tags,
         replacement_id:   id,
       }
     end
@@ -276,10 +213,10 @@ class PostReplacement < ApplicationRecord
         q = q.attribute_exact_matches(:md5, params[:md5])
         q = q.attribute_exact_matches(:status, params[:status])
 
-        q = q.where_user(:creator_id, :creator, params)
-        q = q.where_user(:approver_id, :approver, params)
-        q = q.where_user(:rejector_id, :rejector, params)
-        q = q.where_user(:uploader_id_on_approve, %i[uploader_name_on_approve uploader_id_on_approve], params)
+        q = q.where_user(:creator_ip_addr, :creator_ip_addr, params)
+        q = q.where_user(:approver_ip_addr, :approver_ip_addr, params)
+        q = q.where_user(:rejector_ip_addr, :rejector_ip_addr, params)
+        q = q.where_user(:uploader_ip_addr_on_approve, :uploader_ip_addr_on_approve, params)
 
         if params[:post_id].present?
           q = q.where("post_id in (?)", params[:post_id].split(",").first(100).map(&:to_i))
@@ -307,33 +244,11 @@ class PostReplacement < ApplicationRecord
       def promoted
         where(status: "promoted")
       end
-
-      def for_user(id)
-        where(creator_id: id.to_i)
-      end
-
-      def for_uploader_on_approve(id)
-        where(uploader_id_on_approve: id.to_i)
-      end
-
-      def penalized
-        where(penalize_uploader_on_approve: true)
-      end
-
-      def not_penalized
-        where(penalize_uploader_on_approve: false)
-      end
-
-      def visible(user)
-        return where.not(status: "rejected") if user.is_anonymous?
-        return all if user.is_janitor?
-        where("creator_id = ? or status != ?", user.id, "rejected")
-      end
     end
   end
 
-  def original_file_visible_to?(user)
-    user.is_janitor?
+  def original_file_visible_to?(_user)
+    true
   end
 
   def upload_as_pending?

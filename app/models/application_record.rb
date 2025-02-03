@@ -3,10 +3,6 @@
 class ApplicationRecord < ActiveRecord::Base
   self.abstract_class = true
 
-  after_create -> { DiscordNotification.new(self, :create).execute! }
-  after_update -> { DiscordNotification.new(self, :update).execute! }
-  after_destroy -> { DiscordNotification.new(self, :destroy).execute! }
-
   concerning :SearchMethods do
     class_methods do
       def paginate(page, options = {})
@@ -48,7 +44,7 @@ class ApplicationRecord < ActiveRecord::Base
         when :string, :text
           text_attribute_matches(attribute, value, **)
         else
-          raise(ArgumentError, "unhandled attribute type")
+          raise(ArgumentError, "unhandled column type")
         end
       end
 
@@ -113,29 +109,10 @@ class ApplicationRecord < ActiveRecord::Base
         end
       end
 
-      def with_resolved_user_ids(query_field, params, &)
-        user_name_key = query_field.is_a?(Symbol) ? "#{query_field}_name" : query_field[0]
-        user_id_key = query_field.is_a?(Symbol) ? "#{query_field}_id" : query_field[1]
-
-        if params[user_name_key].present?
-          user_ids = [User.name_to_id(params[user_name_key]) || 0]
-        end
-        if params[user_id_key].present?
-          user_ids = params[user_id_key].split(",").first(100).map(&:to_i)
-        end
-
-        yield(user_ids) if user_ids
-      end
-
-      # Searches for a user both by id and name.
-      # Accepts a block to modify the query when one of the params is present and yields the ids.
+      # Searches for a user by ip address.
       def where_user(db_field, query_field, params)
-        q = all
-        with_resolved_user_ids(query_field, params) do |user_ids|
-          q = yield(q, user_ids) if block_given?
-          q = q.where(to_where_hash(db_field, user_ids))
-        end
-        q
+        return all if params[query_field].blank?
+        where("#{db_field} <<= ?", params[query_field])
       end
 
       def apply_basic_order(params)
@@ -281,7 +258,7 @@ class ApplicationRecord < ActiveRecord::Base
         connection.execute("SET STATEMENT_TIMEOUT = 0") unless Rails.env.test?
         yield
       ensure
-        connection.execute("SET STATEMENT_TIMEOUT = #{CurrentUser.user.try(:statement_timeout) || 3_000}") unless Rails.env.test?
+        connection.execute("SET STATEMENT_TIMEOUT = #{FemboyFans.config.statement_timeout}") unless Rails.env.test?
       end
 
       def with_timeout(time, default_value = nil)
@@ -291,177 +268,64 @@ class ApplicationRecord < ActiveRecord::Base
         FemboyFans::Logger.log(e, expected: true)
         default_value
       ensure
-        connection.execute("SET STATEMENT_TIMEOUT = #{CurrentUser.user.try(:statement_timeout) || 3_000}") unless Rails.env.test?
-      end
-    end
-  end
-
-  concerning :SimpleVersioningMethods do
-    class_methods do
-      def simple_versioning(options = {})
-        cattr_accessor(:versioning_body_column, :versioning_ip_column, :versioning_user_column, :versioning_subject_column, :versioning_is_hidden_column, :versioning_is_sticky_column)
-        self.versioning_body_column = options[:body_column] || "body"
-        self.versioning_subject_column = options[:subject_column]
-        self.versioning_ip_column = options[:ip_column] || "creator_ip_addr"
-        self.versioning_user_column = options[:user_column] || "creator_id"
-        self.versioning_is_hidden_column = options[:is_hidden_column] || "is_hidden"
-        self.versioning_is_sticky_column = options[:is_sticky_column] || "is_sticky"
-
-        class_eval do # rubocop:disable Metrics/BlockLength
-          has_many(:versions, class_name: "EditHistory", as: :versionable)
-          after_update(:save_version, if: :should_create_edited_history)
-          after_save(if: :should_create_hidden_history) do |rec|
-            type = rec.send("#{versioning_is_hidden_column}?") ? "hide" : "unhide"
-            save_version(type)
-          end
-          after_save(if: :should_create_stickied_history) do |rec|
-            type = rec.send("#{versioning_is_sticky_column}?") ? "stick" : "unstick"
-            save_version(type)
-          end
-
-          define_method(:should_create_edited_history) do
-            return true if versioning_subject_column && saved_change_to_attribute?(versioning_subject_column)
-            saved_change_to_attribute?(versioning_body_column)
-          end
-
-          define_method(:should_create_hidden_history) do
-            saved_change_to_attribute?(versioning_is_hidden_column)
-          end
-
-          define_method(:should_create_stickied_history) do
-            saved_change_to_attribute?(versioning_is_sticky_column)
-          end
-
-          define_method(:save_original_version) do
-            body = send("#{versioning_body_column}_before_last_save")
-            body = send(versioning_body_column) if body.nil?
-
-            subject = nil
-            if versioning_subject_column
-              subject = send("#{versioning_subject_column}_before_last_save")
-              subject = send(versioning_subject_column) if subject.nil?
-            end
-            new = EditHistory.new
-            new.versionable = self
-            new.version = 1
-            new.ip_addr = send(versioning_ip_column)
-            new.body = body
-            new.user_id = send(versioning_user_column)
-            new.subject = subject
-            new.created_at = created_at
-            new.save!
-          end
-
-          define_method(:save_version) do |edit_type = "edit", extra_data = {}|
-            EditHistory.transaction do
-              our_next_version = next_version
-              if our_next_version == 0
-                save_original_version
-                our_next_version += 1
-              end
-
-              body = send(versioning_body_column)
-              subject = versioning_subject_column ? send(versioning_subject_column) : nil
-
-              version = EditHistory.new
-              version.version = our_next_version + 1
-              version.versionable = self
-              version.ip_addr = CurrentUser.ip_addr
-              version.body = body
-              version.subject = subject
-              version.user_id = CurrentUser.id
-              version.edit_type = edit_type
-              version.extra_data = extra_data
-              version.save!
-            end
-          end
-
-          define_method(:next_version) do
-            versions.count
-          end
-        end
-      end
-    end
-  end
-
-  concerning :MentionableMethods do
-    class_methods do
-      def mentionable(options = {})
-        cattr_accessor(:mentionable_body_column, :mentionable_notified_mentions_column, :mentionable_creator_column)
-        self.mentionable_body_column = options[:body_column] || "body"
-        self.mentionable_notified_mentions_column = options[:notified_mentions_column] || "notified_mentions"
-        self.mentionable_creator_column = options[:user_column] || "creator_id"
-
-        class_eval do # rubocop:disable Metrics/BlockLength
-          after_save(:update_mentions, if: :should_update_mentions?)
-
-          define_method(:should_update_mentions?) do
-            saved_change_to_attribute?(mentionable_body_column) && CurrentUser.user.id == send(mentionable_creator_column) # && send(mentionable_creator_column) != User.system.id
-          end
-
-          define_method(:update_mentions) do
-            return unless should_update_mentions?
-
-            DText.parse(send(mentionable_body_column)) => { mentions: }
-            return if mentions.empty?
-            sent = mentionable_notified_mentions_column.present? && respond_to?(mentionable_notified_mentions_column) ? send(mentionable_notified_mentions_column) : []
-            userids = mentions.uniq.map { |name| User.name_to_id(name) }.compact.uniq
-            unsent = userids - sent
-            creator = send(mentionable_creator_column)
-            return if unsent.empty?
-            unsent.each do |user_id|
-              # Save the user to the mentioned list regardless so they don't get a random notification for a future edit if they unblock the creator
-              send(mentionable_notified_mentions_column) << user_id if mentionable_notified_mentions_column.present? && respond_to?(mentionable_notified_mentions_column)
-              user = User.find(user_id)
-              next if user.is_suppressing_mentions_from?(creator) || user.id == creator || user == User.system
-              extra = {}
-              type = self.class.name
-              case type
-              when "Comment"
-                extra[:post_id] = post_id
-              when "ForumPost"
-                extra[:topic_id] = topic_id
-                extra[:topic_title] = topic.title
-              end
-              user.notifications.create!(category: "mention", data: { mention_id: id, mention_type: type, user_id: creator, **extra })
-            end
-            save
-          end
-
-          define_method(:mentions) do
-            notified_mentions.map { |id| { id: id, name: User.id_to_name(id) } }
-          end
-        end
+        connection.execute("SET STATEMENT_TIMEOUT = #{FemboyFans.config.statement_timeout}") unless Rails.env.test?
       end
     end
   end
 
   concerning :UserMethods do
     class_methods do
-      def belongs_to_creator(options = {})
+      def belongs_to_creator(column = :creator_ip_addr)
+        column ||= :creator_ip_addr
         class_eval do
-          belongs_to(:creator, **options.merge(class_name: "User"))
           before_validation(on: :create) do |rec|
-            rec.creator_id = CurrentUser.id if rec.creator_id.nil?
-            rec.creator_ip_addr = CurrentUser.ip_addr if rec.respond_to?(:creator_ip_addr=) && rec.creator_ip_addr.nil?
+            rec.send("#{column}=", CurrentUser.ip_addr)
           end
 
-          define_method(:creator_name) do
-            User.id_to_name(creator_id)
-          end
+          # define_method(:creator) do
+          #  User.new(send(column))
+          # end
+
+          # define_method(:creator_name) do
+          #  User.new(send(column)).name
+          # end
         end
+
+        belongs_to_user(:creator, column)
       end
 
-      def belongs_to_updater(options = {})
+      def belongs_to_updater(column = :updater_ip_addr)
+        column ||= :updater_ip_addr
         class_eval do
-          belongs_to(:updater, **options.merge(class_name: "User"))
           before_validation(unless: :destroyed?) do |rec|
-            rec.updater_id = CurrentUser.id
-            rec.updater_ip_addr = CurrentUser.ip_addr if rec.respond_to?(:updater_ip_addr=)
+            rec.send("#{column}=", CurrentUser.ip_addr)
           end
 
-          define_method(:updater_name) do
-            User.id_to_name(updater_id)
+          # define_method(:updater) do
+          #  User.new(send(column))
+          # end
+
+          # define_method(:updater_name) do
+          #  User.new(send(column)).name
+          # end
+        end
+
+        belongs_to_user(:updater, column)
+      end
+
+      def belongs_to_user(attribute, column = "#{attribute}_ip_addr")
+        class_eval do
+          define_method(attribute) do
+            val = send(column)
+            val ? User.new(val) : nil
+          end
+
+          define_method(:"#{attribute}_name") do
+            send(attribute).try(:name)
+          end
+
+          define_method("#{attribute}=") do |user|
+            send("#{column}=", user.try(:ip_addr))
           end
         end
       end
@@ -470,10 +334,10 @@ class ApplicationRecord < ActiveRecord::Base
 
   concerning :AttributeMethods do
     class_methods do
-      # Defines `<attribute>_string`, `<attribute>_string=`, and `<attribute>=`
-      # methods for converting an array attribute to or from a string.
+      # Defines `<column>_string`, `<column>_string=`, and `<column>=`
+      # methods for converting an array column to or from a string.
       #
-      # The `<attribute>=` setter parses strings into an array using the
+      # The `<column>=` setter parses strings into an array using the
       # `parse` regex. The resulting strings can be converted to another type
       # with the `cast` option.
       def array_attribute(name, parse: /[^[:space:]]+/, join_character: " ", cast: :itself)
@@ -523,7 +387,6 @@ class ApplicationRecord < ActiveRecord::Base
     @warnings ||= ActiveModel::Errors.new(self)
   end
 
-  include HasDtextLinks
   include ApiMethods
 
   def self.override_route_key(value)

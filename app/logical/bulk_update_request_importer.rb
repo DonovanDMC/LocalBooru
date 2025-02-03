@@ -2,12 +2,10 @@
 
 class BulkUpdateRequestImporter
   class Error < RuntimeError; end
-  attr_accessor :text, :forum_id, :creator_id, :creator_ip_addr
+  attr_accessor :text, :creator_ip_addr
 
-  def initialize(text, forum_id, creator = nil, ip_addr = nil)
-    @forum_id = forum_id
+  def initialize(text, ip_addr = nil)
     @text = text
-    @creator_id = creator
     @creator_ip_addr = ip_addr
   end
 
@@ -16,9 +14,9 @@ class BulkUpdateRequestImporter
     execute(tokens, approver)
   end
 
-  def validate!(user)
+  def validate!
     tokens = BulkUpdateRequestImporter.tokenize(text)
-    validate_annotate(tokens, user)
+    validate_annotate(tokens)
   end
 
   def self.tokenize(text)
@@ -91,7 +89,7 @@ class BulkUpdateRequestImporter
       return [nil, "duplicate of alias ##{tag_alias.id}; has blocking transitive relationships, cannot be applied through BUR"]
     end
     return [nil, "duplicate of alias ##{tag_alias.id}"] unless tag_alias.nil?
-    tag_alias = TagAlias.new(forum_topic_id: forum_id, status: "pending", antecedent_name: token[1], consequent_name: token[2])
+    tag_alias = TagAlias.new(status: "pending", antecedent_name: token[1], consequent_name: token[2])
     unless tag_alias.valid?
       return ["Error: #{tag_alias.errors.full_messages.join('; ')} (create alias #{tag_alias.antecedent_name} -> #{tag_alias.consequent_name})", nil]
     end
@@ -104,14 +102,14 @@ class BulkUpdateRequestImporter
   def validate_implication(token)
     tag_implication = TagImplication.duplicate_relevant.find_by(antecedent_name: token[1], consequent_name: token[2])
     return [nil, "duplicate of implication ##{tag_implication.id}"] unless tag_implication.nil?
-    tag_implication = TagImplication.new(forum_topic_id: forum_id, status: "pending", antecedent_name: token[1], consequent_name: token[2])
+    tag_implication = TagImplication.new(status: "pending", antecedent_name: token[1], consequent_name: token[2])
     unless tag_implication.valid?
       return ["Error: #{tag_implication.errors.full_messages.join('; ')} (create implication #{tag_implication.antecedent_name} -> #{tag_implication.consequent_name})", nil]
     end
     [nil, nil]
   end
 
-  def validate_annotate(tokens, user)
+  def validate_annotate(tokens)
     errors = []
     annotated = tokens.map do |token| # rubocop:disable Metrics/BlockLength
       case token[0]
@@ -137,13 +135,7 @@ class BulkUpdateRequestImporter
         token[3] = existing
         token
 
-      when :mass_update, :change_category
-        existing = Tag.find_by(name: token[1]).present?
-        token[3] = existing
-        token
-
-      when :nuke_tag
-        errors << "You cannot use nuke" unless FemboyFans.config.can_bur_nuke?(user)
+      when :mass_update, :change_category, :nuke_tag
         existing = Tag.find_by(name: token[1]).present?
         token[3] = existing
         token
@@ -151,8 +143,6 @@ class BulkUpdateRequestImporter
         errors << "Unknown token: #{token[0]}"
       end
     end
-    limit = FemboyFans.config.bur_entry_limit(user)
-    errors << "Cannot create BUR with more than #{limit} entries" if tokens.size > limit
     [errors, BulkUpdateRequestImporter.untokenize(annotated).join("\n")]
   end
 
@@ -183,32 +173,32 @@ class BulkUpdateRequestImporter
     tag_alias = TagAlias.duplicate_relevant.find_by(antecedent_name: token[1], consequent_name: token[2])
     if tag_alias.present?
       return unless tag_alias.status == "pending"
-      tag_alias.update_columns(creator_id: creator_id, creator_ip_addr: creator_ip_addr, forum_topic_id: forum_id)
+      tag_alias.update_columns(creator_ip_addr: creator_ip_addr)
     else
-      tag_alias = TagAlias.create(forum_topic_id: forum_id, status: "pending", antecedent_name: token[1], consequent_name: token[2])
+      tag_alias = TagAlias.create(status: "pending", antecedent_name: token[1], consequent_name: token[2])
       unless tag_alias.valid?
         raise(Error, "Error: #{tag_alias.errors.full_messages.join('; ')} (create alias #{tag_alias.antecedent_name} -> #{tag_alias.consequent_name})")
       end
     end
 
-    tag_alias.rename_artist
+    tag_alias.rename_creator
     raise(Error, "Error: Alias would modify other aliases or implications through transitive relationships. (create alias #{tag_alias.antecedent_name} -> #{tag_alias.consequent_name})") if tag_alias.has_transitives
-    tag_alias.approve!(approver: approver, update_topic: false)
+    tag_alias.approve!(approver)
   end
 
   def find_create_implication(token, approver)
     tag_implication = TagImplication.duplicate_relevant.find_by(antecedent_name: token[1], consequent_name: token[2])
     if tag_implication.present?
       return unless tag_implication.status == "pending"
-      tag_implication.update_columns(creator_id: creator_id, creator_ip_addr: creator_ip_addr, forum_topic_id: forum_id)
+      tag_implication.update_columns(creator_ip_addr: creator_ip_addr)
     else
-      tag_implication = TagImplication.create(forum_topic_id: forum_id, status: "pending", antecedent_name: token[1], consequent_name: token[2])
+      tag_implication = TagImplication.create(status: "pending", antecedent_name: token[1], consequent_name: token[2])
       unless tag_implication.valid?
         raise(Error, "Error: #{tag_implication.errors.full_messages.join('; ')} (create implication #{tag_implication.antecedent_name} -> #{tag_implication.consequent_name})")
       end
     end
 
-    tag_implication.approve!(approver: approver, update_topic: false)
+    tag_implication.approve!(approver)
   end
 
   def execute(tokens, approver)
@@ -234,10 +224,10 @@ class BulkUpdateRequestImporter
           tag_implication.reject!(update_topic: false)
 
         when :mass_update
-          TagBatchJob.perform_later(token[1], token[2], CurrentUser.id, CurrentUser.ip_addr)
+          TagBatchJob.perform_later(token[1], token[2], CurrentUser.user)
 
         when :nuke_tag
-          TagNukeJob.perform_later(token[1], CurrentUser.id, CurrentUser.ip_addr)
+          TagNukeJob.perform_later(token[1], CurrentUser.user)
 
         when :change_category
           tag = Tag.find_by(name: token[1])

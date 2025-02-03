@@ -10,19 +10,14 @@ class PostPresenter < Presenter
       return ""
     end
 
-    if !options[:show_deleted] && post.is_deleted? && options[:tags] !~ /(?:status:(?:all|any|deleted|modqueue|appealed))|(?:deletedby:)|(?:delreason:)/i
-      return ""
-    end
-
-    if post.loginblocked? || post.safeblocked?
+    if !options[:show_deleted] && post.is_deleted? && options[:tags] !~ /(?:status:(?:all|any|deleted))|(?:delreason:)/i
       return ""
     end
 
     options[:stats] ||= !options[:avatar] && !options[:inline]
 
     locals = {
-      post:  post,
-      views: options[:views],
+      post: post,
     }
 
     locals[:article_attrs] = {
@@ -39,13 +34,10 @@ class PostPresenter < Presenter
     if options[:pool_id]
       locals[:link_params]["pool_id"] = options[:pool_id]
     end
-    if options[:post_set_id]
-      locals[:link_params]["post_set_id"] = options[:post_set_id]
-    end
 
-    locals[:tooltip] = "Rating: #{post.rating}\nID: #{post.id}\nDate: #{post.created_at}\nStatus: #{post.status}\nScore: #{post.score}\n\n#{post.tag_string}"
+    locals[:tooltip] = "Rating: #{post.rating}\nID: #{post.id}\nDate: #{post.created_at}\nStatus: #{post.status}\n\n#{post.tag_string}"
 
-    locals[:cropped_url] = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && post.has_cropped? && !CurrentUser.user.disable_cropped_thumbnails?
+    locals[:cropped_url] = if FemboyFans.config.enable_image_cropping? && options[:show_cropped] && post.has_cropped?
                              post.crop_file_url
                            else
                              post.preview_file_url
@@ -95,15 +87,12 @@ class PostPresenter < Presenter
 
   def self.preview_class(post, pool: nil, size: nil, similarity: nil, **options) # rubocop:disable Lint/UnusedMethodArgument
     klass = ["post-preview"]
-    klass << "post-status-pending" if post.is_pending?
-    klass << "post-status-flagged" if post.is_flagged?
     klass << "post-status-deleted" if post.is_deleted?
     klass << "post-status-has-parent" if post.parent_id
     klass << "post-status-has-children" if post.has_visible_children?
     klass << "post-rating-safe" if post.rating == "s"
     klass << "post-rating-questionable" if post.rating == "q"
     klass << "post-rating-explicit" if post.rating == "e"
-    klass << "blacklistable" unless options[:no_blacklist]
     klass
   end
 
@@ -147,24 +136,10 @@ class PostPresenter < Presenter
       id:            post.id,
       created_at:    post.created_at,
       updated_at:    post.updated_at,
-      fav_count:     post.fav_count,
-      comment_count: post.visible_comment_count(CurrentUser),
       change_seq:    post.change_seq,
-      uploader_id:   post.uploader_id,
       description:   post.description,
       flags:         {
-        pending:       post.is_pending,
-        flagged:       post.is_flagged,
-        note_locked:   post.is_note_locked,
-        status_locked: post.is_status_locked,
-        rating_locked: post.is_rating_locked,
-        deleted:       post.is_deleted,
-        has_notes:     post.has_notes?,
-      },
-      score:         {
-        up:    post.up_score,
-        down:  post.down_score,
-        total: post.score,
+        deleted: post.is_deleted,
       },
       relationships: {
         parent_id:           post.parent_id,
@@ -190,9 +165,7 @@ class PostPresenter < Presenter
       },
       sources:       post.source&.split('\n'),
       tags:          post.tag_string.split,
-      locked_tags:   post.locked_tags&.split || [],
       is_favorited:  post.is_favorited?,
-      own_vote:      post.own_vote,
     }
   end
 
@@ -236,7 +209,7 @@ class PostPresenter < Presenter
   end
 
   def has_nav_links?(template)
-    has_sequential_navigation?(template.params) || @post.has_active_pools? || @post.post_sets.owned.any?
+    has_sequential_navigation?(template.params) || @post.has_active_pools?
   end
 
   def has_sequential_navigation?(params)

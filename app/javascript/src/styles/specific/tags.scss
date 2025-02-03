@@ -1,5 +1,4 @@
 
-
 div#c-tags {
   div#a-index table.striped {
     td:nth-child(1), th:nth-child(1) {
@@ -40,18 +39,6 @@ div#c-tags {
       i {
         margin-left: 0.25em;
         font-size: 11pt;
-      }
-
-      .fa-face-frown {
-        color: $tags-vote-down-color;
-      }
-
-      .fa-face-meh {
-        color: $tags-vote-meh-color;
-      }
-
-      .fa-face-smile {
-        color: $tags-vote-up-color;
       }
     }
   }

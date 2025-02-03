@@ -18,16 +18,10 @@ module StatsUpdater
     stats[:deleted_posts] = Post.tag_match("status:deleted").count_only
     stats[:existing_posts] = stats[:active_posts] + stats[:deleted_posts]
     stats[:destroyed_posts] = stats[:total_posts] - stats[:existing_posts]
-    stats[:total_votes] = PostVote.count
-    stats[:total_notes] = Note.count
     stats[:total_favorites] = Favorite.count
     stats[:total_pools] = Pool.count
-    stats[:public_sets] = PostSet.where(is_public: true).count
-    stats[:private_sets] = PostSet.where(is_public: false).count
-    stats[:total_sets] = stats[:public_sets] + stats[:private_sets]
 
     stats[:average_posts_per_pool] = Pool.average(Arel.sql("cardinality(post_ids)")) || 0
-    stats[:average_posts_per_set] = PostSet.average(Arel.sql("cardinality(post_ids)")) || 0
 
     stats[:safe_posts] = Post.tag_match("status:any rating:s").count_only
     stats[:questionable_posts] = Post.tag_match("status:any rating:q").count_only
@@ -41,31 +35,6 @@ module StatsUpdater
     stats[:average_file_size] = Post.average("file_size")
     stats[:total_file_size] = Post.sum("file_size")
     stats[:average_posts_per_day] = daily_average.call(stats[:total_posts])
-
-    ### Users ###
-
-    stats[:total_users] = User.count
-    User::Levels.hash.each do |name, level|
-      stats[:"#{name.downcase}_users"] = User.where(level: level).count
-    end
-    stats[:unactivated_users] = User.email_not_verified.count
-    stats[:total_dmails] = (Dmail.maximum("id") || 0) / 2
-    stats[:average_registrations_per_day] = daily_average.call(stats[:total_users])
-
-    ### Comments ###
-
-    stats[:total_comments] = Comment.maximum("id") || 0
-    stats[:active_comments] = Comment.where(is_hidden: false).count
-    stats[:hidden_comments] = Comment.where(is_hidden: true).count
-    stats[:deleted_comments] = stats[:total_comments] - (stats[:active_comments] + stats[:hidden_comments])
-    stats[:average_comments_per_day] = daily_average.call(stats[:total_comments])
-
-    ### Forum posts ###
-
-    stats[:total_forum_topics] = ForumTopic.count
-    stats[:total_forum_posts] = ForumPost.maximum("id") || 0
-    stats[:average_posts_per_topic] = stats[:total_forum_topics] == 0 ? 0 : (stats[:total_forum_posts] / stats[:total_forum_topics]).round
-    stats[:average_forum_posts_per_day] = daily_average.call(stats[:total_forum_posts])
 
     ### Tags ###
 

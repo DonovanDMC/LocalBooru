@@ -1,5 +1,4 @@
 
-
 .diff-list {
   .added, .added a {
     color: $diff-tag-added-color;
@@ -45,7 +44,7 @@
   del.obsolete, del.obsolete a {
     text-decoration: line-through;
     color: $diff-tag-removed-obsolete-color;
-  }  
+  }
 }
 
 // diffy

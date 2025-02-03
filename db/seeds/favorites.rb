@@ -3,17 +3,11 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "config", "environment"))
 
-users = User.where(level: User::Levels::MEMBER, favorite_count: ...1000).order("id asc")
-
-users.each_with_index do |user, i|
-  CurrentUser.scoped(user) do
-    count = rand(500..7000)
-    puts "Creating #{count} favorites for #{user.name} (#{i + 1}/#{users.count})"
-    Post.find(Post.pluck(:id).sample(count)).each do |post|
-      FavoriteManager.add!(user: CurrentUser.user, post: post)
-      VoteManager::Posts.vote!(user: CurrentUser.user, post: post, score: rand(1..100) > 90 ? -1 : 1)
-    rescue Favorite::Error, ActiveRecord::RecordInvalid
-      # ignore
-    end
+CurrentUser.scoped(ip_addr: "127.0.0.1") do
+  count = rand(500..7000)
+  Post.find(Post.pluck(:id).sample(count)).each do |post|
+    FavoriteManager.add!(post)
+  rescue Favorite::Error, ActiveRecord::RecordInvalid
+    # ignore
   end
 end

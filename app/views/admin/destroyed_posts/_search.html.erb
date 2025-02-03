@@ -1,8 +1,6 @@
 <%= form_search(path: admin_destroyed_posts_path) do |f| %>
   <%= f.user(:destroyer) %>
-  <%= f.input(:destroyer_ip_addr, label: "Destroyer IP Address") %>
   <%= f.user(:uploader) %>
-  <%= f.input(:uploader_ip_addr, label: "Uploader IP Address") %>
   <%= f.input(:post_id, label: "Post ID") %>
   <%= f.input(:md5) %>
   <%= f.input(:reason_matches, label: "Reason") %>

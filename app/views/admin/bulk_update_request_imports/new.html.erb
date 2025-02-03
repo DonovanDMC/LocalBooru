@@ -21,13 +21,6 @@ mass update aaa -> bbb
     <% end %>
   </div>
 
-  <div class="input">
-    <label for="batch_forum_id">
-      Forum ID
-    </label>
-    <%= text_field "batch", "forum_id", value: @importer.try(:forum_id) %>
-  </div>
-
   <%= submit_tag "Import" %>
 <% end %>
 

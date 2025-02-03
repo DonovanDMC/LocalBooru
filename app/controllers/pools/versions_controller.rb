@@ -9,12 +9,12 @@ module Pools
         @pool = Pool.find_by(id: pool_id)
       end
 
-      @pool_versions = authorize(PoolVersion).search(search_params(PoolVersion)).paginate(params[:page], limit: params[:limit])
+      @pool_versions = PoolVersion.search(search_params(PoolVersion)).paginate(params[:page], limit: params[:limit])
       respond_with(@pool_versions)
     end
 
     def diff
-      @pool_version = authorize(PoolVersion.find(params[:id]))
+      @pool_version = PoolVersion.find(params[:id])
     end
   end
 end

@@ -37,8 +37,6 @@ class PostQueryBuilder
     relation = add_array_range_relation(relation, q[:ratio], "ROUND(1.0 * posts.image_width / GREATEST(1, posts.image_height), 2)")
     relation = add_array_range_relation(relation, q[:width], "posts.image_width")
     relation = add_array_range_relation(relation, q[:height], "posts.image_height")
-    relation = add_array_range_relation(relation, q[:score], "posts.score")
-    relation = add_array_range_relation(relation, q[:fav_count], "posts.fav_count")
     relation = add_array_range_relation(relation, q[:framecount], "posts.framecount")
     relation = add_array_range_relation(relation, q[:filesize], "posts.file_size")
     relation = add_array_range_relation(relation, q[:change_seq], "posts.change_seq")
@@ -49,40 +47,20 @@ class PostQueryBuilder
     end
     relation = add_array_range_relation(relation, q[:post_tag_count], "posts.tag_count")
 
-    TagQuery::COUNT_METATAGS.each do |column|
-      relation = add_array_range_relation(relation, q[column.to_sym], "posts.#{column}")
-    end
+    # TagQuery::COUNT_METATAGS.each do |column|
+    #  relation = add_array_range_relation(relation, q[column.to_sym], "posts.#{column}")
+    # end
 
     if q[:md5]
       relation = relation.where("posts.md5": q[:md5])
     end
 
-    if q[:status] == "pending"
-      relation = relation.where("posts.is_pending = TRUE")
-    elsif q[:status] == "flagged"
-      relation = relation.where("posts.is_flagged = TRUE")
-    elsif q[:status] == "appealed"
-      relation = relation.joins(:appeals).where("post_appeals.status = #{PostAppeal.statuses['pending']}")
-    elsif q[:status] == "modqueue"
-      relation = relation.left_joins(:appeals).where("posts.is_pending = TRUE OR posts.is_flagged = TRUE OR (post_appeals.id IS NOT NULL AND post_appeals.status = #{PostAppeal.statuses['pending']})")
-    elsif q[:status] == "deleted"
+    if q[:status] == "deleted" || q[:status_must_not] == "active"
       relation = relation.where("posts.is_deleted = TRUE")
-    elsif q[:status] == "active"
-      relation = relation.where("posts.is_pending = FALSE AND posts.is_deleted = FALSE AND posts.is_flagged = FALSE")
+    elsif q[:status] == "active" || q[:status_must_not] == "deleted"
+      relation = relation.where("posts.is_deleted = FALSE")
     elsif q[:status] == "all" || q[:status] == "any"
       # do nothing
-    elsif q[:status_must_not] == "pending"
-      relation = relation.where("posts.is_pending = FALSE")
-    elsif q[:status_must_not] == "flagged"
-      relation = relation.where("posts.is_flagged = FALSE")
-    elsif q[:status_must_not] == "appealed"
-      relation = relation.left_joins(:appeals).where("post_appeals.id IS NULL OR post_appeals.status != #{PostAppeal.statuses['pending']}")
-    elsif q[:status_must_not] == "modqueue"
-      relation = relation.left_joins(:appeals).where("posts.is_pending = FALSE AND posts.is_flagged = FALSE AND (post_appeals.id IS NULL OR post_appeals.status != #{PostAppeal.statuses['pending']})")
-    elsif q[:status_must_not] == "deleted"
-      relation = relation.where("posts.is_deleted = FALSE")
-    elsif q[:status_must_not] == "active"
-      relation = relation.where("posts.is_pending = TRUE OR posts.is_deleted = TRUE OR posts.is_flagged = TRUE")
     end
 
     q[:filetype]&.each do |filetype|
@@ -97,40 +75,6 @@ class PostQueryBuilder
       relation = relation.where("posts.pool_string = ''")
     elsif q[:pool] == "any"
       relation = relation.where("posts.pool_string != ''")
-    end
-
-    q[:uploader_ids]&.each do |uploader_id|
-      relation = relation.where("posts.uploader_id": uploader_id)
-    end
-
-    q[:uploader_ids_must_not]&.each do |uploader_id|
-      relation = relation.where.not("posts.uploader_id": uploader_id)
-    end
-
-    if q[:approver] == "any"
-      relation = relation.where.not(posts: { approver_id: nil })
-    elsif q[:approver] == "none"
-      relation = relation.where("posts.approver_id is null")
-    end
-
-    q[:approver_ids]&.each do |approver_id|
-      relation = relation.where("posts.approver_id": approver_id)
-    end
-
-    q[:approver_ids_must_not]&.each do |approver_id|
-      relation = relation.where.not("posts.approver_id": approver_id)
-    end
-
-    if q[:commenter] == "any"
-      relation = relation.where.not(posts: { last_commented_at: nil })
-    elsif q[:commenter] == "none"
-      relation = relation.where("posts.last_commented_at is null")
-    end
-
-    if q[:noter] == "any"
-      relation = relation.where.not(posts: { last_noted_at: nil })
-    elsif q[:noter] == "none"
-      relation = relation.where("posts.last_noted_at is null")
     end
 
     if q[:parent] == "none"

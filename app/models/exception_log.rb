@@ -2,13 +2,13 @@
 
 class ExceptionLog < ApplicationRecord
   serialize :extra_params, coder: JSON
+  belongs_to_user :user, :ip_addr
 
-  def self.add!(exception, user_id: nil, request: nil, source: nil, **extra)
+  def self.add!(exception, user: nil, request: nil, source: nil, **extra)
     source ||= request.present? ? request.filtered_parameters.slice(:controller, :action).values.join("#") : "Unknown"
     extra_params = {
       host:       Socket.gethostname,
       params:     request.try(:filtered_parameters),
-      user_id:    user_id,
       referrer:   request.try(:referrer),
       user_agent: request.try(:user_agent) || "Internal",
       source:     source,
@@ -28,7 +28,7 @@ class ExceptionLog < ApplicationRecord
     end
 
     create!(
-      ip_addr:      request.try(:remote_ip) || "0.0.0.0",
+      ip_addr:      user.try(:ip_addr) || request.try(:remote_ip) || "0.0.0.0",
       class_name:   unwrapped_exception.class.name,
       message:      unwrapped_exception.message,
       trace:        unwrapped_exception.backtrace.try(:join, "\n") || "",
@@ -38,12 +38,10 @@ class ExceptionLog < ApplicationRecord
     )
   end
 
-  def user
-    User.find_by(id: extra_params["user_id"])
-  end
-
   def self.search(params)
     q = super
+
+    q = q.where_user(:ip_addr, :user_ip_addr, params)
 
     if params[:commit].present?
       q = q.where(version: params[:commit])

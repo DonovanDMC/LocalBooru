@@ -6,11 +6,6 @@
   <% end %>
   <% t.column("Name", th: { class: "col-expand" }) do |tag| %>
     <span class="category-<%= tag.category %>">
-      <% if tag.artist? %>
-        <%= link_to("?", show_or_new_artists_path(name: tag.name)) %>
-      <% else %>
-        <%= link_to_wiki_or_new("?", tag.name) %>
-      <% end %>
       <%= link_to(tag.name, posts_path(tags: tag.name)) %>
     </span>
   <% end %>

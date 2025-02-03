@@ -6,14 +6,13 @@ class TagVersion < ApplicationRecord
 
   module SearchMethods
     def search(params)
-      q = super.includes(:updater, :tag)
+      q = super.includes(:tag)
 
+      q = q.where_user(:updater_ip_addr, :updater_ip_addr, params)
       if params[:tag].present?
         tag = Tag.find_by_normalized_name(params[:tag])
         q = q.where(tag: tag)
       end
-
-      q = q.where_user(:updater_id, :updater, params)
 
       q.apply_basic_order(params)
     end
@@ -29,11 +28,7 @@ class TagVersion < ApplicationRecord
     previous && previous.category != category
   end
 
-  def is_locked_changed?
-    previous && previous.is_locked? != is_locked?
-  end
-
   def self.available_includes
-    %i[tag updater]
+    %i[tag]
   end
 end

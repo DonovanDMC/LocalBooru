@@ -1,0 +1,28 @@
+<h1>
+  Creator: <%= link_to @creator.pretty_name, posts_path(tags: @creator.name), class: "tag-type-#{@creator.category_id}" %>
+</h1>
+
+<% if @creator.notes.present? && @creator.visible? %>
+  <div class="dtext-container">
+    <%= format_text(@creator.notes) %>
+  </div>
+<% end %>
+
+<%= render "tags/alias_and_implication_list", tag: @creator.tag %>
+<%= yield %>
+
+<div class="recent-posts">
+  <h1>Recent Posts (<%= link_to "view all", posts_path(tags: @creator.name) %>)</h1>
+
+  <div style="margin: 1em 0;">
+    <%= @post_set.presenter.post_previews_html(self) %>
+  </div>
+</div>
+
+<% render(partial: "static/embed", locals: { record: @creator, name: @creator.pretty_name, description: @creator.notes || "", post: nil }) %>
+
+<%= render "secondary_links" %>
+
+<% content_for(:page_title) do %>
+  Creator - <%= @creator.name %>
+<% end %>

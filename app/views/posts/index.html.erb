@@ -1,11 +1,6 @@
 <aside id="sidebar">
   <%= render "posts/partials/common/search", path: posts_path, tags: params[:tags], tags_dom_id: "tags" %>
-
-  <% if CurrentUser.user.is_member? %>
-    <%= render "posts/partials/index/mode_menu" %>
-  <% end %>
-
-  <%= render "posts/partials/index/blacklist" %>
+  <%= render "posts/partials/index/mode_menu" %>
 
   <section id="tag-list">
     <h1>Tags</h1>
@@ -16,19 +11,10 @@
   <%= render "posts/partials/index/related" %>
 </aside>
 
-<% if FemboyFans.config.reports_enabled? && @post_set.is_simple_tags? && @post_set.current_page == 1 %>
-  <% if @post_set.post_count == 0 %>
-    <%= missed_post_search_count_js(@post_set.public_tag_array, @post_set.current_page) %>
-  <% else %>
-    <%= post_search_count_js(@post_set.public_tag_array, @post_set.current_page) %>
-  <% end %>
-<% end %>
-
 <section id="content">
   <!-- TODO: Fix tag array with forced -status:deleted -->
 
   <div class="mobile-search">
-    <%= link_to "(search help)", help_page_path(id: "cheatsheet"), class: "search-help" %>
     <div class="search-form">
       <%= form_tag(posts_path, method: "get") do %>
         <% if params[:random] %>

@@ -6,13 +6,10 @@ module Posts
     # Show uses POST because it needs a file parameter. This would be GET otherwise.
     skip_forgery_protection only: :show
     before_action :validate_enabled
-    skip_before_action :api_check, if: -> { CurrentUser.is_owner? }
 
     def show
-      authorize(:iqdb)
       # Allow legacy ?post_id=123 parameters
       search_params = params[:search].presence || params
-      throttle(search_params)
 
       @matches = []
       if search_params[:file].present?
@@ -28,8 +25,6 @@ module Posts
           nil
         end
         raise(User::PrivilegeError, "Invalid URL") unless parsed_url
-        whitelist_result = UploadWhitelist.is_whitelisted?(parsed_url)
-        raise(User::PrivilegeError, "Not allowed to request content from this URL") unless whitelist_result[0]
         @matches = IqdbProxy.query_url(search_params[:url], search_params[:score_cutoff])
       elsif search_params[:post_id].present?
         @matches = IqdbProxy.query_post(Post.find_by(id: search_params[:post_id]), search_params[:score_cutoff])
@@ -44,20 +39,6 @@ module Posts
       end
     rescue IqdbProxy::Error => e
       render_expected_error(500, e.message)
-    end
-
-    private
-
-    def throttle(search_params)
-      return if FemboyFans.config.disable_throttles? || CurrentUser.is_trusted?
-
-      if %i[file url post_id hash].any? { |key| search_params[key].present? }
-        if RateLimiter.check_limit("img:#{CurrentUser.ip_addr}", 1, 2.seconds)
-          raise(APIThrottled)
-        else
-          RateLimiter.hit("img:#{CurrentUser.ip_addr}", 2.seconds)
-        end
-      end
     end
 
     def validate_enabled

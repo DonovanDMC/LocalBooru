@@ -8,8 +8,12 @@ StorageUtils.bootstrap = function (object, accessor, key, fallback) {
   const type = typeof fallback;
 
   Object.defineProperty(object, accessor, {
-    get () { return StorageUtils.getProxy(key, type, fallback); },
-    set (value) { StorageUtils.setProxy(key, value, type, fallback); },
+    get() {
+      return StorageUtils.getProxy(key, type, fallback);
+    },
+    set(value) {
+      StorageUtils.setProxy(key, value, type, fallback);
+    },
   });
 };
 

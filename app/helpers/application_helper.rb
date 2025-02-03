@@ -2,9 +2,6 @@
 
 module ApplicationHelper
   def disable_mobile_mode?
-    if CurrentUser.user.present? && CurrentUser.is_member?
-      return CurrentUser.disable_responsive_mode?
-    end
     cookies[:nmm].present?
   end
 
@@ -103,35 +100,14 @@ module ApplicationHelper
     end
   end
 
-  def link_to_ip(ip)
-    return "(none)" unless ip
-    banned = IpBan.is_banned?(ip)
-    link_to(ip, moderator_ip_addrs_path(search: { ip_addr: ip }), class: "ip-addr #{'is-banned' if banned}")
-  end
+  def link_to_user(user)
+    user ||= User.anonymous
 
-  def link_to_wiki(text, title = text, classes: nil, **)
-    link_to(text, wiki_page_path(title), class: "wiki-link #{classes}", **)
-  end
-
-  def link_to_wikis(*wiki_titles, **)
-    links = wiki_titles.map do |title|
-      link_to_wiki(title.tr("_", " "), title)
-    end
-
-    to_sentence(links, **)
-  end
-
-  def link_to_user(user, include_activation: false)
-    return "anonymous" if user.blank?
-
-    user_class = user.level_css_class
-    user_class += " user-post-approver" if user.can_approve_posts?
-    user_class += " user-unrestricted-uploads" if user.unrestricted_uploads?
-    user_class += " user-banned" if user.is_banned?
-    user_class += " with-style" if CurrentUser.user.style_usernames?
-    html = link_to(user.pretty_name, user_path(user), class: user_class, rel: "nofollow")
-    html << " (Unactivated)" if include_activation && !user.is_verified?
-    html
+    user_class = ""
+    user_class += " user-is-member" if user.is_member?
+    user_class += " user-is-anonymous" if user.is_anonymous?
+    user_class += " user-is-system" if user.is_system?
+    link_to(user.name, "#", class: user_class, rel: "nofollow")
   end
 
   def table_for(...)
@@ -140,8 +116,7 @@ module ApplicationHelper
   end
 
   def body_attributes(user = CurrentUser.user)
-    attributes = %i[id name level level_string can_approve_posts? unrestricted_uploads? per_page]
-    attributes += User::Roles.map { |role| :"is_#{role}?" }
+    attributes = %i[name ip_addr per_page is_anonymous? is_member? is_system?]
 
     controller_param = params[:controller].parameterize.dasherize
     action_param = params[:action].parameterize.dasherize
@@ -177,48 +152,6 @@ module ApplicationHelper
     end.to_h
   end
 
-  def user_avatar(user)
-    return "" if user.nil?
-    post_id = user.avatar_id
-    return "" unless post_id
-    deferred_post_ids.add(post_id)
-    tag.div(class: "post-thumb placeholder", id: "tp-#{post_id}", data: { id: post_id }) do
-      tag.img(class: "thumb-img placeholder", src: "/images/thumb-preview.png", height: 150, width: 150)
-    end
-  end
-
-  def unread_dmails(user)
-    if user.has_mail?
-      "(#{user.unread_dmail_count})"
-    else
-      ""
-    end
-  end
-
-  def unread_notifications(user)
-    if user.has_unread_notifications?
-      "(#{user.unread_notification_count})"
-    else
-      ""
-    end
-  end
-
-  def link_to_latest(id)
-    return "" unless id
-    subnav_link_to("Latest", params.permit!.merge(page: "b#{id + 1}"))
-  end
-
-  def latest_link(records, raw: false, separator: !raw)
-    return unless CurrentUser.is_moderator?
-    return if params[:action] != "index" || records.blank?
-    link = link_to_latest(records.first.id)
-    if raw
-      link
-    else
-      content_for(:secondary_links) { "#{'| ' if separator}#{link}".html_safe }
-    end
-  end
-
   protected
 
   def nav_link_match(controller, url)
@@ -226,41 +159,14 @@ module ApplicationHelper
     return url == request.path if controller == "static"
 
     url =~ case controller
-           when "sessions", "users", "users/login_reminders", "users/password_resets", "admin/users", "dmails"
-             %r{^/(session|users)}
-
-           when "post_sets"
-             %r{^/post_sets}
-
-           when "comments"
-             %r{^/comments}
-
-           when "notes", "notes/versions"
-             %r{^/notes}
-
-           when "posts", "uploads", "posts/versions", "popular", "favorites"
+           when "posts", "uploads", "posts/versions", "favorites"
              %r{^/posts}
-
-           when "artists", "artist_versions"
-             %r{^/artist}
 
            when "tags", "meta_searches", "tags/aliases", "tags/implications", "tags/related"
              %r{^/tags}
 
            when "pools", "pools/versions"
              %r{^/pools}
-
-           when "moderator/dashboards"
-             %r{^/moderator}
-
-           when "wiki_pages", "wiki_pages/versions"
-             %r{^/wiki_pages}
-
-           when "forums", "forums/topics", "forums/posts"
-             %r{^/forums}
-
-           when "help"
-             %r{^/help}
 
            # If there is no match activate the site map only
            else

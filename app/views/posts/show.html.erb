@@ -4,10 +4,8 @@
     <%= render "posts/partials/show/parent_children", post: @post, parent_post_set: @parent_post_set, children_post_set: @children_post_set %>
   <% end %>
 
-  <%= render "posts/partials/index/blacklist", post_id: @post.id %>
-
   <section id="tag-list">
-    <%= @post.presenter.post_show_sidebar_tag_list_html(current_query: params[:q], highlighted_tags: @post.uploader_linked_artists.map(&:name), followed_tags: @post.followed_tags(CurrentUser.user).map(&:tag_name)) %>
+    <%= @post.presenter.post_show_sidebar_tag_list_html(current_query: params[:q]) %>
   </section>
 
   <section id="post-information">
@@ -24,7 +22,6 @@
     <h1>History</h1>
     <ul>
       <li><%= link_to "Tags/Desc", post_versions_path(search: { post_id: @post.id }) %></li>
-      <li><%= link_to "Notes", note_versions_path(search: { post_id: @post.id }) %></li>
       <li><%= link_to "Events", post_events_path(search: { post_id: @post.id }) %></li>
       <li><%= link_to "Replacements", post_replacements_path(search: { post_id: @post.id }) %></li>
     </ul>
@@ -34,10 +31,8 @@
   <section id="post-related-images">
       <h1>Related</h1>
       <ul>
-        <li><%= link_to "Sets with this post", post_sets_path(search: { post_id: @post.id }), rel: "nofollow" %></li>
         <% if IqdbProxy.enabled? && @post.has_preview? %>
           <li><%= link_to "Visually similar", posts_iqdb_path(search: { post_id: @post.id }), rel: "nofollow" %></li>
-          <li><%= link_to "Recommendations", post_recommendations_path(search: { post_id: @post.id }), rel: "nofollow" %></li>
         <% end %>
         <% if @post.visible? && @post.is_image? %>
           <li><a rel="nofollow" href="https://www.google.com/searchbyimage?image_url=<%= @post.reverse_image_url %>&client=<%= FemboyFans.config.app_name %>">Reverse Google Search</a></li>
@@ -62,14 +57,12 @@
     <% end %>
 
     <div id="post-notices-top">
-      <% if CurrentUser.user.is_janitor? %>
+      <% if CurrentUser.user.top_notices? %>
         <%= render "posts/partials/show/notices", post: @post %>
       <% end %>
     </div>
 
-    <%= tag.section(id: "image-container", class: "blacklistable", **PostPresenter.data_attributes(@post, include_post: true)) do -%>
-      <div id="note-container"></div>
-      <div id="note-preview"></div>
+    <%= tag.section(id: "image-container", **PostPresenter.data_attributes(@post, include_post: true)) do -%>
       <%= render "posts/partials/show/embedded", post: @post %>
     <% end -%>
 
@@ -88,21 +81,14 @@
   </div>
 
   <section id="image-extra-controls">
-    <% if CurrentUser.user.can_post_vote? %>
-      <div id="image-vote-buttons">
-        <%= post_vote_block(@post, @post.own_vote, buttons: true) %>
-      </div>
-    <% end %>
-    <% if CurrentUser.user.can_favorite? %>
-      <%= tag.div(class: "fav-buttons fav-buttons-#{@post.is_favorited?}") do %>
-        <%= button_tag("id": "add-fav-button", "class": "button btn-success", "data-pid": @post.id) do %>
-          <%= tag.i(class: "fa-regular fa-star") %>
-          <span>Favorite</span>
-        <% end %>
-        <%= button_tag("id": "remove-fav-button", "class": "button btn-danger", "data-pid": @post.id) do %>
-          <%= tag.i(class: "fa-solid fa-star") %>
-          <span>Unfavorite</span>
-        <% end %>
+    <%= tag.div(class: "fav-buttons fav-buttons-#{@post.is_favorited?}") do %>
+      <%= button_tag("id": "add-fav-button", "class": "button btn-success", "data-pid": @post.id) do %>
+        <%= tag.i(class: "fa-regular fa-star") %>
+        <span>Favorite</span>
+      <% end %>
+      <%= button_tag("id": "remove-fav-button", "class": "button btn-danger", "data-pid": @post.id) do %>
+        <%= tag.i(class: "fa-solid fa-star") %>
+        <span>Unfavorite</span>
       <% end %>
     <% end %>
     <% if @post.visible? %>
@@ -111,18 +97,7 @@
       </div>
       <div id="image-add-buttons">
         <%# TODO: find some way to remove the whitespace that's being inserted here, then return the margin to 0.5 %>
-        <%= link_to_if(policy(PostSet).add_posts?, "+ Set", "#", id: "set", class: "button btn-neutral") { "" } %>
         <%= link_to_if(policy(Pool).update?, "+ Pool", "#", id: "pool", class: "button btn-neutral") { "" } %>
-      </div>
-      <div id="image-note-buttons">
-        <%= link_to("Notes: ON", "#", id: "toggle-notes-button", class: "button btn-neutral") %>
-        <% if policy(Note).create? %>
-          <% if @post.is_note_locked? %>
-            <%= link_to("Notes Locked", "#", class: "button btn-neutral") %>
-          <% else %>
-            <%= link_to("+ Note", "#", id: "translate", title: "shortcut is n", class: "button btn-neutral", data: { shortcut: "n" }) %>
-          <% end %>
-        <% end %>
       </div>
     <% end %>
     <% unless @post.force_original_size? %>
@@ -150,40 +125,17 @@
     <% unless CurrentUser.move_related_thumbnails? %>
       <%= render "posts/partials/show/parent_children", post: @post, parent_post_set: @parent_post_set, children_post_set: @children_post_set %>
     <% end %>
-    <% unless CurrentUser.user.is_janitor? %>
+    <% unless CurrentUser.user.top_notices? %>
       <%= render "posts/partials/show/notices", post: @post %>
     <% end %>
   </div>
 
-  <section id="mark-as-translated-section" style="display: none;">
-    <%= form_tag(mark_as_translated_post_path(@post), class: "simple_form") do |f| %>
-      <%= hidden_field_tag :tags_query, params[:q] %>
-      <%= hidden_field_tag :pool_id, params[:pool_id] %>
-
-      <fieldset>
-        <label for="post_translation_check">
-          <%= check_box "post", "translation_check", checked: @post.has_tag?("translation_check") %>
-          Check translation
-        </label>
-
-        <label for="post_partially_translated">
-          <%= check_box "post", "partially_translated", checked: @post.has_tag?("partially_translated") %>
-          Partially translated
-        </label>
-      </fieldset>
-
-      <div class="input">
-        <%= submit_tag "Mark as translated" %>
-      </div>
-    <% end %>
-  </section>
-
   <% if @post.description.present? %>
     <div id="post-description-container" class="styled-dtext">
-      <details id="description" <%= "open" unless CurrentUser.description_collapsed_initially? %>>
+      <details id="description" open>
         <summary>Description</summary>
         <div>
-          <%= format_text(@post.description, max_thumbs: 0, qtags: true) %>
+          <%= format_text(@post.description, qtags: true) %>
         </div>
       </details>
     </div>
@@ -194,37 +146,15 @@
     <li><a href="#tag-list">Tags/Info</a></li>
   </ul>
 
-  <%= render "posts/partials/common/inline_blacklist" %>
-
   <menu id="post-sections">
-    <% unless CurrentUser.hide_comments? %>
-      <li class="active"><a href="#comments">Comments</a></li>
-    <% end %>
     <% if policy(@post).update? %>
       <li><a href="#edit" id="post-edit-link" data-shortcut="e">Edit</a></li>
     <% end %>
   </menu>
 
-  <% unless CurrentUser.hide_comments? %>
-    <section id="comments">
-      <%= render "comments/partials/index/list", comments: @post.comments.visible(CurrentUser.user), post: @post, show_header: false %>
-    </section>
-  <% end %>
-
   <ul class="menu mobile-only">
     <li><a href="#image-and-nav">Image</a></li>
-    <% unless CurrentUser.hide_comments? %>
-      <li><a href="#comments">Comments</a></li>
-    <% end %>
   </ul>
-
-  <section id="notes" style="display: none;">
-    <% if @post.has_notes? %>
-      <% cache("p/#{@post.id}/n/#{@post.last_noted_at.to_i}") do %>
-        <%= render partial: "notes/note", collection: @post.notes.active %>
-      <% end %>
-    <% end %>
-  </section>
 
   <% if policy(@post).update? %>
     <section id="edit" style="display: none;">
@@ -234,24 +164,15 @@
 </section>
 
 <% if policy(@post).add_to_pool? %>
-    <div id="add-to-pool-dialog" title="Add to pool" style="display: none;">
-      <%= render "pools/add_dialogue" %>
-    </div>
-  <% end %>
-  <% if PostSetPolicy.new(CurrentUser.user, nil).add_posts? %>
-    <div id="add-to-set-dialog" title="Add to set" style="display: none;">
-      <%= render "post_sets/add_dialog" %>
-    </div>
-  <% end %>
-  <% if CurrentUser.user.is_member? %>
-  <%= javascript_tag nonce: true do -%>
-    var uploaderSettings = {
-      postTags: <%= "#{@post.presenter.split_tag_list_text} ".to_json.html_safe %>,
-      uploadTags: <%= CurrentUser.presenter.favorite_tags_with_types.to_json.html_safe %>,
-      recentTags: <%= CurrentUser.presenter.recent_tags_with_types.to_json.html_safe %>
-    };
-    <% end -%>
+  <div id="add-to-pool-dialog" title="Add to pool" style="display: none;">
+    <%= render "pools/add_dialogue" %>
+  </div>
 <% end %>
+<%= javascript_tag nonce: true do -%>
+  var uploaderSettings = {
+    postTags: <%= "#{@post.presenter.split_tag_list_text} ".to_json.html_safe %>,
+  };
+  <% end -%>
 <% if @fixup_post_url %>
   <%= javascript_tag nonce: true do -%>
     // This just fixes up the history path for this page so you don't end up getting the wrong url when navigating.
@@ -269,7 +190,5 @@
   <meta name="default-image-size" content="<%= @post.presenter.default_image_size(CurrentUser.user) %>"/>
 <% end %>
 <% render(partial: "static/embed", locals: { record: @post, name: @post.presenter.humanized_essential_tag_string, description: "View this #{@post.image_width}x#{@post.image_height} #{number_to_human_size(@post.file_size)} image", post: @post }) %>
-
-<%= view_count_js(@post) %>
 
 <%= render "posts/partials/common/secondary_links" %>

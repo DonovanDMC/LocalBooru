@@ -1,259 +1,141 @@
 <template>
-    <div class="flex-grid-outer">
-        <div class="col box-section" style="flex: 2 0 0;">
-            <div class="flex-grid border-bottom">
-                <div class="col">
-                    <label class="section-label" for="post_file">File</label>
-                    <div class="hint"><a href="/help/supported_filetypes">Supported Formats</a></div>
-                </div>
-                <div class="col2">
-                  <file-input @uploadValueChanged="uploadValue = $event"
-                    @previewChanged="previewData = $event"
-                    @invalidUploadValueChanged="invalidUploadValue = $event"></file-input>
-                </div>
-            </div>
-            <file-preview classes="box-section in-editor below-upload" :data="previewData"></file-preview>
-            <div class="flex-grid border-bottom">
-                <div class="col">
-                    <label class="section-label" for="post_sources">Sources</label>
-                    <div>You should include: A link to the artists page where this was obtained, and a link to the
-                        submission page where this image was obtained. No available source should ONLY be used if the
-                        content has never been posted online anywhere else.
-                    </div>
-                </div>
-                <div class="col2">
-                    <sources :maxSources="10" :showErrors="showErrors" v-model:sources="sources" @sourceWarning="sourceWarning = $event"></sources>
-                </div>
-            </div>
-            <template v-if="normalMode">
-                <div class="flex-grid border-bottom">
-                    <div class="col">
-                        <label class="section-label" for="names">Artists</label>
-                        <div><a href="/help/tags">How do I tag an artist?</a></div>
-                        <div>Please don't use <a href="/wiki_pages/show_or_new?title=anonymous_artist">anonymous_artist</a> or <a href="/wiki_pages/show_or_new?title=unknown_artist">unknown_artist</a> tags unless they fall under the definitions found on the wiki.</div>
-                    </div>
-                    <div class="col2">
-                        <div>
-            <textarea class="tag-textarea" v-model="tagEntries.artist" id="post_artist" rows="2"
-                      placeholder="Ex: artist_name, unknown_artist, anonymous_artist etc." data-autocomplete="tag-edit"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex-grid border-bottom">
-                    <div class="col">
-                        <label class="section-label" for="post_sex_tags">Characters</label>
-                        <div>
-                          Select (and write in) all that apply. See our <a href="/wiki_pages/show_or_new?title=howto:tag_genders">Gender Tagging Guidelines</a> for more information.
-                        </div>
-                    </div>
-                    <div class="col2">
-                      <div class="flex-wrap">
-                        <image-checkbox :check="check" :checks="checkboxes.selected" v-for="check in checkboxes.sex"
-                                            @set="setCheck"
-                                            :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
-                      </div>
-                      <hr>
-                      <div class="flex-wrap">
-                        <image-checkbox :check="check" :checks="checkboxes.selected"
-                                        v-for="check in checkboxes.mascfem" @set="setCheck"
-                                        :key="check.name"></image-checkbox>
-                      </div>
-                      <div class="flex-wrap hide-default">
-                        <image-checkbox :check="check" :checks="checkboxes.selected"
-                                        v-for="check in checkboxes.behavior" @set="setCheck"
-                                        :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
-                      </div>
-                      <hr>
-                      <div class="flex-wrap">
-                        <image-checkbox :check="check" :checks="checkboxes.selected"
-                                          v-for="check in checkboxes.count" @set="setCheck"
-                                          :key="check.name"></image-checkbox>
-                      </div>
-                      <hr>
-                      <div class="flex-wrap hide-default">
-                          <image-checkbox :check="check" :checks="checkboxes.selected"
-                                          v-for="check in checkboxes.pairing" @set="setCheck"
-                                          :key="check.name" :data-tag-a="check.tagA" :data-tag-b="check.tagB"></image-checkbox>
-                      </div>
-                      <textarea class="tag-textarea" rows="2" v-model="tagEntries.character" id="post_character"
-                                placeholder="Ex: character_name solo_focus 1_male 2_females etc."
-                                data-autocomplete="tag-edit"></textarea>
-                    </div>
-                </div>
-                <div class="flex-grid border-bottom">
-                    <div class="col">
-                        <label class="section-label">Body Types and Species</label>
-                        <div>One listed body type per visible character, listed options are mutually exclusive.</div>
-                    </div>
-                    <div class="col2">
-                        <div class="flex-wrap">
-                            <image-checkbox :check="check" :checks="checkboxes.selected"
-                                            v-for="check in checkboxes.body" @set="setCheck"
-                                            :key="check.name" :data-tag="check.tag || check.name.toLowerCase().replace(/ /g, '_')"></image-checkbox>
-                        </div>
-                        <hr>
-                        <div class="flex-wrap hide-default">
-                          <image-checkbox :check="check" :checks="checkboxes.selected"
-                                          v-for="check in checkboxes.bodyTypePairing" @set="setCheck"
-                                          :key="check.name" :data-tag-a="check.tagA" :data-tag-b="check.tagB"></image-checkbox>
-                        </div>
-                        <textarea class="tag-textarea" rows="2" v-model="tagEntries.species" id="post_species"
-                                  placeholder="Ex: bear dragon hyena rat newt etc."
-                                  data-autocomplete="tag-edit"></textarea>
-                    </div>
-                </div>
-                <div class="flex-grid border-bottom">
-                    <div class="col">
-                        <label class="section-label">Contentious Content</label>
-                        <div>
-                            Fetishes or subjects that other users may find extreme or objectionable.
-                            These allow users to find or blacklist content with ease. Make sure that you are tagging
-                            these upon initial upload.
-                        </div>
-                    </div>
-                    <div class="col2">
-          <textarea class="tag-textarea" v-model="tagEntries.content" id="post_content" rows="2"
-                    data-autocomplete="tag-edit"
-                    placeholder="Ex: cub scatplay watersports diaper my_little_pony vore rape hyper etc."></textarea>
-                    </div>
-                </div>
+  <div class="flex-grid-outer">
+    <div class="col box-section" style="flex: 2 0 0;">
+      <div class="flex-grid border-bottom">
+        <div class="col">
+          <label class="section-label" for="post_file">File</label>
+          <div class="hint"><a href="/help/supported_filetypes">Supported Formats</a></div>
+        </div>
+        <div class="col2">
+          <file-input @uploadValueChanged="uploadValue = $event"
+                      @previewChanged="previewData = $event"
+                      @invalidUploadValueChanged="invalidUploadValue = $event"></file-input>
+        </div>
+      </div>
+      <file-preview classes="box-section in-editor below-upload" :data="previewData"></file-preview>
+      <div class="flex-grid border-bottom">
+        <div class="col">
+          <label class="section-label" for="post_sources">Sources</label>
+          <div>You should include: A link to the artists page where this was obtained, and a link to the
+            submission page where this image was obtained. No available source should ONLY be used if the
+            content has never been posted online anywhere else.
+          </div>
+        </div>
+        <div class="col2">
+          <sources :maxSources="10" :showErrors="showErrors" v-model:sources="sources" @sourceWarning="sourceWarning = $event"></sources>
+        </div>
+      </div>
+      <div class="flex-grid border-bottom">
+        <div class="col">
+          <label class="section-label">Rating</label>
+          <div>Explicit tags include sex, pussy, penis, masturbation, fellatio, etc.
+            (<a href="/help/ratings" target="_blank">help</a>)
+          </div>
+        </div>
+        <div class="col2">
+          <div class="box-section background-red" v-if="showErrors && invalidRating">
+            You must select an appropriate rating for this image.
+          </div>
+          <div>
+            <template v-if="!safe">
+              <button class="toggle-button rating-e" :class="{active: rating==='e'}" @click="rating = 'e'">
+                Explicit
+              </button>
+              <button class="toggle-button rating-q" :class="{active: rating==='q'}" @click="rating = 'q'">
+                Questionable
+              </button>
             </template>
-            <div class="flex-grid border-bottom">
-                <div class="col">
-                    <label class="section-label">Rating</label>
-                    <div>Explicit tags include sex, pussy, penis, masturbation, fellatio, etc.
-                        (<a href="/help/ratings" target="_blank">help</a>)
-                    </div>
-                </div>
-                <div class="col2">
-                    <div class="box-section background-red" v-if="showErrors && invalidRating">
-                        You must select an appropriate rating for this image.
-                    </div>
-                    <div>
-                        <template v-if="!safe">
-                            <button class="toggle-button rating-e" :class="{active: rating==='e'}" @click="rating = 'e'">
-                                Explicit
-                            </button>
-                            <button class="toggle-button rating-q" :class="{active: rating==='q'}" @click="rating = 'q'">
-                                Questionable
-                            </button>
-                        </template>
-                        <button class="toggle-button rating-s" :class="{active: rating==='s'}" @click="rating = 's'">Safe
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="flex-grid come-together-now">
-                <div class="col">
-                    <label class="section-label" for="post_tags">Other Tags</label>
-                    <div>
-                        Separate tags with spaces. (<a href="/help/tags" target="_blank">help</a>)
-                    </div>
-                    <div>
-                      Ensure you've reviewed our <a href="/wiki_pages/show_or_new?title=tag_what_you_see">
-                        Tag What You See
-                      </a> policy.
-                    </div>
-                </div>
-                <div class="col2">
-                  <file-preview classes="box-section in-editor" :data="previewData"></file-preview>
-                    <div class="box-section background-red" v-show="showErrors && notEnoughTags">
-                        You must provide at least <b>{{4 - tagCount}}</b> more tags. Tags in other sections count
-                        towards this total.
-                    </div>
-                    <div v-show="!tagPreview.show">
+            <button class="toggle-button rating-s" :class="{active: rating==='s'}" @click="rating = 's'">Safe
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="flex-grid come-together-now">
+        <div class="col">
+          <label class="section-label" for="post_tags">Other Tags</label>
+          <div>
+            Separate tags with spaces. (<a href="/help/tags" target="_blank">help</a>)
+          </div>
+          <div>
+            Ensure you've reviewed our <a href="/wiki_pages/show_or_new?title=tag_what_you_see">
+            Tag What You See
+          </a> policy.
+          </div>
+        </div>
+        <div class="col2">
+          <file-preview classes="box-section in-editor" :data="previewData"></file-preview>
+          <div class="box-section background-red" v-show="showErrors && notEnoughTags">
+            You must provide at least <b>{{4 - tagCount}}</b> more tags. Tags in other sections count
+            towards this total.
+          </div>
+          <div v-show="!tagPreview.show">
                         <textarea class="tag-textarea" id="post_tags" v-model="tagEntries.other" rows="5"
                                   ref="otherTags" data-autocomplete="tag-edit"></textarea>
-                    </div>
-                    <div v-show="tagPreview.show">
-                        <tag-preview :tags="tagPreview.tags" :loading="tagPreview.loading"
-                                     @close="previewFinalTags"></tag-preview>
-                    </div>
+          </div>
+          <div v-show="tagPreview.show">
+            <tag-preview :tags="tagPreview.tags" :loading="tagPreview.loading"
+                         @close="previewFinalTags"></tag-preview>
+          </div>
 
-                    <div class="related-tag-functions">
-                        Related:
-                        <a href="#" @click.prevent="findRelated()">Tags</a> |
-                        <a href="#" @click.prevent="findRelated(1)">Artists</a> |
-                        <a href="#" @click.prevent="findRelated(2)">Contributors</a> |
-                        <a href="#" @click.prevent="findRelated(3)">Copyrights</a> |
-                        <a href="#" @click.prevent="findRelated(4)">Characters</a> |
-                        <a href="#" @click.prevent="findRelated(5)">Species</a> |
-                        <a href="#" @click.prevent="findRelated(7)">Metatags</a> |
-                        <a href="#" @click.prevent="previewFinalTags">Preview Final Tags</a>
-                    </div>
-                </div>
-            </div>
-            <div class="flex-grid border-bottom over-me">
-                <related-tags v-if="relatedTags.length" :tags="tagsArray" :related="relatedTags"
-                              :loading="loadingRelated"
-                              @tag-active="pushTag"></related-tags>
-            </div>
-            <div class="flex-grid border-bottom">
-                <div class="col">
-                    <label class="section-label">Parent Post ID</label>
-                </div>
-                <div class="col2">
-                    <input v-model.number="parentID" placeholder="Ex. 12345"/>
-                </div>
-            </div>
-            <div v-if="allowLockedTags" class="flex-grid border-bottom">
-                <div class="col">
-                    <label class="section-label">Locked Tags</label>
-                </div>
-                <div class="col2">
-                    <input type="text" v-model="lockedTags" data-autocomplete="tag-query"/>
-                </div>
-            </div>
-            <div v-if="allowRatingLock" class="flex-grid border-bottom">
-                <div class="col">
-                    <label class="section-label">Lock Rating</label>
-                </div>
-                <div class="col2">
-                    <label><input type="checkbox" v-model="ratingLocked"/> Lock Rating</label>
-                </div>
-            </div>
-            <div class="flex-grid border-bottom">
-                <div class="col">
-                    <label class="section-label" for="post_description">Description</label>
-                </div>
-                <div class="col2">
-                    <%= ApplicationController.new.render_to_string(partial: "dtext_input", locals: { limit: FemboyFans.config.post_descr_max_size, textarea: '<textarea  class="dtext-formatter-input tag-textarea dtext" id="post_description" rows="10" v-model="description"></textarea>'.html_safe, allow_color: true }) %>
-                </div>
-            </div>
-            <div v-if="allowUploadAsPending" class="flex-grid border-bottom">
-                <div class="col">
-                    <label class="section-label">Upload as Pending</label>
-                    <div>If you aren't sure if this particular post is up to the standards, checking this box will put it into the moderation queue.</div>
-                </div>
-                <div class="col2">
-                    <label><input type="checkbox" v-model="uploadAsPending"/> Upload as Pending</label>
-                </div>
-            </div>
-            <div class="flex-grid">
-                <div class="col"></div>
-                <div class="col2">
-                    <div class="box-section background-red" v-show="preventUpload && showErrors">
-                        Unmet requirements above prevent the submission of the post.
-                    </div>
-                    <div class="box-section background-green" v-show="submitting">
-                        Submitting your post, please wait.
-                    </div>
-                    <div class="box-section background-red" v-show="error">
-                        {{ error }}
-                    </div>
-                    <div class="box-section background-red" v-show="duplicateId">
-                        Post is a duplicate of <a :href="duplicatePath">post #{{duplicateId}}.</a>
-                    </div>
-                    <button @click="submit" :disabled="(showErrors && preventUpload) || submitting" accesskey="s">
-                        {{ submitting ? "Uploading..." : "Upload" }}
-                    </button>
-                </div>
-            </div>
+          <div class="related-tag-functions">
+            Related:
+            <a href="#" @click.prevent="findRelated()">Tags</a> |
+            <a href="#" @click.prevent="findRelated(1)">Creators</a> |
+            <a href="#" @click.prevent="findRelated(2)">Contributors</a> |
+            <a href="#" @click.prevent="findRelated(3)">Copyrights</a> |
+            <a href="#" @click.prevent="findRelated(4)">Characters</a> |
+            <a href="#" @click.prevent="findRelated(5)">Species</a> |
+            <a href="#" @click.prevent="findRelated(7)">Metatags</a> |
+            <a href="#" @click.prevent="previewFinalTags">Preview Final Tags</a>
+          </div>
         </div>
-        <div id="preview-sidebar" class="col box-section" style="margin-left: 10px; padding: 10px;">
-            <file-preview classes="in-sidebar" :data="previewData"></file-preview>
+      </div>
+      <div class="flex-grid border-bottom over-me">
+        <related-tags v-if="relatedTags.length" :tags="tagsArray" :related="relatedTags"
+                      :loading="loadingRelated"
+                      @tag-active="pushTag"></related-tags>
+      </div>
+      <div class="flex-grid border-bottom">
+        <div class="col">
+          <label class="section-label">Parent Post ID</label>
         </div>
+        <div class="col2">
+          <input v-model.number="parentID" placeholder="Ex. 12345"/>
+        </div>
+      </div>
+      <div class="flex-grid border-bottom">
+        <div class="col">
+          <label class="section-label" for="post_description">Description</label>
+        </div>
+        <div class="col2">
+          <%= ApplicationController.new.render_to_string(partial: "dtext_input", locals: { limit: 0, textarea: '<textarea  class="dtext-formatter-input tag-textarea dtext" id="post_description" rows="10" v-model="description"></textarea>'.html_safe }) %>
+        </div>
+      </div>
+      <div class="flex-grid">
+        <div class="col"></div>
+        <div class="col2">
+          <div class="box-section background-red" v-show="preventUpload && showErrors">
+            Unmet requirements above prevent the submission of the post.
+          </div>
+          <div class="box-section background-green" v-show="submitting">
+            Submitting your post, please wait.
+          </div>
+          <div class="box-section background-red" v-show="error">
+            {{ error }}
+          </div>
+          <div class="box-section background-red" v-show="duplicateId">
+            Post is a duplicate of <a :href="duplicatePath">post #{{duplicateId}}.</a>
+          </div>
+          <button @click="submit" :disabled="(showErrors && preventUpload) || submitting" accesskey="s">
+            {{ submitting ? "Uploading..." : "Upload" }}
+          </button>
+        </div>
+      </div>
     </div>
+    <div id="preview-sidebar" class="col box-section" style="margin-left: 10px; padding: 10px;">
+      <file-preview classes="in-sidebar" :data="previewData"></file-preview>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -263,65 +145,6 @@
   import tagPreview from "./tag_preview.vue";
   import filePreview from "./file_preview.vue";
   import fileInput from "./file_input.vue";
-
-  const sex_checks = window.s = [
-    {name: "Male"},
-    {name: "Female"},
-    {name: "Andromorph"},
-    {name: "Gynomorph"},
-    {name: "Hermaphrodite", tag: "herm"},
-    {name: "Male-Herm", tag: "maleherm"},
-    {name: "Unknown", tag: "unknown_gender"}];
-  const genders = window.g = sex_checks.map(s => s.tag || s.name.toLowerCase().replace(/ /g, "_"));
-  const mascgenders = ["male", "andromorph", "maleherm"];
-  const femgenders = ["female", "gynomorph", "herm"];
-  const ucwords = (str) => str.toString().toLowerCase().replace(/_gender/g, "").replace(/^(.)|\s+(.)/g, r => r.toUpperCase());
-
-  function removeDuplicates(set) {
-    const unique = [];
-    for (const item of set) {
-      if (unique.find(p => p.tagA === item.tagB && p.tagB === item.tagA)) continue;
-      unique.push(item);
-    }
-    return unique;
-  }
-
-  const pairing_checks = window.pc = removeDuplicates(genders.flatMap(tagA => genders.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))))
-
-  const mascfem_checks = [
-    { name: "Masculine" },
-    { name: "Feminine" },
-  ];
-
-  const behavior_checks = [
-    { name: "Manly", genders: mascgenders },
-    { name: "Femboy", genders: mascgenders },
-    { name: "Tomboy", genders: femgenders },
-    { name: "Girly", genders: femgenders },
-  ];
-
-  const char_count_checks = [
-    { name: "Solo" },
-    { name: "Duo" },
-    { name: "Trio" },
-    { name: "Group" },
-    { name: "Zero Pictured" }
-  ];
-
-  const body_type_checks = [
-    { name: "Anthro" },
-    { name: "Feral" },
-    { name: "Humanoid" },
-    { name: "Human" },
-    { name: "Taur" }
-  ];
-
-  const forms = body_type_checks.map(b => b.tag || b.name.toLowerCase().replace(/ /g, "_"));
-  const body_type_pairing_checks = removeDuplicates(forms.flatMap(tagA => forms.flatMap(tagB => ({ name: `${ucwords(tagA)}/${ucwords(tagB)}`, tagA, tagB }))))
-
-  function tagSorter(a, b) {
-    return a.name > b.name ? 1 : -1;
-  }
 
   function unloadWarning() {
     if (this.allowNavigate || (this.uploadValue === "" && this.tags === "")) {
@@ -340,25 +163,8 @@
       "file-input": fileInput,
     },
     data() {
-      const allChecks = {};
-      const addChecks = function (check) {
-        if (typeof check["tag"] !== "undefined") {
-          allChecks[check.tag] = true;
-          return
-        }
-        allChecks[check.name.toLowerCase().replace(" ", "_")] = true;
-      };
-      sex_checks.forEach(addChecks);
-      mascfem_checks.forEach(addChecks);
-      behavior_checks.forEach(addChecks);
-      char_count_checks.forEach(addChecks);
-      pairing_checks.forEach(addChecks);
-      body_type_checks.forEach(addChecks);
-      body_type_pairing_checks.forEach(addChecks);
-
-
       return {
-        safe: window.uploaderSettings.safeSite,
+        safe: false,
         showErrors: false,
         allowNavigate: false,
         submitting: false,
@@ -372,27 +178,8 @@
 
         sourceWarning: false,
         sources: [""],
-        normalMode: !window.uploaderSettings.compactMode,
-
-        checkboxes: {
-          sex: sex_checks,
-          mascfem: mascfem_checks,
-          behavior: behavior_checks,
-          pairing: pairing_checks,
-          count: char_count_checks,
-          body: body_type_checks,
-          bodyTypePairing: body_type_pairing_checks,
-          selected: {},
-          all: allChecks
-        },
         tagEntries: {
-          // These had a bizarre naming pattern
-          // Old names are listed below VVV
-          artist: "",     // character: '',
-          character: "",  // sex: '',
-          species: "",    // bodyType: '',
-          content: "",    // theme: '',
-          other: "",      // other: '',
+          other: "",
         },
 
         tagPreview: {
@@ -400,13 +187,6 @@
           show: false,
           tags: []
         },
-
-        allowLockedTags: window.uploaderSettings.allowLockedTags,
-        lockedTags: "",
-        allowRatingLock: window.uploaderSettings.allowRatingLock,
-        ratingLocked: false,
-        allowUploadAsPending: window.uploaderSettings.allowUploadAsPending,
-        uploadAsPending: false,
 
         relatedTags: [],
         lastRelatedCategoryId: undefined,
@@ -424,47 +204,40 @@
       const self = this;
       window.onbeforeunload = unloadWarning.bind(self);
       const params = new URLSearchParams(window.location.search);
-      const fillField = function(field, key) {
-        if(params.has(key)) {
+      const fillField = function (field, key) {
+        if (params.has(key)) {
           self[field] = params.get(key);
         }
       };
-      const fillFieldBool = function(field, key) {
-        if(params.has(key)) {
+      const fillFieldBool = function (field, key) {
+        if (params.has(key)) {
           self[field] = (params.get(key) === "true");
         }
       };
 
       // Import tags from query parameters
-      const fillTags = function() {
-        const queryList = ["tags-artist", "tags-character", "tags-species", "tags-content"];
+      const fillTags = function () {
+        const queryList = ["tags-artist", "tags-creator", "tags-character", "tags-species", "tags-content"];
 
-        if(params.has("tags"))
+        if (params.has("tags"))
           self.importTags(params.get("tags"), "other");
 
-        if(self.normalMode) {
-          for(const name of queryList) {
-            if(!params.has(name)) continue;
-            self.importTags(params.get(name), name.replace("tags-", ""));
-          }
-        } else {
-          // No other inputs in advanced mode, so we can avoid
-          // recalculating duplicates every time in importTags
-          const tags = [];
-          for(const name of queryList) {
-            if(!params.has(name)) continue;
-            tags.push(params.get(name));
-          }
-          if(tags.length > 0)
-            self.importTags(tags.join(" "), "other");
+        // No other inputs in advanced mode, so we can avoid
+        // recalculating duplicates every time in importTags
+        const tags = [];
+        for (const name of queryList) {
+          if (!params.has(name)) continue;
+          tags.push(params.get(name));
         }
+        if (tags.length > 0)
+          self.importTags(tags.join(" "), "other");
       };
 
       // Import the post rating from a query parameter
-      const fillRating = function() {
-        if(!params.has("rating")) return;
+      const fillRating = function () {
+        if (!params.has("rating")) return;
         const rating = params.get("rating")[0].toLowerCase();
-        if(!/[sqe]/.test(rating)) return;
+        if (!/[sqe]/.test(rating)) return;
         self.rating = rating;
       };
 
@@ -472,20 +245,11 @@
       fillField("description", "description");
       fillTags();
       fillRating();
-      if(params.has("sources")) {
+      if (params.has("sources")) {
         self.sources = params.get("sources").split(",");
       }
-      if(this.allowRatingLock)
-        fillFieldBool("ratingLocked", "rating_locked");
-      if(this.allowLockedTags)
-        fillField("lockedTags", "locked_tags");
-      if(this.allowUploadAsPending)
-        fillFieldBool("uploadAsPending", "upload_as_pending")
     },
     methods: {
-      setCheck(tag, value) {
-        this.checkboxes.selected[tag] = value;
-      },
       submit() {
         this.showErrors = true;
         this.error = "";
@@ -504,12 +268,6 @@
         data.append("upload[source]", this.sources.join("\n"));
         data.append("upload[description]", this.description);
         data.append("upload[parent_id]", this.parentID);
-        if (this.allowLockedTags)
-          data.append("upload[locked_tags]", this.lockedTags);
-        if (this.allowRatingLock)
-          data.append("upload[locked_rating]", this.ratingLocked);
-        if (this.allowUploadAsPending)
-          data.append("upload[as_pending]", this.uploadAsPending);
         jQuery.ajax("/uploads.json", {
           contentType: false,
           processData: false,
@@ -544,13 +302,8 @@
       },
       pushTag(tag, add) {
         this.tagPreview.show = false;
-        const isCheck = typeof this.checkboxes.all[tag] !== "undefined";
         // In advanced mode we need to push these into the tags area because there are no checkboxes or other
         // tag fields so we can"t see them otherwise.
-        if (isCheck && this.normalMode) {
-          this.setCheck(tag, add);
-          return;
-        }
         const tags = this.tagEntries.other ? this.tagEntries.other.trim().split(" ") : [];
         const tagIdx = tags.indexOf(tag);
         if (add) {
@@ -574,19 +327,15 @@
         const tagsA = (tags + "").trim().split(" ").filter(n => n);
 
         // Dedupe
-        let tagsB = this.normalMode ? [] : (this.tagEntries.other || "").trim().split(" ");
+        let tagsB = (this.tagEntries.other || "").trim().split(" ");
         tagsA.forEach((tag) => {
-          if(tagsB.indexOf(tag) >= 0) return;
+          if (tagsB.indexOf(tag) >= 0) return;
           // In advanced mode, checkboxes are not available
-          if(this.normalMode && typeof this.checkboxes.all[tag] !== "undefined") {
-            this.setCheck(tag, true);
-            this.toggleTag(tag, true);
-          }
           tagsB.push(tag);
         });
 
         // Without a space at the end, vue panics
-        this.tagEntries[this.normalMode ? input : "other"] = tagsB.join(" ") + " ";
+        this.tagEntries.other = tagsB.join(" ") + " ";
       },
 
       previewFinalTags() {
@@ -659,71 +408,11 @@
         });
       },
       toggleTag(tag, checked) {
-        if (genders.includes(tag)) {
-          this.updateGenderTags(tag, checked);
-        }
-
-        if (forms.includes(tag)) {
-          this.updateFormTags(tag, checked);
-        }
       },
-      updateGenderTags(tag, checked) {
-        this.updateBehaviorTags();
-        const selected = genders.filter(g => this.checkboxes.selected[g] === true);
-        if (!checked) {
-          $(`[data-tag-a=${tag}], [data-tag-b=${tag}]`).hide();
-          // I feel like there should be a better way to do this but I can't find one (I hate vue)
-          $(`[data-tag-a=${tag}].active, [data-tag-b=${tag}].active`).click();
-          return;
-        }
-        for (const gender of genders) {
-          if (!selected.includes(gender)) continue;
-          for (const gender2 of genders) {
-            if (!selected.includes(gender2)) continue;
-            $(`[data-tag-a=${gender}][data-tag-b=${gender2}]`).show();
-          }
-        }
-      },
-      updateFormTags(tag, checked) {
-        const selected = forms.filter(g => this.checkboxes.selected[g] === true);
-        if (!checked) {
-          $(`[data-tag-a=${tag}], [data-tag-b=${tag}]`).hide();
-          // I feel like there should be a better way to do this but I can't find one (I hate vue)
-          $(`[data-tag-a=${tag}].active, [data-tag-b=${tag}].active`).click();
-          return;
-        }
-        for (const form of forms) {
-          if (!selected.includes(form)) continue;
-          for (const form2 of forms) {
-            if (!selected.includes(form2)) continue;
-            $(`[data-tag-a=${form}][data-tag-b=${form2}]`).show();
-          }
-        }
-      },
-      updateBehaviorTags() {
-        const selected = genders.filter(g => this.checkboxes.selected[g] === true);
-        for (const behavior of behavior_checks) {
-          const tag = behavior.tag || behavior.name.toLowerCase().replace(/ /g, "_");
-          if (!behavior.genders.some(g => selected.includes(g))) {
-            $(`[data-tag=${tag}]`).hide();
-            // I feel like there should be a better way to do this but I can't find one (I hate vue)
-            $(`[data-tag=${tag}].active`).click();
-          } else {
-            $(`[data-tag=${tag}]`).show();
-          }
-        }
-      }
     },
     computed: {
       tags() {
-        const self = this;
-        if (!this.normalMode)
-          return this.tagEntries.other;
-        const checked = Object.keys(this.checkboxes.selected).filter(function (x) {
-          return self.checkboxes.selected[x] === true;
-        });
-        return checked.concat([this.tagEntries.other, this.tagEntries.artist, this.tagEntries.character,
-          this.tagEntries.species, this.tagEntries.content]).join(" ").replace(",", " ").trim().replace(/ +/g, " ");
+        return this.tagEntries.other;
       },
       tagsArray() {
         return this.tags.toLowerCase().split(" ");

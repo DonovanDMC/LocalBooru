@@ -1,9 +1,0 @@
-<% content_for(:secondary_links) do %>
-  <%= subnav_link_to("Listing", forum_categories_path) %>
-  <%= subnav_link_to_if(policy(ForumCategory).create?, "New", new_forum_category_path) %>
-  <% if params[:action] == "index" && policy(ForumCategory).reorder? %>
-    |
-    <%= subnav_link_to("Edit Order", "", class: "edit-order-link") %>
-    <%= subnav_link_to("Save Order", "", class: "save-order-link", li_options: { style: "display: none;" }) %>
-  <% end %>
-<% end %>

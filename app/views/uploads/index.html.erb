@@ -1,5 +1,4 @@
 <%= render "uploads/search" %>
-<%= render "posts/partials/common/inline_blacklist" %>
 
 <%= table_for(@uploads, class: "striped autofit") do |t| %>
   <% t.column("Upload") do |upload| %>
@@ -46,12 +45,12 @@
 
     <span class="post-info">
       <strong>Tags</strong>
-      <%= upload.presenter.inline_tag_list_html(:wiki_page) %>
+      <%= upload.presenter.inline_tag_list_html %>
     </span>
   <% end %>
   <% t.column("Uploader") do |upload| %>
     <%= link_to_user(upload.uploader) %>
-    <%= link_to("»", uploads_path(search: params[:search].merge(uploader_name: upload.uploader_name))) %>
+    <%= link_to("»", uploads_path(search: params[:search].merge(uploader_ip_addr: upload.uploader_ip_addr))) %>
     <br><%= time_ago_in_words_tagged(upload.created_at) %>
   <% end %>
   <% t.column("Status") do |upload| %>

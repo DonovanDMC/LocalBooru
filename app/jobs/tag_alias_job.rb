@@ -8,8 +8,8 @@ class TagAliasJob < ApplicationJob
     [args[0]]
   end
 
-  def perform(*args)
-    ta = TagAlias.find(args[0])
-    ta.process!(update_topic: args[1])
+  def perform(id)
+    ta = TagAlias.find(id)
+    ta.process!
   end
 end

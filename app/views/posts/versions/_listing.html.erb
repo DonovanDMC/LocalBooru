@@ -2,9 +2,7 @@
   <% @post_versions.each do |post_version| %>
     <div id="post-version-<%= post_version.id %>" data-post-version-id="<%= post_version.id %>" data-post-id="<%= post_version.post_id %>" class="post-version">
       <div class="post-version-row-select pv-check pv-label<% if post_version.original_tags.blank? %> without-original<% end %>">
-        <% if CurrentUser.user.is_trusted? %>
-          <input type="checkbox" class="post-version-select" <%= "disabled" unless policy(post_version).undo? && post_version.undoable? %> >
-        <% end %>
+        <input type="checkbox" class="post-version-select" <%= "disabled" unless policy(post_version).undo? && post_version.undoable? %> >
       </div>
       <div class="pv-post-label pv-label">
         Post #:Version
@@ -18,9 +16,6 @@
       <div class="pv-description-label pv-label">
         Description
       </div>
-      <div class="pv-tags-locked-label pv-label">
-        Locked Tags
-      </div>
       <div class="pv-spacer pv-label"></div>
       <div class="pv-post pv-content">
         <%= link_to("#{post_version.post_id}:#{post_version.version}", post_path(post_version.post_id)) %>
@@ -28,9 +23,6 @@
       <div class="pv-date pv-content">
         <% if post_version.updater %>
           <%= link_to_user(post_version.updater) %>
-        <% end %>
-        <% if policy(post_version).can_see_ip_addr? %>
-          (<%= link_to_ip(post_version.updater_ip_addr) %>)
         <% end %>
         <%= time_ago_in_words_tagged(post_version.updated_at, compact: true) %>
       </div>
@@ -51,9 +43,6 @@
         <% elsif post_version.description_changed && post_version.version != 1 %>
           <em>Cleared</em>
         <% end %>
-      </div>
-      <div class="pv-tags-locked pv-content">
-        <%= post_version_locked_diff(post_version) %>
       </div>
       <div class="pv-actions pv-content">
         <% if policy(post_version).undo? && post_version.undoable? %>
@@ -80,7 +69,7 @@
           Original Tag String
         </div>
         <div class="pv-original-tag-string pv-content">
-          <%= post_version.presenter.inline_tag_list_html(:wiki_page) %>
+          <%= post_version.presenter.inline_tag_list_html %>
         </div>
       <% end %>
     </div>

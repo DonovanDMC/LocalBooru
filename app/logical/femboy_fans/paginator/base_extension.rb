@@ -61,7 +61,7 @@ module FemboyFans
       end
 
       def records_per_page
-        limit = @paginator_options.try(:[], :limit) || FemboyFans.config.records_per_page
+        limit = @paginator_options.try(:[], :limit) || FemboyFans.config.per_page
         limit.to_i.clamp(0, FemboyFans.config.max_per_page)
       end
 
