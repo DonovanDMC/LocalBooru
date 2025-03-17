@@ -38,8 +38,8 @@
 4. Copy the sample environment file with `cp .env.sample .env`.
 5. Run the following commands:
     ```
-    docker compose run --rm --no-deps femboyfans /app/bin/presetup
-    docker compose run --rm -e SEED_POST_COUNT=100 femboyfans /app/bin/setup
+    docker compose run --rm --no-deps hornybooru /app/bin/presetup
+    docker compose run --rm -e SEED_POST_COUNT=100 hornybooru /app/bin/setup
     docker compose run --rm reports npm run migrate
     docker compose up
     ```
@@ -68,7 +68,7 @@ You're most likely using Windows. Give this a shot, it tells Git to stop trackin
 
 `docker compose run --rm rubocop` to run the linter.
 
-The postgres server accepts outside connections which you can use to access it with a local client. Use `localhost:34518` to connect to a database named `femboyfans_development` with the user `femboyfans`. Leave the password blank, anything will work.
+The postgres server accepts outside connections which you can use to access it with a local client. Use `localhost:34518` to connect to a database named `hornybooru_development` with the user `hornybooru`. Leave the password blank, anything will work.
 
 ## Production Setup
 

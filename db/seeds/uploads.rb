@@ -10,7 +10,7 @@ require "net/http"
 module Uploads
   def self.api_request(path)
     puts("-> GET #{read_resources['base_url']}#{path}")
-    response = Faraday.get("#{read_resources['base_url']}#{path}", nil, user_agent: "femboyfans/seeding")
+    response = Faraday.get("#{read_resources['base_url']}#{path}", nil, user_agent: "hornybooru/seeding")
     JSON.parse(response.body)
   end
 
