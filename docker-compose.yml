@@ -201,20 +201,6 @@ services:
     volumes:
       - iqdb_data:/iqdb
 
-  recommender:
-    image: ghcr.io/femboyfans/recommender:b29409d748333c99beb1faf2dc7b902cefdf26cf
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://127.0.0.1:5000/metrics || exit 1
-      interval: 30s
-      timeout: 2s
-      retries: 5
-    volumes:
-      - recommender_data:/recommender/data
-    environment:
-      - DATABASE_URL=postgres://hornybooru:@postgres/hornybooru_development
-      - OPENBLAS_NUM_THREADS=1
-      - TRAINING_THREADS=4
-
   # By default, this is bound to /reports on the same url as the primary app for external access
   # To change this, set the FEMBOYFANS_REPORTS_SERVER env variable
   # For internal access, change the FEMBOYFANS_REPORTS_SERVER_INTERNAL env varable (defaults to http://reports:3000)
@@ -236,40 +222,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-
-  # Discord integration
-
-  discordbot:
-    image: ghcr.io/femboyfans/discordbot:8b12e4861d6da64e70ec482b41001fddca8a1a18
-    environment:
-      DISCORD_TOKEN: ${DISCORDBOT_DISCORD_TOKEN-}
-      DISCORD_ID: ${DISCORDBOT_DISCORD_ID-}
-      DISCORD_SECRET: ${DISCORDBOT_DISCORD_SECRET-}
-      REDIS_URL: ${DISCORDBOT_REDIS_URL:-redis://redis/2}
-      REDIS_CHANNELS_TICKETS: ${DISCORDBOT_CHANNELS_TICKETS:-ticket_updates}
-      GUILD_ID: ${DISCORDBOT_GUILD_ID-}
-      ADMIN_ROLE: ${DISCORDBOT_ADMIN_ROLE-}
-      JOINER_PORT: ${JOINER_PORT:-4002}
-      JOINER_URL: ${DISCORDBOT_JOINER_URL:-http://localhost:${EXPOSED_JOINER_PORT:-4002}}
-      JOINER_SECRET: ${FEMBOYFANS_DISCORD_SECRET:-super_secret_for_url_discord}
-      JOINER_CHANNEL_ID: ${DISCORDBOT_JOINER_CHANNEL_ID-}
-      AUDIT_LOG_CHANNEL_ID: ${DISCORDBOT_AUDIT_LOG_CHANNEL_ID-}
-      EVENT_CHANNEL_ID: ${DISCORDBOT_EVENT_CHANNEL_ID-}
-      TICKET_CHANNEL_ID: ${DISCORDBOT_TICKET_CHANNEL_ID-}
-      MEMBER_ROLE_ID: ${DISCORDBOT_MEMBER_ROLE_ID-}
-      BASE_URL: ${DISCORDBOT_BASE_URL:-http://localhost:${EXPOSED_SERVER_PORT:-4000}}
-      FETCH_URL: ${DISCORDBOT_FETCH_URL:-http://nginx:${EXPOSED_SERVER_PORT:-4000}}
-      CDN_HOST: ${DISCORDBOT_CDN_HOST:-localhost:${EXPOSED_SERVER_PORT:-4000}}
-      BLACKLISTED_TAGS: ${DISCORDBOT_BLACKLISTED_TAGS:-}
-      STAFF_CATEGORIES: ${DISCORDBOT_STAFF_CATEGORIES:-}
-      SAFE_CHANNELS: ${DISCORDBOT_SAFE_CHANNELS:-}
-      ENCRYPTION_KEY: ${DISCORDBOT_ENCRYPTION_KEY:-o7SrC4IZKDeX4WOC4Zulp2xhQxNM1tvkHmi4Wh8AEqbjdCR3vFQplQCPE6FlnisLCLbs3Axeg0B96hYr}
-      ENCRYPTION_SALT: ${DISCORDBOT_ENCRYPTION_SALT:-apPyQsjNgUOIiAV62Evly0qgJATdocWwKT0vsdow}
-    init: true
-    ports:
-      - "${EXPOSED_JOINER_PORT:-${JOINER_PORT-}}:${JOINER_PORT:-4002}"
-    profiles:
-      - discord
 
   # Useful for development
 
@@ -321,7 +273,6 @@ volumes:
   redis_data:
   node_modules:
   rubocop_cache:
-  recommender_data:
   clickhouse_data:
 
 networks:
