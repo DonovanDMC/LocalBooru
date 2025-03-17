@@ -5,7 +5,7 @@ module StatsUpdater
 
   def run!
     stats = {}
-    stats[:started] = User.system.created_at
+    stats[:started] = Post.first&.created_at || DateTime.now
 
     daily_average = ->(total) do
       (total / ((Time.now - stats[:started]) / (60 * 60 * 24))).round
