@@ -119,7 +119,8 @@ module FemboyFans
       user.forum_unread_bubble        = true
       user.upload_notifications       = User.upload_notifications_options
       user.email_verified             = !enable_email_verification?
-      user.level                      = User::Levels::TRUSTED # if user_approvals_enabled? && user.level == User::Levels::MEMBER
+      #user.level                      = User::Levels::RESTRICTED  if user_approvals_enabled? && user.level == User::Levels::MEMBER
+      user.level = User::Levels::TRUSTED unless user.is_anonymous?
     end
 
     def default_blacklist
