@@ -33,14 +33,14 @@ x-depends-on: &common-depends-on
     condition: service_healthy
 
 services:
-  femboyfans:
+  hornybooru:
     build:
       context: .
       args:
         HOST_UID: ${HOST_UID:-1000}
         HOST_GID: ${HOST_GID:-1000}
     user: ${DOCKER_USER:-root}
-    image: femboyfans
+    image: hornybooru
     healthcheck:
       # this healthcheck is only for the rails app, sidekiq needs to be separated to be healthchecked
       test: wget --no-verbose --tries=1 --spider http://127.0.0.1:9000/up || exit 1
@@ -56,8 +56,8 @@ services:
     environment:
       <<: *common-env
       RAILS_ENV: development
-      DB_USER: femboyfans
-      DB_NAME: femboyfans_development
+      DB_USER: hornybooru
+      DB_NAME: hornybooru_development
     depends_on:
       <<: *common-depends-on
       autocompleted:
@@ -84,10 +84,10 @@ services:
       retries: 5
     environment:
       SERVER_ADDR: autocompleted:8118
-      PG__USER: femboyfans
+      PG__USER: hornybooru
       PG__HOST: postgres
       PG__PORT: 5432
-      PG__DBNAME: femboyfans_development
+      PG__DBNAME: hornybooru_development
       PG__POOL__MAX_SIZE: 1
 
   nginx:
@@ -107,7 +107,7 @@ services:
     depends_on:
       autocompleted:
         condition: service_healthy
-      femboyfans:
+      hornybooru:
         condition: service_healthy
       reports:
         condition: service_healthy
@@ -117,13 +117,13 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=femboyfans
-      - POSTGRES_DB=femboyfans_development
+      - POSTGRES_USER=hornybooru
+      - POSTGRES_DB=hornybooru_development
       - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: pg_isready -U femboyfans -d postgres
+      test: pg_isready -U hornybooru -d postgres
       interval: 20s
       timeout: 2s
       retries: 10
@@ -211,7 +211,7 @@ services:
     volumes:
       - recommender_data:/recommender/data
     environment:
-      - DATABASE_URL=postgres://femboyfans:@postgres/femboyfans_development
+      - DATABASE_URL=postgres://hornybooru:@postgres/hornybooru_development
       - OPENBLAS_NUM_THREADS=1
       - TRAINING_THREADS=4
 
@@ -274,7 +274,7 @@ services:
   # Useful for development
 
   tests:
-    image: femboyfans
+    image: hornybooru
     environment:
       <<: *common-env
       RAILS_ENV: test
@@ -296,7 +296,7 @@ services:
       - tests
 
   rubocop:
-    image: femboyfans
+    image: hornybooru
     volumes:
       - .:/app
       - rubocop_cache:/rubocop_cache
@@ -305,7 +305,7 @@ services:
       - rubocop
 
   linter:
-    image: femboyfans
+    image: hornybooru
     volumes:
       - .:/app
       - node_modules:/app/node_modules
@@ -330,4 +330,4 @@ networks:
     ipam:
       driver: default
     driver_opts:
-      com.docker.network.bridge.name: br-femboyfans
+      com.docker.network.bridge.name: br-hornybooru

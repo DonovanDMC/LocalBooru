@@ -7,7 +7,7 @@ module FemboyFans
     end
 
     def app_name
-      "Femboy Fans"
+      "HornyBooru"
     end
 
     def app_url
@@ -23,15 +23,15 @@ module FemboyFans
     end
 
     def description
-      "Your one-stop shop for femboy furries."
+      "The horny place"
     end
 
     def domain
-      "femboy.fan"
+      "horny.furry.cool"
     end
 
     def cdn_domain
-      "static.femboy.fan"
+      "horny.furry.cool"
     end
 
     # Force rating:s on this version of the site.
@@ -40,7 +40,7 @@ module FemboyFans
     end
 
     def user_approvals_enabled?
-      true
+      false
     end
 
     # The canonical hostname of the site.
@@ -58,7 +58,7 @@ module FemboyFans
     end
 
     def source_code_url
-      "https://github.com/FemboyFans/FemboyFans"
+      "https://github.com/DonovanDMC/HornyBooru"
     end
 
     # Stripped of any special characters.
@@ -68,7 +68,7 @@ module FemboyFans
 
     # If enabled, users must verify their email addresses.
     def enable_email_verification?
-      Rails.env.production?
+      false
     end
 
     def anonymous_user_name
@@ -119,7 +119,7 @@ module FemboyFans
       user.forum_unread_bubble        = true
       user.upload_notifications       = User.upload_notifications_options
       user.email_verified             = !enable_email_verification?
-      user.level                      = User::Levels::RESTRICTED if user_approvals_enabled? && user.level == User::Levels::MEMBER
+      user.level                      = User::Levels::TRUSTED # if user_approvals_enabled? && user.level == User::Levels::MEMBER
     end
 
     def default_blacklist
