@@ -25,7 +25,7 @@ module TagCategory
     end
 
     def admin_only?
-      is_a?(AdminCategory)
+      false
     end
   end
   class AdminCategory < Category; end
@@ -36,10 +36,10 @@ module TagCategory
   COPYRIGHT = Category.new(3, "copyright", %w[copy co], header: "Copyrights", limit: 1, formatstr: "(%s)")
   CHARACTER = Category.new(4, "character", %w[char ch oc], header: "Characters", limit: 5, regex: /^(.+?)(?:_\(.+\))?$/)
   SPECIES = Category.new(5, "species", %w[spec])
-  INVALID = AdminCategory.new(6, "invalid", %w[inv])
-  META = AdminCategory.new(7, "meta")
-  LORE = AdminCategory.new(8, "lore", %w[lor], suffix: "_(lore)")
-  GENDER = AdminCategory.new(9, "gender")
+  INVALID = Category.new(6, "invalid", %w[inv])
+  META = Category.new(7, "meta")
+  LORE = Category.new(8, "lore", %w[lor], suffix: "_(lore)")
+  GENDER = Category.new(9, "gender")
 
   def categories
     @categories ||= constants.map { |c| const_get(c) }.select { |c| c.is_a?(Category) }

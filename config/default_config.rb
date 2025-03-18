@@ -789,7 +789,7 @@ module FemboyFans
     end
 
     def bypass_upload_whitelist?(user)
-      user.is_admin? || user == User.system
+      true
     end
 
     # Additional video samples will be generated in these dimensions if it makes sense to do so
