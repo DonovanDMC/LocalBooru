@@ -154,15 +154,12 @@ FilterUtils.wildcardTagMatchesFilter = (post, filter) => {
  */
 FilterUtils.parseRating = (input) => {
   switch (input) {
-    case "safe":
-    case "s":
-      return "s";
-    case "questionable":
-    case "q":
-      return "q";
-    case "explicit":
-    case "e":
-      return "e";
+    case "general":
+    case "g":
+      return "g";
+    case "adult":
+    case "a":
+      return "";
     default:
       return "x";
   }

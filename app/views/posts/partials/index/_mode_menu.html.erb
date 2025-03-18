@@ -12,9 +12,8 @@
       <option value="add-to-set">Add To Set</option>
       <option value="remove-from-set">Remove From Set</option>
       <% if CurrentUser.user.is_trusted? %>
-        <option value="rating-s">Rate Safe</option>
-        <option value="rating-q">Rate Questionable</option>
-        <option value="rating-e">Rate Explicit</option>
+        <option value="rating-g">Rate General</option>
+        <option value="rating-a">Rate Adult</option>
         <option value="tag-script">Tag script</option>
         <option value="lock-rating">Lock rating</option>
       <% end %>

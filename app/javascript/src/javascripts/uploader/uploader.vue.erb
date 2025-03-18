@@ -121,7 +121,7 @@
             <div class="flex-grid border-bottom">
                 <div class="col">
                     <label class="section-label">Rating</label>
-                    <div>Explicit tags include sex, pussy, penis, masturbation, fellatio, etc.
+                    <div>Adult tags include sex, pussy, penis, masturbation, fellatio, etc.
                         (<a href="/help/ratings" target="_blank">help</a>)
                     </div>
                 </div>
@@ -131,14 +131,11 @@
                     </div>
                     <div>
                         <template v-if="!safe">
-                            <button class="toggle-button rating-e" :class="{active: rating==='e'}" @click="rating = 'e'">
-                                Explicit
-                            </button>
-                            <button class="toggle-button rating-q" :class="{active: rating==='q'}" @click="rating = 'q'">
-                                Questionable
+                            <button class="toggle-button rating-a" :class="{active: rating==='a'}" @click="rating = 'a'">
+                                Adult
                             </button>
                         </template>
-                        <button class="toggle-button rating-s" :class="{active: rating==='s'}" @click="rating = 's'">Safe
+                        <button class="toggle-button rating-g" :class="{active: rating==='g'}" @click="rating = 'g'">General
                         </button>
                     </div>
                 </div>

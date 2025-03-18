@@ -187,9 +187,8 @@ PostModeMenu.click = function (e) {
     case "remove-vote": Post.unvote(post_id); break;
     case "add-to-set": PostSet.add_post($("#set-id").val(), post_id); break;
     case "remove-from-set": PostSet.remove_post($("#set-id").val(), post_id, undefined); break;
-    case "rating-s": Post.update(post_id, { "post[rating]": "s"}); break;
-    case "rating-q": Post.update(post_id, { "post[rating]": "q"}); break;
-    case "rating-e": Post.update(post_id, { "post[rating]": "e"}); break;
+    case "rating-g": Post.update(post_id, { "post[rating]": "g"}); break;
+    case "rating-a": Post.update(post_id, { "post[rating]": "a"}); break;
     case "lock-rating": Post.update(post_id, { "post[is_rating_locked]": "1" }); break;
     case "lock-note": Post.update(post_id, { "post[is_note_locked]": "1" }); break;
     case "delete": Post.delete_with_reason(post_id, $("#quick-mode-reason").val(), false); break;

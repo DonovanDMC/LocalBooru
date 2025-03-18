@@ -42,7 +42,7 @@ class Post < ApplicationRecord
   before_validation :remove_parent_loops
   normalizes :description, with: ->(desc) { desc.gsub("\r\n", "\n") }
   validates :md5, uniqueness: { on: :create, message: ->(obj, _data) { "duplicate: #{Post.find_by(md5: obj.md5).id}" } }
-  validates :rating, inclusion: { in: %w[s q e], message: "rating must be s, q, or e" }
+  validates :rating, inclusion: { in: %w[g a], message: "rating must be g or a" }
   validates :bg_color, format: { with: /\A[A-Fa-f0-9]{6}\z/ }, allow_nil: true
   validates :description, length: { maximum: FemboyFans.config.post_descr_max_size }, if: :description_changed?
   validate :added_tags_are_valid, if: :should_process_tags?
@@ -109,9 +109,8 @@ class Post < ApplicationRecord
   end
 
   module Ratings
-    SAFE = "s"
-    QUESTIONABLE = "q"
-    EXPLICIT = "e"
+    GENERAL = "g"
+    ADULT = "a"
 
     def self.map
       constants.to_h { |x| [x.to_s.downcase, const_get(x)] }
@@ -528,9 +527,8 @@ class Post < ApplicationRecord
 
     def pretty_rating
       {
-        "s" => "Safe",
-        "q" => "Questionable",
-        "e" => "Explicit",
+        "g" => "General",
+        "a" => "Adult",
       }[rating]
     end
   end
@@ -1058,7 +1056,7 @@ class Post < ApplicationRecord
             remove_parent_loops
           end
 
-        when /^rating:([qse])/i
+        when /^rating:([ga])/i
           self.rating = $1
 
         when /^(-?)locked:notes?$/i

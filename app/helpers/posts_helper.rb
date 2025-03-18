@@ -174,9 +174,8 @@ module PostsHelper
 
   def rating_collection
     [
-      %w[Safe s],
-      %w[Questionable q],
-      %w[Explicit e],
+      %w[General g],
+      %w[Adult a],
     ]
   end
 
