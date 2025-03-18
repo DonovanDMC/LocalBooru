@@ -120,7 +120,10 @@ module FemboyFans
       user.upload_notifications       = User.upload_notifications_options
       user.email_verified             = !enable_email_verification?
       #user.level                      = User::Levels::RESTRICTED  if user_approvals_enabled? && user.level == User::Levels::MEMBER
-      user.level = User::Levels::TRUSTED unless user.is_anonymous?
+      unless user.is_anonymous?
+        user.level = User::Levels::TRUSTED
+        user.unrestricted_uploads = true
+      end
     end
 
     def default_blacklist
@@ -191,11 +194,11 @@ module FemboyFans
     end
 
     def disable_throttles?
-      false
+      true
     end
 
     def disable_age_checks?
-      false
+      true
     end
 
     def disable_cache_store?
