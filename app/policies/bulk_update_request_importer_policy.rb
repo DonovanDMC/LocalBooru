@@ -2,6 +2,6 @@
 
 class BulkUpdateRequestImporterPolicy < ApplicationPolicy
   def create?
-    user.is_owner?
+    user.can_manage_aibur?
   end
 end

@@ -308,7 +308,7 @@ module FemboyFans
     end
 
     def compact_uploader_minimum_posts
-      10
+      0
     end
 
     def remember_key
@@ -325,7 +325,7 @@ module FemboyFans
 
     # Users cannot search for more than X regular tags at a time.
     def tag_query_limit
-      40
+      Float::INFINITY
     end
 
     def followed_tag_limit(user)
@@ -339,13 +339,12 @@ module FemboyFans
     end
 
     # If the user can request a bulk update request containing a nuke instruction
-    def can_bur_nuke?(user)
-      user.is_admin?
+    def can_bur_nuke?(_user)
+      true
     end
 
-    def bur_entry_limit(user)
-      return Float::INFINITY if user.is_admin?
-      50
+    def bur_entry_limit(_user)
+      Float::INFINITY
     end
 
     # Return true if the given tag shouldn't count against the user's tag search limit.
@@ -893,16 +892,10 @@ module FemboyFans
     # only applies to approving
     def tag_change_request_update_limit(user)
       return 0 unless user.can_manage_aibur?
-      if user.is_owner?
+      if user.is_admin?
         Float::INFINITY
-      elsif user.is_admin?
-        100_000
-      elsif user.is_moderator?
-        10_000
-      elsif user.is_janitor?
-        1_000
       elsif user.is_trusted?
-        500
+        5_000
       else
         0
       end
