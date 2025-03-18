@@ -16,6 +16,9 @@
     <%= f.input(:email, required: true, as: :email) %>
     <%= f.input(:password) %>
     <%= f.input(:password_confirmation) %>
+    <% if FemboyFans.config.enable_signup_code? %>
+      <%= f.input(:signup_code, hint: "You must get a code from the site owner to create an account.", required: true) %>
+    <% end %>
 
     <%= f.input(:time_zone, include_blank: false) %>
 

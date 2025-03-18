@@ -160,7 +160,7 @@ class User < ApplicationRecord
     Preferences.to_list(bit_prefs)
   end
 
-  attr_accessor :password, :old_password, :validate_email_format, :is_admin_edit
+  attr_accessor :password, :old_password, :validate_email_format, :is_admin_edit, :signup_code
 
   after_initialize :initialize_attributes, if: :new_record?
   before_validation :sanitize_upload_notifications, if: :will_save_change_to_upload_notifications?

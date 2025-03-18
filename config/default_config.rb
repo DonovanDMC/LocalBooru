@@ -27,11 +27,11 @@ module FemboyFans
     end
 
     def domain
-      "horny.furry.cool"
+      "hornybooru.furry.cool"
     end
 
     def cdn_domain
-      "horny.furry.cool"
+      "hornybooru-cdn.furry.cool"
     end
 
     # Force rating:s on this version of the site.
@@ -548,6 +548,13 @@ module FemboyFans
 
     def enable_signups?
       true
+    end
+
+    def enable_signup_code?
+      enable_signups? && signup_code.present?
+    end
+
+    def signup_code
     end
 
     def enable_stale_forum_topics?

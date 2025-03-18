@@ -30,7 +30,7 @@ class UserPolicy < ApplicationPolicy
   end
 
   def permitted_attributes_for_create
-    super + %i[name email]
+    super + %i[name email signup_code]
   end
 
   def permitted_attributes_for_update

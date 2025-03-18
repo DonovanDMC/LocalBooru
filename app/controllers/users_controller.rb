@@ -65,6 +65,7 @@ class UsersController < ApplicationController
     raise(User::PrivilegeError, "Signups are disabled") unless FemboyFans.config.enable_signups?
     User.transaction do
       @user = User.new(permitted_attributes(User).merge({ last_ip_addr: request.remote_ip }))
+      raise(User::PrivilegeError, "Invalid signup code") if FemboyFans.config.enable_signup_code? && @user.signup_code != FemboyFans.config.signup_code
       @user.validate_email_format = true
       @user.email_verified = false if FemboyFans.config.enable_email_verification?
       if !FemboyFans.config.enable_recaptcha? || verify_recaptcha(model: @user)
