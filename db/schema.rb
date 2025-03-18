@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_18_191345) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_18_202524) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -747,7 +747,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_191345) do
     t.integer "tag_count_gender", default: 0, null: false
     t.integer "framecount"
     t.integer "thumbnail_frame"
-    t.integer "tag_count_contributor", default: 0, null: false
+    t.integer "tag_count_fetish", default: 0, null: false
     t.jsonb "samples_data", default: [], null: false
     t.integer "min_edit_level", default: 10, null: false
     t.string "typed_tag_string", default: "", null: false

@@ -339,8 +339,8 @@ module FemboyFans
     end
 
     # If the user can request a bulk update request containing a nuke instruction
-    def can_bur_nuke?(_user)
-      true
+    def can_bur_nuke?(user)
+      user.can_manage_aibur?
     end
 
     def bur_entry_limit(_user)
