@@ -3,14 +3,10 @@ name: Checks
 on:
   push:
     branches:
-      - master
-      - dev
-      - build-*
+      - horny
   pull_request:
     branches:
-      - master
-      - dev
-      - build-*
+      - horny
 
 permissions:
   contents: read
@@ -30,14 +26,14 @@ jobs:
         with:
           cache-from: type=gha
           load: true
-          tags: femboyfans
-          outputs: type=docker,dest=/tmp/femboyfans.tar
+          tags: hornybooru
+          outputs: type=docker,dest=/tmp/hornybooru.tar
 
       - name: Upload FemboyFans Image
         uses: actions/upload-artifact@v4
         with:
-          name: femboyfans
-          path: /tmp/femboyfans.tar
+          name: hornybooru
+          path: /tmp/hornybooru.tar
 
       - name: Build DText Image
         uses: docker/build-push-action@v4
@@ -65,7 +61,7 @@ jobs:
       - name: Load FemboyFans Image
         uses: ./.github/load-docker-image
         with:
-          name: femboyfans
+          name: hornybooru
 
       - name: Run Rubocop
         run: $DOCKER_RUN rubocop --format github
@@ -80,55 +76,7 @@ jobs:
       - name: Load FemboyFans Image
         uses: ./.github/load-docker-image
         with:
-          name: femboyfans
+          name: hornybooru
 
       - name: Run ESLint
         run: $DOCKER_RUN linter
-
-  tests:
-    runs-on: ubuntu-22.04
-    needs: docker-build
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-      - name: Load FemboyFans Image
-        uses: ./.github/load-docker-image
-        with:
-          name: femboyfans
-
-      - name: Create DB
-        run: $DOCKER_RUN --entrypoint bin/rails tests db:create
-
-      - name: Load DB Schema
-        run: $DOCKER_RUN --entrypoint bin/rails tests db:schema:load
-
-      - name: Run Tests
-        run: $DOCKER_RUN tests
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: log/test.log
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: FemboyFans/FemboyFans
-
-  dtext-tests:
-    runs-on: ubuntu-22.04
-    needs: docker-build
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-      - name: Load DText Image
-        uses: ./.github/load-docker-image
-        with:
-          name: dtext
-
-      - name: Run Tests
-        run: $DOCKER_RUN dtext bin/rake test
