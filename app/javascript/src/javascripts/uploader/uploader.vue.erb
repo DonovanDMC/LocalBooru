@@ -76,7 +76,7 @@
                                           :key="check.name" :data-tag-a="check.tagA" :data-tag-b="check.tagB"></image-checkbox>
                       </div>
                       <textarea class="tag-textarea" rows="2" v-model="tagEntries.character" id="post_character"
-                                placeholder="Ex: character_name solo_focus 1_male 2_females etc."
+                                placeholder="Ex: character_name solo_focus  etc."
                                 data-autocomplete="tag-edit"></textarea>
                     </div>
                 </div>
@@ -268,10 +268,13 @@
     {name: "Gynomorph"},
     {name: "Hermaphrodite", tag: "herm"},
     {name: "Male-Herm", tag: "maleherm"},
-    {name: "Unknown", tag: "unknown_gender"}];
+    {name: "Unknown", tag: "unknown_gender"},
+    {name: "Trans Man (FtM)", tag: "trans_man"},
+    {name: "Trans Woman (MtF)", tag: "trans_woman"},
+    {name: "Nonbinary"}];
   const genders = window.g = sex_checks.map(s => s.tag || s.name.toLowerCase().replace(/ /g, "_"));
-  const mascgenders = ["male", "andromorph", "maleherm"];
-  const femgenders = ["female", "gynomorph", "herm"];
+  const mascgenders = ["male", "andromorph", "maleherm", "trans_man", "nonbinary"];
+  const femgenders = ["female", "gynomorph", "herm", "trans_woman", "nonbinary"];
   const ucwords = (str) => str.toString().toLowerCase().replace(/_gender/g, "").replace(/^(.)|\s+(.)/g, r => r.toUpperCase());
 
   function removeDuplicates(set) {
@@ -306,11 +309,9 @@
   ];
 
   const body_type_checks = [
-    { name: "Anthro" },
-    { name: "Feral" },
-    { name: "Humanoid" },
     { name: "Human" },
-    { name: "Taur" }
+    { name: "Anthro" },
+    { name: "Feral" }
   ];
 
   const forms = body_type_checks.map(b => b.tag || b.name.toLowerCase().replace(/ /g, "_"));
