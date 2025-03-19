@@ -2023,7 +2023,7 @@ class Post < ApplicationRecord
 
       new_creator_tags.each do |tag|
         if tag.creator.blank?
-          warnings.add(:base, "Creator [[#{tag.name}]] requires an creator entry. \"Create new creator entry\":[/creators/new?creator%5Bname%5D=#{CGI.escape(tag.name)}]")
+          warnings.add(:base, "Creator [[#{tag.name}]] requires a creator entry. \"Create new creator entry\":[/creators/new?creator%5Bname%5D=#{CGI.escape(tag.name)}]")
         end
       end
     end
