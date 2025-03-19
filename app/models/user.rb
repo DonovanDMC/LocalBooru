@@ -813,10 +813,6 @@ class User < ApplicationRecord
       is_owner?
     end
 
-    def can_edit_avoid_posting_entries?
-      is_owner?
-    end
-
     def can_revert_post_versions?
       is_member?
     end

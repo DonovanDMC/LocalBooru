@@ -383,8 +383,6 @@ inline := |*
   'set #'i id                                  => { append_id_link("set", "set", "/post_sets/", { a1, a2 }); };
   'ticket #'i id                               => { append_id_link("ticket", "ticket", "/tickets/", { a1, a2 }); };
   'take'i ' 'i? 'down 'i 'request 'i? '#'i id  => { append_id_link("takedown", "takedown", "/takedowns/", { a1, a2 }); };
-  'dnp #'i id                                  => { append_id_link("avoid posting", "avoid-posting", "/avoid_postings/", { a1, a2 }); };
-  'avoid posting #'i id                        => { append_id_link("avoid posting", "avoid-posting", "/avoid_postings/", { a1, a2 }); };
 
   'issue #'i id                                => { append_id_link("issue", "github", "https://github.com/FemboyFans/FemboyFans/issues/", { a1, a2 }); };
   'pull #'i id                                 => { append_id_link("pull", "github-pull", "https://github.com/FemboyFans/FemboyFans/pull/", { a1, a2 }); };

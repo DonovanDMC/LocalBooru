@@ -33,8 +33,6 @@
   <ul>
     <li><h1>Artists</h1></li>
     <%= li_link_to("Listing", artists_path) %>
-    <%= li_link_to("Avoid Posting Entries", avoid_postings_path) %>
-    <%= li_link_to("Avoid Posting List", avoid_posting_static_path) %>
     <%= li_link_to("Changes", artist_versions_path) %>
     <%= li_link_to("Help", help_page_path(id: "artists")) %>
   </ul>
@@ -113,7 +111,6 @@
     <%= li_link_to_if(policy(%i[security dashboard]).index?, "Security", security_root_path) %>
     <%= li_link_to_if(policy(IpBan).index?, "IP Bans", ip_bans_path) %>
     <%= li_link_to_if(policy(%i[admin user]).alt_list?, "Alt list", alt_list_admin_users_path) %>
-    <%= li_link_to_if(policy(:stuck_dnp).create?, "Stuck DNP tags", new_admin_stuck_dnp_path) %>
     <%= li_link_to_if(policy(DestroyedPost).index?, "Destroyed Posts", admin_destroyed_posts_path) %></li>
     <%= li_link_to_if(policy(BulkUpdateRequestImporter).create?, "Bulk Update Request Import", new_admin_bulk_update_request_import_path) %>
     <%= li_link_to_if(policy(:reowner).create?, "Post Reowner", new_admin_reowner_path) %>

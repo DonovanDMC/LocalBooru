@@ -76,7 +76,6 @@ class TagRelationship < ApplicationRecord
 
   def approvable_by?(user)
     return false unless is_pending? && user.can_manage_aibur?
-    return false unless user.is_owner? || !(consequent_tag&.artist&.is_dnp? || antecedent_tag&.artist&.is_dnp?)
     return false unless user.is_admin? || creator_id != user.id
     FemboyFans.config.tag_change_request_update_limit(user) >= estimate_update_count
   end

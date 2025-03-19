@@ -91,7 +91,6 @@ These wik/help pages are expected to exist, as they are linked to or used in var
 * internal:rules_body
 * internal:flag_notice
 * internal:replacement_notice
-* internal:avoid_posting_notice
 * internal:discord_notice
 * internal:ban_notice (sub: %BAN_REASON%, %BAN_USER%)
 * internal:restricted_notice
@@ -105,7 +104,6 @@ These wik/help pages are expected to exist, as they are linked to or used in var
 * accounts
 * api
 * artists
-* avoid_posting
 * blacklisting
 * blocking
 * cheatsheet

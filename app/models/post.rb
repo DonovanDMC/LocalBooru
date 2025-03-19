@@ -731,13 +731,11 @@ class Post < ApplicationRecord
       normalized_tags = remove_aspect_ratio_tags(normalized_tags)
       normalized_tags = filter_metatags(normalized_tags)
       normalized_tags = remove_negated_tags(normalized_tags)
-      normalized_tags = remove_dnp_tags(normalized_tags)
       normalized_tags = TagAlias.to_aliased(normalized_tags)
       normalized_tags = apply_locked_tags(normalized_tags, @locked_to_add, @locked_to_remove)
       normalized_tags = %w[tagme] if normalized_tags.empty?
       normalized_tags = add_automatic_tags(normalized_tags)
       normalized_tags = TagImplication.with_descendants(normalized_tags)
-      add_dnp_tags_to_locked(normalized_tags)
       normalized_tags -= @locked_to_remove if @locked_to_remove # Prevent adding locked tags through implications or aliases.
       normalized_tags = normalized_tags.compact.uniq
       normalized_tags = Tag.find_or_create_by_name_list(normalized_tags)
@@ -757,31 +755,6 @@ class Post < ApplicationRecord
       end
       warnings.add(:base, "Aspect ratios cannot be added to posts: #{rejected.join(', ')}") if rejected.any?
       tags
-    end
-
-    # Prevent adding these without an implication
-    def remove_dnp_tags(tags)
-      locked = locked_tags
-      # Don't remove dnp tags here if they would be later added through locked tags
-      # to prevent the warning message from appearing when they didn't actually get removed
-      if locked.exclude?("avoid_posting")
-        tags -= ["avoid_posting"]
-      end
-      if locked.exclude?("conditional_dnp")
-        tags -= ["conditional_dnp"]
-      end
-      tags
-    end
-
-    def add_dnp_tags_to_locked(tags)
-      locked = TagQuery.scan(locked_tags.downcase)
-      if tags.include?("avoid_posting")
-        locked << "avoid_posting"
-      end
-      if tags.include?("conditional_dnp")
-        locked << "conditional_dnp"
-      end
-      self.locked_tags = locked.uniq.join(" ") unless locked.empty?
     end
 
     def apply_locked_tags(tags, to_add, to_remove)
@@ -2208,10 +2181,6 @@ class Post < ApplicationRecord
   def uploader_name_matches_artists?
     return false if uploader_id.nil? || uploader_linked_artists.any?
     typed_tags(TagCategory.artist).include?(uploader_name.downcase)
-  end
-
-  def avoid_posting_artists
-    AvoidPosting.active.joins(:artist).where("artists.name": artist_tag_array)
   end
 
   def followed_tags(user)

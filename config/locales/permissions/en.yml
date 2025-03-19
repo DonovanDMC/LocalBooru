@@ -65,7 +65,6 @@ en:
       "wiki_pages/versions": "Wiki Page Version"
     routes:
       "admin/reowner:create": "Admin: Change Post Ownership"
-      "admin/stuck_dnp:create": "Admin: Fix Stuck DNP"
       "admin/users:alt_list": "Admin: List Alt Accounts"
       "admin/users:password_reset": "Admin: Reset User Password"
       "admin/users:update_blacklist": "Admin: Update User Blacklist"

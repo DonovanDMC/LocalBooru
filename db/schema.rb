@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_18_225134) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -74,34 +74,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_225134) do
     t.index ["name"], name: "index_artists_on_name", unique: true
     t.index ["name"], name: "index_artists_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["other_names"], name: "index_artists_on_other_names", using: :gin
-  end
-
-  create_table "avoid_posting_versions", force: :cascade do |t|
-    t.bigint "updater_id", null: false
-    t.bigint "avoid_posting_id", null: false
-    t.inet "updater_ip_addr", null: false
-    t.string "details", default: "", null: false
-    t.string "staff_notes", default: "", null: false
-    t.boolean "is_active", default: true, null: false
-    t.datetime "updated_at", null: false
-    t.index ["avoid_posting_id"], name: "index_avoid_posting_versions_on_avoid_posting_id"
-    t.index ["updater_id"], name: "index_avoid_posting_versions_on_updater_id"
-  end
-
-  create_table "avoid_postings", force: :cascade do |t|
-    t.bigint "creator_id", null: false
-    t.bigint "updater_id", null: false
-    t.inet "creator_ip_addr", null: false
-    t.inet "updater_ip_addr", null: false
-    t.string "details", default: "", null: false
-    t.string "staff_notes", default: "", null: false
-    t.boolean "is_active", default: true, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "artist_id", null: false
-    t.index ["artist_id"], name: "index_avoid_postings_on_artist_id", unique: true
-    t.index ["creator_id"], name: "index_avoid_postings_on_creator_id"
-    t.index ["updater_id"], name: "index_avoid_postings_on_updater_id"
   end
 
   create_table "bans", id: :serial, force: :cascade do |t|
@@ -1192,11 +1164,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_225134) do
   add_foreign_key "artist_versions", "users", column: "updater_id"
   add_foreign_key "artists", "users", column: "creator_id"
   add_foreign_key "artists", "users", column: "linked_user_id"
-  add_foreign_key "avoid_posting_versions", "avoid_postings"
-  add_foreign_key "avoid_posting_versions", "users", column: "updater_id"
-  add_foreign_key "avoid_postings", "artists"
-  add_foreign_key "avoid_postings", "users", column: "creator_id"
-  add_foreign_key "avoid_postings", "users", column: "updater_id"
   add_foreign_key "bans", "users"
   add_foreign_key "bans", "users", column: "banner_id"
   add_foreign_key "bulk_update_requests", "forum_posts", on_delete: :nullify

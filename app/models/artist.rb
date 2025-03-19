@@ -10,7 +10,6 @@ class Artist < ApplicationRecord
   belongs_to_creator
   before_validation :normalize_name, unless: :destroyed?
   before_validation :normalize_other_names, unless: :destroyed?
-  before_validation :validate_protected_properties_not_changed, if: :dnp_restricted?
   validate :validate_user_can_edit
   validate :wiki_page_not_locked
   validate :user_not_limited
@@ -30,8 +29,6 @@ class Artist < ApplicationRecord
   has_one :wiki_page, foreign_key: "title", primary_key: "name"
   has_one :tag_alias, foreign_key: "antecedent_name", primary_key: "name"
   has_one :tag, foreign_key: "name", primary_key: "name"
-  has_one :avoid_posting, -> { active }
-  has_one :inactive_dnp, -> { deleted }, class_name: "AvoidPosting"
   belongs_to :linked_user, class_name: "User", optional: true
   attribute :notes, :string
   delegate :post_count, to: :tag
@@ -499,28 +496,6 @@ class Artist < ApplicationRecord
     end
   end
 
-  module AvoidPostingMethods
-    def validate_protected_properties_not_changed
-      errors.add(:name, "cannot be changed while the artist is on the avoid posting list") if will_save_change_to_name?
-      errors.add(:other_names, "cannot be changed while the artist is on the avoid posting list") if will_save_change_to_other_names?
-      throw(:abort) if errors.any?
-    end
-
-    def is_dnp?
-      avoid_posting.present?
-    end
-
-    def has_any_dnp?
-      is_dnp? || inactive_dnp.present?
-    end
-
-    def dnp_restricted?
-      is_dnp? && !CurrentUser.can_edit_avoid_posting_entries?
-    end
-  end
-
-  include AvoidPostingMethods
-
   include UrlMethods
   include NameMethods
   include VersionMethods
@@ -529,10 +504,8 @@ class Artist < ApplicationRecord
   include LockMethods
   extend SearchMethods
 
-  # due to technical limitations (foreign keys), artists with any
-  # dnp entry (active or inactive) cannot be deleted
   def deletable_by?(user)
-    !has_any_dnp? && user.is_admin?
+    user.is_admin?
   end
 
   def editable_by?(user)
@@ -561,6 +534,6 @@ class Artist < ApplicationRecord
   end
 
   def self.available_includes
-    %i[creator urls wiki_page tag_alias tag avoid_posting linked_user]
+    %i[creator urls wiki_page tag_alias tag linked_user]
   end
 end

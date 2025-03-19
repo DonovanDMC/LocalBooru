@@ -61,10 +61,6 @@ class StaffAuditLog < ApplicationRecord
       text: ->(log) { "Reassigned #{log.post_ids.length} #{'post'.pluralize(log.post_ids.length)} with query \"#{log.query}\" from \"#{User.id_to_name(log.old_user_id)}\":/users/#{log.old_user_id} to \"#{User.id_to_name(log.new_user_id)}\":/users/#{log.new_user_id}" },
       json: %i[query post_ids old_user_id new_user_id],
     },
-    stuck_dnp:                  {
-      text: ->(log) { "Removed dnp tags from #{log.post_ids.length} #{'post'.pluralize(log.post_ids.length)} with query \"#{log.query}\"" },
-      json: %i[query post_ids],
-    },
     user_title_change:          {
       text: ->(log) { "Set the title of #{link_to_user(log.target_id)} to \"#{log.title}\"" },
       json: %i[target_id title],
