@@ -12,7 +12,7 @@ class WikiPage < ApplicationRecord
   has_dtext_links :body
   has_one :help_page
   has_one :tag, foreign_key: "name", primary_key: "title"
-  has_one :artist, foreign_key: "name", primary_key: "title"
+  has_one :creator, foreign_key: "name", primary_key: "title"
   has_many :versions, -> { order("wiki_page_versions.id ASC") }, class_name: "WikiPageVersion", dependent: :destroy
 
   after_initialize :set_parent_props
@@ -340,6 +340,6 @@ class WikiPage < ApplicationRecord
   end
 
   def self.available_includes
-    %i[artist dtext_links help_page tag]
+    %i[creator dtext_links help_page tag]
   end
 end

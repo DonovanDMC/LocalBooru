@@ -241,8 +241,8 @@ module ApplicationHelper
            when "posts", "uploads", "posts/versions", "popular", "favorites"
              %r{^/posts}
 
-           when "artists", "artist_versions"
-             %r{^/artist}
+           when "creators", "creator_versions"
+             %r{^/creator}
 
            when "tags", "meta_searches", "tags/aliases", "tags/implications", "tags/related"
              %r{^/tags}

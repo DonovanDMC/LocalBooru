@@ -27,7 +27,7 @@ module PostIndex
           change_seq:               { type: "long" },
 
           tag_count_general:        { type: "integer" },
-          tag_count_artist:         { type: "integer" },
+          tag_count_creator:         { type: "integer" },
           tag_count_character:      { type: "integer" },
           tag_count_copyright:      { type: "integer" },
           tag_count_meta:           { type: "integer" },
@@ -166,8 +166,8 @@ module PostIndex
           WHERE post_id IN (#{post_ids})
           GROUP BY post_id
         SQL
-        verified_artists_sql = <<-SQL.squish
-          SELECT name, linked_user_id FROM artists WHERE linked_user_id IS NOT NULL
+        verified_creators_sql = <<-SQL.squish
+          SELECT name, linked_user_id FROM creators WHERE linked_user_id IS NOT NULL
         SQL
 
         # Run queries
@@ -183,7 +183,7 @@ module PostIndex
         noter_ids        = conn.execute(noter_sql).values.map(&array_parse).to_h
         child_ids        = conn.execute(child_sql).values.map(&array_parse).to_h
         disapprovers     = conn.execute(disapprovals_sql).values.map(&array_parse).to_h
-        verified_artists = conn.execute(verified_artists_sql).values.to_h
+        verified_creators = conn.execute(verified_creators_sql).values.to_h
         notes            = Hash.new { |h, k| h[k] = [] }
         conn.execute(note_sql).values.each { |p, b| notes[p] << b } # rubocop:disable Style/HashEachMethods
         pending_replacements = conn.execute(pending_replacements_sql).values.to_h
@@ -219,7 +219,7 @@ module PostIndex
             del_reason:               del_reasons[p.id] || empty,
             has_pending_replacements: pending_replacements[p.id],
             disapproval_count:        disapprovers[p.id]&.count || 0,
-            artverified:              p.tag_array.any? { |tag| verified_artists.key?(tag) && verified_artists[tag] == p.uploader_id },
+            artverified:              p.tag_array.any? { |tag| verified_creators.key?(tag) && verified_creators[tag] == p.uploader_id },
             views:                    views[p.id] || 0,
           }
 
@@ -284,7 +284,7 @@ module PostIndex
       change_seq:               change_seq,
 
       tag_count_general:        tag_count_general,
-      tag_count_artist:         tag_count_artist,
+      tag_count_creator:         tag_count_creator,
       tag_count_character:      tag_count_character,
       tag_count_copyright:      tag_count_copyright,
       tag_count_meta:           tag_count_meta,
@@ -336,7 +336,7 @@ module PostIndex
       appealed:                 is_appealed?,
       has_children:             has_children,
       has_pending_replacements: options.key?(:has_pending_replacements) ? options[:has_pending_replacements] : replacements.pending.any?,
-      artverified:              options.key?(:artverified) ? options[:artverified] : uploader_linked_artists.any?,
+      artverified:              options.key?(:artverified) ? options[:artverified] : uploader_linked_creators.any?,
     }
   end
 end

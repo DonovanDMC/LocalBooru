@@ -10,8 +10,8 @@ function showMascot (mascot) {
   $(".mascotbox").css("background-image", "url(" + mascot.background_url + ")");
   $(".mascotbox").css("background-color", mascot.background_color);
 
-  const artistLink = $("<span>").text("Mascot by ").append($("<a>").text(mascot.artist_name).attr("href", mascot.artist_url));
-  $("#mascot_artist").empty().append(artistLink);
+  const creatorLink = $("<span>").text("Mascot by ").append($("<a>").text(mascot.creator_name).attr("href", mascot.creator_url));
+  $("#mascot_creator").empty().append(creatorLink);
 }
 
 function changeMascot () {

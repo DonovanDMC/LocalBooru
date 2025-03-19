@@ -1,0 +1,38 @@
+<h1>Creator History</h1>
+
+<%= table_for(@creator_versions, class: "striped autofit") do |t| %>
+  <% t.column("Name") do |version| %>
+    <%= link_to(version.name, creator_path(version.creator_id)) %>
+    <%= link_to("»", creator_versions_path(search: { creator_id: version.creator_id })) %>
+  <% end %>
+  <% t.column("Other Names") do |version| %>
+    <%= creator_version_other_names_diff(version) %>
+  <% end %>
+  <% t.column("URLs", td: { class: "col-expand" }) do |version| %>
+    <%= creator_version_urls_diff(version) %>
+  <% end %>
+  <% t.column("Notes") do |version| %>
+    <% if version.notes_changed %>
+      <%= link_to("Note Changes", wiki_page_versions_path(search: version.creator.present? ? { wiki_page_id: version.creator.wiki_page } : { title: version.name })) %>
+    <% else %>
+      (No Changes)
+    <% end %>
+  <% end %>
+  <% t.column("Updated") do |version| %>
+    <%= link_to_user(version.updater) %>
+    <%= link_to("»", creator_versions_path(search: { updater_name: version.updater_name })) %>
+    <p>
+      <%= compact_time(version.updated_at) %>
+      <% if policy(version).can_see_ip_addr? %>
+        (<%= link_to_ip(version.updater_ip_addr) %>)
+      <% end %>
+    </p>
+  <% end %>
+<% end %>
+
+<%= render "search" %>
+<%= numbered_paginator(@creator_versions) %>
+
+<% content_for(:page_title) do %>
+  Creator Versions
+<% end %>

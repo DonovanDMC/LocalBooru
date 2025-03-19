@@ -10,9 +10,9 @@ module Moderator
         @max_level = max_level.present? ? max_level.to_i : User::Levels::MEMBER
       end
 
-      def artists
+      def creators
         ApplicationRecord.without_timeout do
-          Queries::Artist.all(min_date, max_level)
+          Queries::Creator.all(min_date, max_level)
         end
       end
 

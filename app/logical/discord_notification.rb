@@ -19,8 +19,8 @@ class DiscordNotification
   def create_embed
     embeds = []
     case record
-    when Artist
-      embeds << { color: GREEN, title: "Artist Created", description: "Name: #{record.name}", url: r.artist_url(record), author: a(record.creator) }
+    when Creator
+      embeds << { color: GREEN, title: "Creator Created", description: "Name: #{record.name}", url: r.creator_url(record), author: a(record.creator) }
     when Ban
       embeds << { color: RED, title: "Ban Created", description: "User: #{u(record.user)}", url: r.ban_url(record), author: a(record.banner) }
     when BulkUpdateRequest
@@ -140,8 +140,8 @@ class DiscordNotification
   def destroy_embed
     embeds = []
     case record
-    when Artist
-      embeds << { color: RED, title: "Artist Deleted", description: "Name: #{record.name}", url: r.artist_url(record), author: a(record.creator) }
+    when Creator
+      embeds << { color: RED, title: "Creator Deleted", description: "Name: #{record.name}", url: r.creator_url(record), author: a(record.creator) }
     when Ban
       embeds << { color: GREEN, title: "Ban Deleted", description: "User: #{u(record.user)}", url: r.ban_url(record), author: a(record.banner) }
     when Comment
@@ -181,13 +181,13 @@ class DiscordNotification
   def update_embed
     embeds = []
     case record
-    when Artist
-      if artist.is_locked? && !artist.is_locked_before_last_save
-        embeds << { color: GREEN, title: "Artist Locked", description: "Name: #{record.name}", url: r.artist_url(record), author: a(record.updater) }
-      elsif !artist.is_locked? && artist.is_locked_before_last_save
-        embeds << { color: RED, title: "Artist Unlocked", description: "Name: #{record.name}", url: r.artist_url(record), author: a(record.updater) }
+    when Creator
+      if creator.is_locked? && !creator.is_locked_before_last_save
+        embeds << { color: GREEN, title: "Creator Locked", description: "Name: #{record.name}", url: r.creator_url(record), author: a(record.updater) }
+      elsif !creator.is_locked? && creator.is_locked_before_last_save
+        embeds << { color: RED, title: "Creator Unlocked", description: "Name: #{record.name}", url: r.creator_url(record), author: a(record.updater) }
       end
-      embeds << { color: YELLOW, title: "Artist Updated", description: "Name: #{record.name}", url: r.artist_url(record), author: a(record.updater) }
+      embeds << { color: YELLOW, title: "Creator Updated", description: "Name: #{record.name}", url: r.creator_url(record), author: a(record.updater) }
     when Ban
       embeds << { color: YELLOW, title: "Ban Updated", description: "User: #{u(record.user)}", url: r.ban_url(record), author: a(record.banner) }
     when BulkUpdateRequest

@@ -1,0 +1,18 @@
+<%= render "search" %>
+
+<%= table_for(@creators) do |t| %>
+  <% t.column("Primary Name", width: "50%") do |creator| %>
+    <%= link_to h(creator.name), creator_path(creator) %>
+  <% end %>
+  <% t.column("Secondary Names", width: "50%") do |creator| %>
+    <%= creator.other_names_string %>
+  <% end %>
+<% end %>
+
+<%= numbered_paginator(@creators) %>
+
+<%= render "secondary_links" %>
+
+<% content_for(:page_title) do %>
+  Creators
+<% end %>

@@ -31,8 +31,8 @@ module Moderator
         post_flags_path(search: { ip_addr: ip_addr })
       when :users
         users_path(search: { ip_addr: ip_addr })
-      when :artist_version
-        artist_versions_path(search: { ip_addr: ip_addr })
+      when :creator_version
+        creator_versions_path(search: { ip_addr: ip_addr })
       when :note_version
         note_versions_path(search: { ip_addr: ip_addr })
       when :pool_version
@@ -52,8 +52,8 @@ module Moderator
         posts_path(tags: "user_id:#{user_id}")
       when :last_login
         user_path(user_id)
-      when :artist_version
-        artist_versions_path(search: { updater_id: user_id })
+      when :creator_version
+        creator_versions_path(search: { updater_id: user_id })
       when :note_version
         note_versions_path(search: { updater_id: user_id })
       when :pool_version

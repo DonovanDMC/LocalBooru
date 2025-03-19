@@ -8,7 +8,7 @@ module PostDeletionReasons
       "Excessive same base image set",
       "Colored base",
       { title: "Advert", prompt: "being an advertisement", reason: "Advertisement" },
-      "Underage artist",
+      "Underage creator",
       "",
       { title: "Artistic", prompt: "artistic standards", reason: "Does not meet minimum quality standards (Artistic)" },
       "Does not meet minimum quality standards (Resolution)",

@@ -47,7 +47,7 @@ class Post < ApplicationRecord
   validates :description, length: { maximum: FemboyFans.config.post_descr_max_size }, if: :description_changed?
   validate :added_tags_are_valid, if: :should_process_tags?
   validate :removed_tags_are_valid, if: :should_process_tags?
-  validate :has_artist_tag, if: :should_process_tags?
+  validate :has_creator_tag, if: :should_process_tags?
   validate :has_enough_tags, if: :should_process_tags?
   validate :post_is_not_its_own_parent
   validate :updater_can_change_rating
@@ -59,7 +59,7 @@ class Post < ApplicationRecord
   after_save :create_version
   after_save :update_parent_on_save
   after_save :apply_post_metatags
-  after_commit :update_pool_artists
+  after_commit :update_pool_creators
   after_commit :update_tag_followers, on: %i[create update], if: :should_update_followers?
   after_commit :delete_files, on: :destroy
   after_commit :remove_iqdb_async, on: :destroy
@@ -607,13 +607,13 @@ class Post < ApplicationRecord
       Tag.decrement_post_counts(decrement_tags)
     end
 
-    def update_pool_artists
-      return unless artist_tag_array != artist_tag_array_before_last_save
-      UpdatePoolArtistsJob.perform_later(id)
+    def update_pool_creators
+      return unless creator_tag_array != creator_tag_array_before_last_save
+      UpdatePoolCreatorsJob.perform_later(id)
     end
 
-    def update_pool_artists!
-      pools.each(&:update_artists!)
+    def update_pool_creators!
+      pools.each(&:update_creators!)
     end
 
     def update_tag_followers
@@ -1998,7 +1998,7 @@ class Post < ApplicationRecord
       added_invalid_tags = added.select { |t| t.category == TagCategory.invalid }
       new_tags = added.select { |t| t.post_count <= 0 }
       new_general_tags = new_tags.select { |t| t.category == TagCategory.general }
-      new_artist_tags = new_tags.select { |t| t.category == TagCategory.artist }
+      new_creator_tags = new_tags.select { |t| t.category == TagCategory.creator }
       # See https://github.com/e621ng/e621ng/issues/494
       # If the tag is fresh it's save to assume it was created with a prefix
       repopulated_tags = new_tags.select { |t| t.category != TagCategory.general && t.category != TagCategory.meta && t.created_at < 10.seconds.ago }
@@ -2021,9 +2021,9 @@ class Post < ApplicationRecord
         warnings.add(:base, "Repopulated #{n} old #{'tag'.pluralize(n)}: #{tag_wiki_links.join(', ')}")
       end
 
-      new_artist_tags.each do |tag|
-        if tag.artist.blank?
-          warnings.add(:base, "Artist [[#{tag.name}]] requires an artist entry. \"Create new artist entry\":[/artists/new?artist%5Bname%5D=#{CGI.escape(tag.name)}]")
+      new_creator_tags.each do |tag|
+        if tag.creator.blank?
+          warnings.add(:base, "Creator [[#{tag.name}]] requires an creator entry. \"Create new creator entry\":[/creators/new?creator%5Bname%5D=#{CGI.escape(tag.name)}]")
         end
       end
     end
@@ -2040,11 +2040,11 @@ class Post < ApplicationRecord
       @removed_tags = []
     end
 
-    def has_artist_tag
+    def has_creator_tag
       return unless new_record?
-      return if tags.artist.any?
+      return if tags.creator.any?
 
-      warnings.add(:base, 'Artist tag is required. "Click here":/help/tags#categorychange if you need help changing the category of an tag. Ask on the forum if you need naming help')
+      warnings.add(:base, 'Creator tag is required. "Click here":/help/tags#categorychange if you need help changing the category of an tag. Ask on the forum if you need naming help')
     end
 
     def has_enough_tags
@@ -2129,10 +2129,10 @@ class Post < ApplicationRecord
 
   def reupload_url
     h = Rails.application.routes.url_helpers
-    others = TagCategory.category_names - %w[artist character species]
+    others = TagCategory.category_names - %w[creator character species]
     options = {
       "sources":        source_array.join(" "),
-      "tags-artist":    artist_tag_array.join(" "),
+      "tags-creator":    creator_tag_array.join(" "),
       "tags-character": character_tags.join(" "),
       "tags-species":   species_tag_array.join(" "),
       "tags":           others.map { |type| public_send("#{type}_tags") }.flatten.join(" "),
@@ -2174,13 +2174,13 @@ class Post < ApplicationRecord
     save
   end
 
-  def uploader_linked_artists
-    artist_tags.filter_map(&:artist).select { |artist| artist.linked_user_id == uploader_id }
+  def uploader_linked_creators
+    creator_tags.filter_map(&:creator).select { |creator| creator.linked_user_id == uploader_id }
   end
 
-  def uploader_name_matches_artists?
-    return false if uploader_id.nil? || uploader_linked_artists.any?
-    typed_tags(TagCategory.artist).include?(uploader_name.downcase)
+  def uploader_name_matches_creators?
+    return false if uploader_id.nil? || uploader_linked_creators.any?
+    typed_tags(TagCategory.creator).include?(uploader_name.downcase)
   end
 
   def followed_tags(user)
@@ -2189,11 +2189,11 @@ class Post < ApplicationRecord
 
   def download_filename
     name = id.to_s
-    artists = typed_tags(TagCategory.artist)
+    creators = typed_tags(TagCategory.creator)
     copyrights = typed_tags(TagCategory.copyright)
     characters = typed_tags(TagCategory.character)
     species = typed_tags(TagCategory.species)
-    name += "-#{artists.join('-')}" if artists.present?
+    name += "-#{creators.join('-')}" if creators.present?
     name += "-#{copyrights.join('-')}" if copyrights.present?
     name += "-#{characters.join('-')}" if characters.present?
     name += "-#{species.join('-')}" if species.present?

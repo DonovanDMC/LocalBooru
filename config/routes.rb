@@ -100,16 +100,16 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :artists, constraints: id_name_constraint do
+  resources :creators, constraints: id_name_constraint do
     member do
       put :revert
     end
     collection do
       get :show_or_new
-      resources :versions, only: %i[index], controller: "artists/versions", as: "artist_versions" do
+      resources :versions, only: %i[index], controller: "creators/versions", as: "creator_versions" do
         get :search, on: :collection
       end
-      resources :urls, only: %i[index], controller: "artists/urls", as: "artist_urls"
+      resources :urls, only: %i[index], controller: "creators/urls", as: "creator_urls"
     end
   end
   resources :bans do

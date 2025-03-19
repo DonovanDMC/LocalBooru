@@ -26,8 +26,8 @@ class UserInfo
     def url
       r = Rails.application.routes.url_helpers
       case throttle.name
-      when :artist_edit
-        r.artist_versions_path(search: { updater_id: user.id })
+      when :creator_edit
+        r.creator_versions_path(search: { updater_id: user.id })
       when :comment
         r.comments_path(search: { creator_id: user.id }, group_by: "comment")
       when :comment_vote

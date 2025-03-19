@@ -1,15 +1,15 @@
-<% user.artists.each do |artist| %>
+<% user.creators.each do |creator| %>
   <div class="box user-artwork">
     <h2 class="box-label">
-      <%= link_to(sanitize("<b>#{user.artists.length == 1 ? 'Artwork' : artist.name}</b>"), posts_path(tags: artist.name)) %>
+      <%= link_to(sanitize("<b>#{user.creators.length == 1 ? 'Artwork' : creator.name}</b>"), posts_path(tags: creator.name)) %>
     </h2>
     <span class="box-extra">
-      <%= link_to(sanitize("<b>#{artist.post_count} total</b>"), favorites_path(user_id: user.id)) %>
-      <%= link_to(sanitize("<b>Comments</b>"), comments_path(group_by: "comment", search: { post_tags_match: artist.name })) %>
+      <%= link_to(sanitize("<b>#{creator.post_count} total</b>"), favorites_path(user_id: user.id)) %>
+      <%= link_to(sanitize("<b>Comments</b>"), comments_path(group_by: "comment", search: { post_tags_match: creator.name })) %>
     </span>
     <div class="box-posts">
-      <% presenter.artwork(artist.name).each do |post| %>
-        <%= PostPresenter.preview(post, tags: artist.name) %>
+      <% presenter.artwork(creator.name).each do |post| %>
+        <%= PostPresenter.preview(post, tags: creator.name) %>
       <% end %>
     </div>
   </div>

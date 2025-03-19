@@ -103,7 +103,7 @@ These wik/help pages are expected to exist, as they are linked to or used in var
 #### Help Pages
 * accounts
 * api
-* artists
+* creators
 * blacklisting
 * blocking
 * cheatsheet

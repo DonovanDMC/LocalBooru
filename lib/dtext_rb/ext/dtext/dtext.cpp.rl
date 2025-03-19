@@ -370,8 +370,8 @@ inline := |*
   'dmail #'i id '/' dmail_key                  => { append_dmail_key_link({ a1, a2 }, { b1, b2 }); };
   'pool #'i id                                 => { append_id_link("pool", "pool", "/pools/", { a1, a2 }); };
   'user #'i id                                 => { append_id_link("user", "user", "/users/", { a1, a2 }); };
-  'artist #'i id                               => { append_id_link("artist", "artist", "/artists/", { a1, a2 }); };
-  'artist changes #'i id                       => { append_id_link("artist changes", "artist-changes-for", "/artists/versions?search[artist_id]=", { a1, a2 }); };
+  'creator #'i id                               => { append_id_link("creator", "creator", "/creators/", { a1, a2 }); };
+  'creator changes #'i id                       => { append_id_link("creator changes", "creator-changes-for", "/creators/versions?search[creator_id]=", { a1, a2 }); };
   'ban #'i id                                  => { append_id_link("ban", "ban", "/bans/", { a1, a2 }); };
   'bur #'i id                                  => { append_id_link("BUR", "bulk-update-request", "/bulk_update_requests/", { a1, a2 }); };
   'alias #'i id                                => { append_id_link("alias", "tag-alias", "/tags/aliases/", { a1, a2 }); };
@@ -1073,8 +1073,8 @@ void StateMachine::append_internal_url(const DText::URL& url) {
         return append_id_link("comment", "comment", "/comments/", id);
       } else if (controller == "users") {
         return append_id_link("user", "user", "/users/", id);
-      } else if (controller == "artists") {
-        return append_id_link("artist", "artist", "/artists/", id);
+      } else if (controller == "creators") {
+        return append_id_link("creator", "creator", "/creators/", id);
       } else if (controller == "notes") {
         return append_id_link("note", "note", "/notes/", id);
       } else if (controller == "post_sets" && query.empty()) {

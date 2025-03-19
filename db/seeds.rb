@@ -67,8 +67,8 @@ module Seeds
         Mascot.find_or_create_by!(display_name: mascot["display_name"]) do |masc|
           masc.mascot_file = Downloads::File.new(mascot["url_path"]).download!
           masc.background_color = mascot["background_color"]
-          masc.artist_url = mascot["artist_url"]
-          masc.artist_name = mascot["artist_name"]
+          masc.creator_url = mascot["artist_url"]
+          masc.creator_name = mascot["artist_name"]
           masc.available_on_string = FemboyFans.config.app_name
           masc.hide_anonymous = mascot["hide_anonymous"]
           masc.active = mascot["active"]
@@ -84,8 +84,8 @@ module Seeds
         Mascot.find_or_create_by!(display_name: mascot["name"]) do |masc|
           masc.mascot_file = Downloads::File.new(mascot["file"]).download!
           masc.background_color = mascot["color"]
-          masc.artist_url = mascot["artist_url"]
-          masc.artist_name = mascot["artist_name"]
+          masc.creator_url = mascot["artist_url"]
+          masc.creator_name = mascot["artist_name"]
           masc.available_on_string = FemboyFans.config.app_name
           masc.active = mascot["active"]
           masc.hide_anonymous = mascot["hide_anonymous"]

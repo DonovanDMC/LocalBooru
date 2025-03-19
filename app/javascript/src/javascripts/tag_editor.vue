@@ -10,7 +10,7 @@
         <div class="related-tag-functions">
             Related:
             <a href="#" @click.prevent="findRelated()">Tags</a> |
-            <a href="#" @click.prevent="findRelated(1)">Artists</a> |
+            <a href="#" @click.prevent="findRelated(1)">Creators</a> |
             <a href="#" @click.prevent="findRelated(2)">Kinks & Fetishes</a> |
             <a href="#" @click.prevent="findRelated(3)">Copyrights</a> |
             <a href="#" @click.prevent="findRelated(4)">Characters</a> |

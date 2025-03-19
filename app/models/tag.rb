@@ -2,7 +2,7 @@
 
 class Tag < ApplicationRecord
   has_one :wiki_page, foreign_key: "title", primary_key: "name"
-  has_one :artist, foreign_key: "name", primary_key: "name"
+  has_one :creator, foreign_key: "name", primary_key: "name"
   has_one :antecedent_alias, -> { active }, class_name: "TagAlias", foreign_key: "antecedent_name", primary_key: "name"
   has_many :consequent_aliases, -> { active }, class_name: "TagAlias", foreign_key: "consequent_name", primary_key: "name"
   has_many :antecedent_implications, -> { active }, class_name: "TagImplication", foreign_key: "antecedent_name", primary_key: "name"
@@ -115,7 +115,7 @@ class Tag < ApplicationRecord
         Post.sql_raw_tag_match(name).find_each do |post|
           post.update_typed_tags # does not save
           post.save!
-          post.update_pool_artists
+          post.update_pool_creators
           post.update_index
         end
       end
@@ -346,10 +346,10 @@ class Tag < ApplicationRecord
         q = q.joins("LEFT JOIN wiki_pages ON tags.name = wiki_pages.title").where("wiki_pages.title IS NULL OR wiki_pages.is_deleted = true")
       end
 
-      if params[:has_artist].to_s.truthy?
-        q = q.joins("INNER JOIN artists ON tags.name = artists.name")
-      elsif params[:has_artist].to_s.falsy?
-        q = q.joins("LEFT JOIN artists ON tags.name = artists.name").where("artists.name IS NULL")
+      if params[:has_creator].to_s.truthy?
+        q = q.joins("INNER JOIN creators ON tags.name = creators.name")
+      elsif params[:has_creator].to_s.falsy?
+        q = q.joins("LEFT JOIN creators ON tags.name = creators.name").where("creators.name IS NULL")
       end
 
       q = q.attribute_matches(:is_locked, params[:is_locked])
@@ -425,6 +425,6 @@ class Tag < ApplicationRecord
   end
 
   def self.available_includes
-    %i[artist antecedent_alias wiki_page]
+    %i[creator antecedent_alias wiki_page]
   end
 end

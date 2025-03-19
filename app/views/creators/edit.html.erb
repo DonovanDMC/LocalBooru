@@ -1,0 +1,15 @@
+<h1>Edit Creator</h1>
+
+<% if @creator.editable_by?(CurrentUser.user) %>
+  <%= render "form" %>
+
+<% elsif @creator.is_locked? %>
+  <p>This creator entry is locked and cannot be edited.</p>
+
+<% end %>
+
+<%= render "secondary_links" %>
+
+<% content_for(:page_title) do %>
+  Edit Creator - <%= @creator.name %>
+<% end %>

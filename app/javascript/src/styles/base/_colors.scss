@@ -156,7 +156,7 @@ $user-home-greeting-color: gold;
 
 $tag-categories: (
   "0": "general",
-  "1": "artist",
+  "1": "creator",
   "2": "kink",
   "3": "copyright",
   "4": "character",
@@ -169,7 +169,8 @@ $tag-categories: (
 
 $tag-categories-short: (
   "gen": "general",
-  "art": "artist",
+  "art": "creator",
+  "artist": "creator",
   "kink": "kink",
   "fet": "kink",
   "fetish": "kink",

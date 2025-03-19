@@ -1,0 +1,23 @@
+<%= custom_form_for(@creator) do |f| %>
+  <% if @creator.new_record? %>
+    <%= f.input(:name, as: :string, autocomplete: "tag") %>
+  <% elsif can_use_attribute?(@creator, :name) %>
+    <%= f.input(:name, autocomplete: "tag", hint: "Change to rename this creator entry and its wiki page.") %>
+  <% else %>
+    <p><%= @creator.name %></p>
+  <% end %>
+  <% if can_use_attributes?(@creator, %i[linked_user_id is_locked]) %>
+    <%= f.input(:linked_user_id, label: "Linked User ID") %>
+    <%= f.input(:is_locked, label: "Locked") %>
+  <% end %>
+  <% if @creator.new_record? %>
+    <%= f.input(:other_names_string, label: "Other names", hint: "Separate names with spaces, not commas. Use underscores for spaces inside names. Limit 25.", input_html: { size: "80" }) %>
+  <% end %>
+  <%= f.input(:url_string, label: "URLs", as: :text, input_html: { size: "80x10", value: params.dig(:creator, :url_string) || @creator.urls.join("\n") }, hint: "You can prefix a URL with - to mark it as dead.") %>
+
+  <% if @creator.is_note_locked? %>
+    <p>Creator is note locked. Notes cannot be edited.</p>
+  <% end %>
+  <%= f.input(:notes, as: :dtext, limit: FemboyFans.config.wiki_page_max_size, disabled: @creator.is_note_locked?, allow_color: true) %>
+  <%= f.button(:submit, "Submit") %>
+<% end %>

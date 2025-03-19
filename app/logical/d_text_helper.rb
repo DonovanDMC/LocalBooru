@@ -20,10 +20,10 @@ module DTextHelper
     names = dtext_messages.map { |message| parse_wiki_titles(message) }.flatten.uniq
     wiki_pages = WikiPage.where(title: names)
     tags = Tag.where(name: names)
-    artists = Artist.where(name: names)
+    creators = Creator.where(name: names)
     topics = dtext_messages.map { |message| parse_forum_topics(message) }.flatten.uniq
 
-    [wiki_pages, tags, artists, topics]
+    [wiki_pages, tags, creators, topics]
   end
 
   def replace_topics(text, topics)
@@ -43,7 +43,7 @@ module DTextHelper
     end
   end
 
-  def postprocess(html, wiki_pages, tags, artists)
+  def postprocess(html, wiki_pages, tags, creators)
     fragment = parse_html(html)
 
     fragment.css("a.dtext-wiki-link").each do |node| # rubocop:disable Metrics/BlockLength
@@ -53,18 +53,18 @@ module DTextHelper
       name = WikiPage.normalize_title(name)
       wiki = wiki_pages.find { |w| w.title == name }
       tag = tags.find { |t| t.name == name }
-      artist = artists.find { |a| a.name == name }
+      creator = creators.find { |a| a.name == name }
 
       if tag.present?
         node["class"] += " tag-type-#{tag.category}"
       end
 
-      if tag.present? && tag.artist?
-        node["href"] = "/artists/show_or_new?name=#{CGI.escape(name)}"
+      if tag.present? && tag.creator?
+        node["href"] = "/creators/show_or_new?name=#{CGI.escape(name)}"
 
-        if artist.blank?
-          node["class"] += " dtext-artist-does-not-exist"
-          node["title"] = "This artist page does not exist"
+        if creator.blank?
+          node["class"] += " dtext-creator-does-not-exist"
+          node["title"] = "This creator page does not exist"
         end
       else
         if wiki.blank?

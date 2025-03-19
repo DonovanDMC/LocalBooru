@@ -242,8 +242,8 @@ module FemboyFans
       25
     end
 
-    # Artists creator or edited in the last hour
-    def artist_edit_limit
+    # Creators creator or edited in the last hour
+    def creator_edit_limit
       25
     end
 
@@ -585,8 +585,8 @@ module FemboyFans
         },
         {
           name:   "trace",
-          reason: "Trace of another artist's work",
-          text:   "Images traced from other artists' artwork are not accepted on this site. Referencing from something is fine, but outright copying someone else's work is not.\nPlease, leave more information in the comments, or simply add the original artwork as the posts's parent if it's hosted on this site.",
+          reason: "Trace of another creator's work",
+          text:   "Images traced from other creators' artwork are not accepted on this site. Referencing from something is fine, but outright copying someone else's work is not.\nPlease, leave more information in the comments, or simply add the original artwork as the posts's parent if it's hosted on this site.",
         },
         {
           name:   "previously_deleted",
@@ -606,7 +606,7 @@ module FemboyFans
         {
           name:   "inferior",
           reason: "Duplicate or inferior version of another post",
-          text:   "A superior version of this post already exists on the site.\nThis may include images with better visual quality (larger, less compressed), but may also feature \"fixed\" versions, with visual mistakes accounted for by the artist.\nNote that edits and alternate versions do not fall under this category.",
+          text:   "A superior version of this post already exists on the site.\nThis may include images with better visual quality (larger, less compressed), but may also feature \"fixed\" versions, with visual mistakes accounted for by the creator.\nNote that edits and alternate versions do not fall under this category.",
           parent: true,
         },
       ]
@@ -681,8 +681,8 @@ module FemboyFans
       true
     end
 
-    # tags excluded when listing artists
-    def artist_exclusion_tags
+    # tags excluded when listing creators
+    def creator_exclusion_tags
       %w[epilepsy_warning sound_warning]
     end
 
@@ -838,7 +838,7 @@ module FemboyFans
         { name: "Already", text: "User already received a record for that message." },
         { name: "Banned", text: "This user is already banned." },
         { name: "Blacklist", text: "If you find the contents of that post objectionable, \"blacklist\":/help/blacklisting it." },
-        { name: "Takedown", text: "Artists and character owners may request a takedown \"here\":/static/takedown.\nWe do not accept third party takedowns." },
+        { name: "Takedown", text: "Creators and character owners may request a takedown \"here\":/static/takedown.\nWe do not accept third party takedowns." },
       ]
     end
 

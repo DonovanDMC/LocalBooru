@@ -6,7 +6,7 @@
   <% if @wiki_page.visible? %>
     <%= render "form" %>
   <% else %>
-    <p>The artist requested removal of this page.</p>
+    <p>The creator requested removal of this page.</p>
   <% end %>
 
   <%= wiki_page_alias_and_implication_list(@wiki_page)%>

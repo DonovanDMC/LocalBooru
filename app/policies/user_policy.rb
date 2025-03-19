@@ -52,7 +52,7 @@ class UserPolicy < ApplicationPolicy
       id created_at name level base_upload_limit
       post_upload_count post_update_count note_update_count
       level_string avatar_id wiki_page_version_count
-      artist_version_count pool_version_count
+      creator_version_count pool_version_count
       forum_post_count comment_count
       favorite_count positive_feedback_count
       positive_feedback_count neutral_feedback_count negative_feedback_count

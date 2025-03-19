@@ -41,6 +41,6 @@ class TagPolicy < ApplicationPolicy
   end
 
   def permitted_search_params
-    super + %i[fuzzy_name_matches name_matches name category hide_empty has_wiki has_artist is_locked]
+    super + %i[fuzzy_name_matches name_matches name category hide_empty has_wiki has_creator is_locked]
   end
 end

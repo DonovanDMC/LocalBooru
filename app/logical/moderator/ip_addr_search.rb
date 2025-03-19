@@ -37,7 +37,7 @@ module Moderator
       add_by_ip_addr(sums, :last_login, ip_addrs, ::User, :last_ip_addr, :id)
 
       if with_history
-        add_by_ip_addr(sums, :artist_version, ip_addrs, ::ArtistVersion, :updater_ip_addr, :updater_id)
+        add_by_ip_addr(sums, :creator_version, ip_addrs, ::CreatorVersion, :updater_ip_addr, :updater_id)
         add_by_ip_addr(sums, :note_version, ip_addrs, ::NoteVersion, :updater_ip_addr, :updater_id)
         add_by_ip_addr(sums, :pool_version, ip_addrs, ::PoolVersion, :updater_ip_addr, :updater_id)
         add_by_ip_addr(sums, :post_version, ip_addrs, ::PostVersion, :updater_ip_addr, :updater_id)
@@ -63,7 +63,7 @@ module Moderator
       add_by_user_id(sums, :users, user_ids, ::User, :last_ip_addr, :id)
 
       if with_history
-        add_by_user_id(sums, :artist_version, user_ids, ::ArtistVersion, :updater_ip_addr, :updater_id)
+        add_by_user_id(sums, :creator_version, user_ids, ::CreatorVersion, :updater_ip_addr, :updater_id)
         add_by_user_id(sums, :note_version, user_ids, ::NoteVersion, :updater_ip_addr, :updater_id)
         add_by_user_id(sums, :pool_version, user_ids, ::PoolVersion, :updater_ip_addr, :updater_id)
         add_by_user_id(sums, :post_version, user_ids, ::PostVersion, :updater_ip_addr, :updater_id)

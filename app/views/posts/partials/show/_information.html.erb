@@ -23,10 +23,10 @@
   <% if CurrentUser.user.is_janitor? %>
     <li>
       Uploader: <%= link_to_user(post.uploader) %> <%= user_record_meta(post.uploader) %>
-      <% if post.uploader_linked_artists.any? %>
-        <i class="uploader-is-artist fa-regular fa-circle-check" title="The uploader is linked to one of the artist tags"></i>
-      <% elsif post.uploader_name_matches_artists? %>
-        <span class="post-uploader-artist">(artist)</span>
+      <% if post.uploader_linked_creators.any? %>
+        <i class="uploader-is-creator fa-regular fa-circle-check" title="The uploader is linked to one of the creator tags"></i>
+      <% elsif post.uploader_name_matches_creators? %>
+        <span class="post-uploader-creator">(creator)</span>
       <% end %>
     </li>
   <% elsif CurrentUser.user.show_post_uploader? %>

@@ -7,7 +7,7 @@ class UserTextVersion < ApplicationRecord
 
   CHANGE_TYPES = {
     about:     "About",
-    artinfo:   "Artist Info",
+    artinfo:   "Creator Info",
     blacklist: "Blacklist",
   }.freeze
 
@@ -123,7 +123,7 @@ class UserTextVersion < ApplicationRecord
       if params[:artinfo_matches]
         params.delete(:changes)
         q = q.attribute_matches(:artinfo_text, params[:artinfo_matches])
-             .where("? = ANY(text_changes)", "Artist Info")
+             .where("? = ANY(text_changes)", "Creator Info")
       end
 
       if params[:blacklist_matches]

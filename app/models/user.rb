@@ -229,7 +229,7 @@ class User < ApplicationRecord
   has_many :staff_notes, -> { active.order("staff_notes.id desc") }
   has_many :user_name_change_requests, -> { order(id: :asc) }
   has_many :text_versions, -> { order(id: :desc) }, class_name: "UserTextVersion"
-  has_many :artists, foreign_key: "linked_user_id"
+  has_many :creators, foreign_key: "linked_user_id"
   has_many :blocks, class_name: "UserBlock"
   has_many :followed_tags, class_name: "TagFollower"
   has_many :notifications
@@ -743,7 +743,7 @@ class User < ApplicationRecord
       is_trusted?
     end
 
-    create_user_throttle(:artist_edit, -> { FemboyFans.config.artist_edit_limit - ArtistVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
+    create_user_throttle(:creator_edit, -> { FemboyFans.config.creator_edit_limit - CreatorVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
     create_user_throttle(:post_edit, -> { FemboyFans.config.post_edit_limit - PostVersion.for_user(id).where("updated_at > ?", 1.hour.ago).count },
                          :general_bypass_throttle?, 3.days, Levels::MEMBER..)
@@ -931,8 +931,8 @@ class User < ApplicationRecord
       note_update_count
     end
 
-    def artist_version_count
-      artist_update_count
+    def creator_version_count
+      creator_update_count
     end
 
     def pool_version_count
@@ -977,7 +977,7 @@ class User < ApplicationRecord
           comment_count:                    Comment.for_creator(id).count,
           pool_update_count:                PoolVersion.for_user(id).count,
           set_count:                        PostSet.owned(self).count,
-          artist_update_count:              ArtistVersion.for_user(id).count,
+          creator_update_count:              CreatorVersion.for_user(id).count,
           own_post_replaced_count:          PostReplacement.for_uploader_on_approve(id).count,
           own_post_replaced_penalize_count: PostReplacement.penalized.for_uploader_on_approve(id).count,
           post_replacement_rejected_count:  post_replacements.rejected.count,
@@ -1337,6 +1337,6 @@ class User < ApplicationRecord
   end
 
   def self.available_includes
-    %i[artists bans feedback]
+    %i[creators bans feedback]
   end
 end

@@ -1,0 +1,9 @@
+<%= table_for(@dashboard.creators) do |t| %>
+  <% t.caption { "Creator Updates" } %>
+  <% t.column("User") do |activity| %>
+    <%= link_to_user(activity.user) %>
+  <% end %>
+  <% t.column("Count") do |activity| %>
+    <%= link_to(activity.count, creator_versions_path(search: { updater_id: activity.user.id })) %>
+  <% end %>
+<% end %>

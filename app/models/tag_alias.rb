@@ -155,7 +155,7 @@ class TagAlias < TagRelationship
       CurrentUser.as_system { update_posts_locked_tags_undo }
       update_blacklists_undo
       CurrentUser.as_system { update_posts_undo }
-      rename_artist_undo
+      rename_creator_undo
       forum_updater.update(retirement_message, "UNDONE") if update_topic
     end
     tag_rel_undos.update_all(applied: true)
@@ -197,9 +197,9 @@ class TagAlias < TagRelationship
     end
   end
 
-  def rename_artist_undo
-    if consequent_tag.artist? && (consequent_tag.artist.present? && antecedent_tag.artist.blank?)
-      consequent_tag.artist.update!(name: antecedent_name)
+  def rename_creator_undo
+    if consequent_tag.creator? && (consequent_tag.creator.present? && antecedent_tag.creator.blank?)
+      consequent_tag.creator.update!(name: antecedent_name)
     end
   end
 
@@ -215,7 +215,7 @@ class TagAlias < TagRelationship
         update_blacklists
         CurrentUser.as_system { update_posts }
         update_followers
-        rename_artist
+        rename_creator
         forum_updater.update(approval_message(approver), "APPROVED") if update_topic
         update(status: "active", post_count: consequent_tag.post_count)
         # TODO: Race condition with indexing jobs here.
@@ -313,9 +313,9 @@ class TagAlias < TagRelationship
     end
   end
 
-  def rename_artist
-    if antecedent_tag.artist? && (antecedent_tag.artist.present? && consequent_tag.artist.blank?)
-      antecedent_tag.artist.update!(name: consequent_name)
+  def rename_creator
+    if antecedent_tag.creator? && (antecedent_tag.creator.present? && consequent_tag.creator.blank?)
+      antecedent_tag.creator.update!(name: consequent_name)
     end
   end
 

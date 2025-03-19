@@ -132,8 +132,8 @@ class TagSetPresenter < Presenter
 
     html = %(<li class="category-#{tag.category}">)
 
-    if category == TagCategory.artist
-      html += %(<a class="wiki-link" rel="nofollow" href="/artists/show_or_new?name=#{u(name)}">?</a> )
+    if category == TagCategory.creator
+      html += %(<a class="wiki-link" rel="nofollow" href="/creators/show_or_new?name=#{u(name)}">?</a> )
     else
       html += %(<a class="wiki-link" rel="nofollow" href="/wiki_pages/show_or_new?title=#{u(name)}">?</a> )
     end
@@ -146,7 +146,7 @@ class TagSetPresenter < Presenter
     end
 
     html += tag_link(tag, name.tr("_", " "))
-    html += %(<i title="Uploaded by the artist" class="highlight fa-regular fa-circle-check"></i>) if highlight
+    html += %(<i title="Uploaded by the creator" class="highlight fa-regular fa-circle-check"></i>) if highlight
 
     if count >= 10_000
       post_count = "#{count / 1_000}k"
@@ -176,7 +176,7 @@ class TagSetPresenter < Presenter
 
   def tag_link(tag, link_text = tag.name, link_type = :tag)
     link = link_type == :wiki_page ? show_or_new_wiki_pages_path(title: tag.name) : posts_path(tags: tag.name)
-    itemprop = 'itemprop="author"' if tag.artist?
+    itemprop = 'itemprop="author"' if tag.creator?
     %(<a rel="nofollow" class="search-tag" #{itemprop} href="#{link}">#{h(link_text)}</a> )
   end
 end

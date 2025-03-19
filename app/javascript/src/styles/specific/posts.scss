@@ -518,7 +518,7 @@ div#c-posts {
   }
 }
 
-div#c-posts-versions, div#c-artists-versions {
+div#c-posts-versions, div#c-creators-versions {
   div#a-index {
     a {
       word-wrap: break-word;
@@ -816,7 +816,7 @@ body[data-user-can-approve-posts="true"] .notice {
   input[type="submit"] { margin: 0.75rem 1rem 0.5rem; }
 }
 
-section#post-information .post-uploader-artist {
+section#post-information .post-uploader-creator {
   font-weight: bold;
   color: #e45f5f;
 }

@@ -35,7 +35,7 @@ class ModAction < ApplicationRecord
     wiki_page wiki_page_title old_title wiki_page_id protection_level target_wiki_page_id target_wiki_page_title
     category_name old_category_name
     prompt old_prompt title
-    artist_name
+    creator_name
     post_id
   ].freeze
 
@@ -55,25 +55,25 @@ class ModAction < ApplicationRecord
   end
 
   FORMATTERS = {
-    ### Artist ###
-    artist_lock:                                {
-      text: ->(mod, _user) { "Locked artist ##{mod.subject_id}" },
+    ### Creator ###
+    creator_lock:                                {
+      text: ->(mod, _user) { "Locked creator ##{mod.subject_id}" },
       json: %i[],
     },
-    artist_rename:                              {
-      text: ->(mod, _user) { "Renamed artist ##{mod.subject_id} (\"#{mod.old_name}\":#{url.show_or_new_artists_path(name: mod.old_name)} -> \"#{mod.new_name}\":#{url.show_or_new_artists_path(name: mod.new_name)})" },
+    creator_rename:                              {
+      text: ->(mod, _user) { "Renamed creator ##{mod.subject_id} (\"#{mod.old_name}\":#{url.show_or_new_creators_path(name: mod.old_name)} -> \"#{mod.new_name}\":#{url.show_or_new_creators_path(name: mod.new_name)})" },
       json: %i[old_name new_name],
     },
-    artist_unlock:                              {
-      text: ->(mod, _user) { "Unlocked artist ##{mod.subject_id}" },
+    creator_unlock:                              {
+      text: ->(mod, _user) { "Unlocked creator ##{mod.subject_id}" },
       json: %i[],
     },
-    artist_user_link:                           {
-      text: ->(mod, user) { "Linked #{user} to artist ##{mod.subject_id}" },
+    creator_user_link:                           {
+      text: ->(mod, user) { "Linked #{user} to creator ##{mod.subject_id}" },
       json: %i[user_id],
     },
-    artist_user_unlink:                         {
-      text: ->(mod, user) { "Unlinked #{user} from artist ##{mod.subject_id}" },
+    creator_user_unlink:                         {
+      text: ->(mod, user) { "Unlinked #{user} from creator ##{mod.subject_id}" },
       json: %i[user_id],
     },
 

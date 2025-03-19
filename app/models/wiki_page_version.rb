@@ -3,7 +3,7 @@
 class WikiPageVersion < ApplicationRecord
   belongs_to :wiki_page
   belongs_to_updater counter_cache: "wiki_update_count"
-  belongs_to :artist, optional: true
+  belongs_to :creator, optional: true
   delegate :visible?, to: :wiki_page
 
   module SearchMethods
@@ -48,6 +48,6 @@ class WikiPageVersion < ApplicationRecord
   end
 
   def self.available_includes
-    %i[artist updater wiki_page]
+    %i[creator updater wiki_page]
   end
 end

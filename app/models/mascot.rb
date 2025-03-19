@@ -6,9 +6,9 @@ class Mascot < ApplicationRecord
   array_attribute :available_on, parse: /[^,]+/, join_character: ","
   attr_accessor :mascot_file
 
-  validates :display_name, :background_color, :artist_url, :artist_name, presence: true
-  validates :artist_url, format: { with: %r{\Ahttps?://}, message: "must start with http:// or https://" }, length: { maximum: 1_000 }
-  validates :display_name, :artist_name, length: { maximum: 100 }
+  validates :display_name, :background_color, :creator_url, :creator_name, presence: true
+  validates :creator_url, format: { with: %r{\Ahttps?://}, message: "must start with http:// or https://" }, length: { maximum: 1_000 }
+  validates :display_name, :creator_name, length: { maximum: 100 }
   validates :mascot_file, presence: true, on: :create
   validate :set_file_properties
   validates :md5, uniqueness: true
@@ -41,7 +41,7 @@ class Mascot < ApplicationRecord
     mascots = Cache.fetch("active_mascots", expires_in: 1.day) do
       query = Mascot.where(active: true).where("? = ANY(available_on)", FemboyFans.config.app_name)
       mascots = query.map do |mascot|
-        mascot.slice(:id, :background_color, :artist_url, :artist_name, :hide_anonymous).merge(background_url: mascot.url_path)
+        mascot.slice(:id, :background_color, :creator_url, :creator_name, :hide_anonymous).merge(background_url: mascot.url_path)
       end
       mascots.index_by { |mascot| mascot["id"] }
     end
@@ -89,7 +89,7 @@ class Mascot < ApplicationRecord
 
   def self.search(params)
     q = super
-    q.order("lower(artist_name)")
+    q.order("lower(creator_name)")
   end
 
   module LogMethods

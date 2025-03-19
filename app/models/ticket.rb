@@ -27,13 +27,13 @@ class Ticket < ApplicationRecord
 
   attr_accessor :record_type, :send_update_dmail
 
-  MODEL_TYPES = %w[Artist Comment Dmail ForumPost Pool Post PostSet Tag User WikiPage].freeze
+  MODEL_TYPES = %w[Creator Comment Dmail ForumPost Pool Post PostSet Tag User WikiPage].freeze
 
   # Permissions Table
   #
   # |    Type    |      Can Create     |    Details Visible   |
   # |:----------:|:-------------------:|:--------------------:|
-  # |   Artist   |         Any         |  Janitor+ / Creator  |
+  # |   Creator   |         Any         |  Janitor+ / Creator  |
   # |   Comment  |       Visible       | Moderator+ / Creator |
   # |    Dmail   | Visible & Recipient | Moderator+ / Creator |
   # | Forum Post |       Visible       | Moderator+ / Creator |
@@ -47,7 +47,7 @@ class Ticket < ApplicationRecord
   #
   # * Janitor+ can see details if the creator is Janitor+ or the ticket is a commendation, else Moderator+
   module TicketTypes
-    module Artist
+    module Creator
       def can_view?(user)
         user.is_janitor? || user.id == creator_id
       end

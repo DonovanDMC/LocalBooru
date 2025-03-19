@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
+ActiveRecord::Schema[7.1].define(version: 2025_03_19_000201) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -28,52 +28,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
     t.inet "last_ip_address"
     t.index ["key"], name: "index_api_keys_on_key", unique: true
     t.index ["name", "user_id"], name: "index_api_keys_on_name_and_user_id", unique: true
-  end
-
-  create_table "artist_urls", id: :serial, force: :cascade do |t|
-    t.integer "artist_id", null: false
-    t.text "url", null: false
-    t.text "normalized_url", null: false
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.boolean "is_active", default: true, null: false
-    t.index ["artist_id", "url"], name: "index_artist_urls_on_artist_id_and_url", unique: true
-    t.index ["artist_id"], name: "index_artist_urls_on_artist_id"
-    t.index ["normalized_url"], name: "index_artist_urls_on_normalized_url_pattern", opclass: :text_pattern_ops
-    t.index ["normalized_url"], name: "index_artist_urls_on_normalized_url_trgm", opclass: :gin_trgm_ops, using: :gin
-    t.index ["url"], name: "index_artist_urls_on_url_trgm", opclass: :gin_trgm_ops, using: :gin
-  end
-
-  create_table "artist_versions", id: :serial, force: :cascade do |t|
-    t.integer "artist_id", null: false
-    t.string "name", null: false
-    t.integer "updater_id", null: false
-    t.inet "updater_ip_addr", null: false
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.text "other_names", default: [], null: false, array: true
-    t.text "urls", default: [], null: false, array: true
-    t.boolean "notes_changed", default: false
-    t.bigint "linked_user_id"
-    t.index ["artist_id"], name: "index_artist_versions_on_artist_id"
-    t.index ["created_at"], name: "index_artist_versions_on_created_at"
-    t.index ["linked_user_id"], name: "index_artist_versions_on_linked_user_id"
-    t.index ["name"], name: "index_artist_versions_on_name"
-    t.index ["updater_id"], name: "index_artist_versions_on_updater_id"
-    t.index ["updater_ip_addr"], name: "index_artist_versions_on_updater_ip_addr"
-  end
-
-  create_table "artists", id: :serial, force: :cascade do |t|
-    t.string "name", null: false
-    t.integer "creator_id", null: false
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.text "other_names", default: [], null: false, array: true
-    t.integer "linked_user_id"
-    t.boolean "is_locked", default: false
-    t.index ["name"], name: "index_artists_on_name", unique: true
-    t.index ["name"], name: "index_artists_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
-    t.index ["other_names"], name: "index_artists_on_other_names", using: :gin
   end
 
   create_table "bans", id: :serial, force: :cascade do |t|
@@ -139,6 +93,52 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
     t.index ["creator_id"], name: "index_comments_on_creator_id"
     t.index ["creator_ip_addr"], name: "index_comments_on_creator_ip_addr"
     t.index ["post_id"], name: "index_comments_on_post_id"
+  end
+
+  create_table "creator_urls", id: :serial, force: :cascade do |t|
+    t.integer "creator_id", null: false
+    t.text "url", null: false
+    t.text "normalized_url", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.boolean "is_active", default: true, null: false
+    t.index ["creator_id", "url"], name: "index_creator_urls_on_creator_id_and_url", unique: true
+    t.index ["creator_id"], name: "index_creator_urls_on_creator_id"
+    t.index ["normalized_url"], name: "index_creator_urls_on_normalized_url_pattern", opclass: :text_pattern_ops
+    t.index ["normalized_url"], name: "index_creator_urls_on_normalized_url_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["url"], name: "index_creator_urls_on_url_trgm", opclass: :gin_trgm_ops, using: :gin
+  end
+
+  create_table "creator_versions", id: :serial, force: :cascade do |t|
+    t.integer "creator_id", null: false
+    t.string "name", null: false
+    t.integer "updater_id", null: false
+    t.inet "updater_ip_addr", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.text "other_names", default: [], null: false, array: true
+    t.text "urls", default: [], null: false, array: true
+    t.boolean "notes_changed", default: false
+    t.bigint "linked_user_id"
+    t.index ["created_at"], name: "index_creator_versions_on_created_at"
+    t.index ["creator_id"], name: "index_creator_versions_on_creator_id"
+    t.index ["linked_user_id"], name: "index_creator_versions_on_linked_user_id"
+    t.index ["name"], name: "index_creator_versions_on_name"
+    t.index ["updater_id"], name: "index_creator_versions_on_updater_id"
+    t.index ["updater_ip_addr"], name: "index_creator_versions_on_updater_ip_addr"
+  end
+
+  create_table "creators", id: :serial, force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "creator_id", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.text "other_names", default: [], null: false, array: true
+    t.integer "linked_user_id"
+    t.boolean "is_locked", default: false
+    t.index ["name"], name: "index_creators_on_name", unique: true
+    t.index ["name"], name: "index_creators_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["other_names"], name: "index_creators_on_other_names", using: :gin
   end
 
   create_table "destroyed_posts", force: :cascade do |t|
@@ -369,8 +369,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
     t.string "md5", null: false
     t.string "file_ext", null: false
     t.string "background_color", null: false
-    t.string "artist_url", null: false
-    t.string "artist_name", null: false
+    t.string "creator_url", null: false
+    t.string "creator_name", null: false
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -477,7 +477,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
     t.integer "post_ids", default: [], null: false, array: true
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
-    t.string "artist_names", default: [], null: false, array: true
+    t.string "creator_names", default: [], null: false, array: true
     t.index "lower((name)::text) gin_trgm_ops", name: "index_pools_on_name_trgm", using: :gin
     t.index "lower((name)::text)", name: "index_pools_on_lower_name"
     t.index ["creator_id"], name: "index_pools_on_creator_id"
@@ -687,7 +687,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
     t.text "tag_string", default: "", null: false
     t.integer "tag_count", default: 0, null: false
     t.integer "tag_count_general", default: 0, null: false
-    t.integer "tag_count_artist", default: 0, null: false
+    t.integer "tag_count_creator", default: 0, null: false
     t.integer "tag_count_character", default: 0, null: false
     t.integer "tag_count_copyright", default: 0, null: false
     t.string "file_ext", null: false
@@ -1095,7 +1095,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
     t.integer "comment_count", default: 0, null: false
     t.integer "pool_update_count", default: 0, null: false
     t.integer "set_count", default: 0, null: false
-    t.integer "artist_update_count", default: 0, null: false
+    t.integer "creator_update_count", default: 0, null: false
     t.integer "own_post_replaced_count", default: 0, null: false
     t.integer "own_post_replaced_penalize_count", default: 0, null: false
     t.integer "post_replacement_rejected_count", default: 0, null: false
@@ -1158,12 +1158,6 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
   end
 
   add_foreign_key "api_keys", "users"
-  add_foreign_key "artist_urls", "artists"
-  add_foreign_key "artist_versions", "artists"
-  add_foreign_key "artist_versions", "users", column: "linked_user_id"
-  add_foreign_key "artist_versions", "users", column: "updater_id"
-  add_foreign_key "artists", "users", column: "creator_id"
-  add_foreign_key "artists", "users", column: "linked_user_id"
   add_foreign_key "bans", "users"
   add_foreign_key "bans", "users", column: "banner_id"
   add_foreign_key "bulk_update_requests", "forum_posts", on_delete: :nullify
@@ -1176,6 +1170,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_03_18_234832) do
   add_foreign_key "comments", "users", column: "creator_id"
   add_foreign_key "comments", "users", column: "updater_id"
   add_foreign_key "comments", "users", column: "warning_user_id"
+  add_foreign_key "creator_urls", "creators"
+  add_foreign_key "creator_versions", "creators"
+  add_foreign_key "creator_versions", "users", column: "linked_user_id"
+  add_foreign_key "creator_versions", "users", column: "updater_id"
+  add_foreign_key "creators", "users", column: "creator_id"
+  add_foreign_key "creators", "users", column: "linked_user_id"
   add_foreign_key "destroyed_posts", "users", column: "destroyer_id"
   add_foreign_key "destroyed_posts", "users", column: "uploader_id"
   add_foreign_key "dmail_filters", "users"

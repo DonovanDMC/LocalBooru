@@ -19,7 +19,7 @@ module Sources
           end
         end
 
-        # bad if we have md5 without post, and bad if we have anything else and neither md5 nor post (such as an artist link)
+        # bad if we have md5 without post, and bad if we have anything else and neither md5 nor post (such as an creator link)
         (has_md5 && !has_post) || (!has_md5 && !has_post)
       end
 

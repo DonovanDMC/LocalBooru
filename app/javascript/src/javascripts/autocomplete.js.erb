@@ -29,7 +29,7 @@ Autocomplete.initialize_all = function() {
   });
 
   this.initialize_tag_autocomplete();
-  this.initialize_artist_autocomplete($('[data-autocomplete="artist"]'));
+  this.initialize_creator_autocomplete($('[data-autocomplete="creator"]'));
   this.initialize_pool_autocomplete($('[data-autocomplete="pool"]'));
   this.initialize_user_autocomplete($('[data-autocomplete="user"]'));
   this.initialize_wiki_autocomplete($('[data-autocomplete="wiki-page"]'));
@@ -138,13 +138,13 @@ Autocomplete.initialize_tag_autocomplete = function() {
   });
 }
 
-Autocomplete.initialize_artist_autocomplete = function($fields) {
+Autocomplete.initialize_creator_autocomplete = function($fields) {
   $fields.autocomplete({
     search: function() {
       $(this).data("ui-autocomplete").menu.bindings = $();
     },
     source: function(req, resp) {
-      Autocomplete.artist_source(req.term, resp);
+      Autocomplete.creator_source(req.term, resp);
     }
   });
 };
@@ -313,8 +313,8 @@ Autocomplete.get_href = function(item) {
     return "/users/" + item.id;
   case "pool":
     return "/pools/" + item.id;
-  case "artist":
-    return "/artists/" + item.id;
+  case "creator":
+    return "/creators/" + item.id;
   case "wiki_page":
     return "/wiki_pages/" + item.id;
   case "tag":
@@ -452,9 +452,9 @@ Autocomplete.pool_source = function(term, resp, metatag) {
   });
 }
 
-Autocomplete.artist_source = function(term, resp) {
+Autocomplete.creator_source = function(term, resp) {
   return $.ajax({
-    url: "/artists.json",
+    url: "/creators.json",
     data: {
       "search[name]": term.trim().replace(/\s+/g, "_") + "*",
       "search[order]": "post_count",
@@ -463,13 +463,13 @@ Autocomplete.artist_source = function(term, resp) {
     },
     method: "get",
     success: function(data) {
-      resp($.map(data, function(artist) {
+      resp($.map(data, function(creator) {
         return {
-          id: artist.id,
-          type: "artist",
-          label: artist.name.replace(/_/g, " "),
-          value: artist.name,
-          category: Autocomplete.TAG_CATEGORIES.artist,
+          id: creator.id,
+          type: "creator",
+          label: creator.name.replace(/_/g, " "),
+          value: creator.name,
+          category: Autocomplete.TAG_CATEGORIES.creator,
         };
       }));
     }

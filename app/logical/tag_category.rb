@@ -31,7 +31,7 @@ module TagCategory
   class AdminCategory < Category; end
 
   GENERAL = Category.new(0, "general", %w[gen])
-  ARTIST = Category.new(1, "artist", %w[art], header: "Artists", exclusion: FemboyFans.config.artist_exclusion_tags, formatstr: "created by %s")
+  CREATOR = Category.new(1, "creator", %w[art creator], header: "Creators", exclusion: FemboyFans.config.creator_exclusion_tags, formatstr: "created by %s")
   KINK = Category.new(2, "kink", %w[fet fetish], header: "Kinks & Fetishes")
   COPYRIGHT = Category.new(3, "copyright", %w[copy co], header: "Copyrights", limit: 1, formatstr: "(%s)")
   CHARACTER = Category.new(4, "character", %w[char ch oc], header: "Characters", limit: 5, regex: /^(.+?)(?:_\(.+\))?$/)
@@ -96,7 +96,7 @@ module TagCategory
     end
   end
 
-  SPLIT_HEADER_LIST = %w[invalid artist kink copyright character species gender general meta lore].freeze
-  CATEGORIZED_LIST = %w[invalid artist kink copyright character species gender meta general lore].freeze
-  HUMANIZED_LIST = %w[character copyright artist].freeze
+  SPLIT_HEADER_LIST = %w[invalid creator kink copyright character species gender general meta lore].freeze
+  CATEGORIZED_LIST = %w[invalid creator kink copyright character species gender meta general lore].freeze
+  HUMANIZED_LIST = %w[character copyright creator].freeze
 end

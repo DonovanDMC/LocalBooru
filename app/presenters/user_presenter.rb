@@ -154,8 +154,8 @@ class UserPresenter
     template.link_to(user.wiki_page_version_count, template.wiki_page_versions_path(search: { updater_id: user.id }))
   end
 
-  def artist_version_count(template)
-    template.link_to(user.artist_version_count, template.artist_versions_path(search: { updater_id: user.id }))
+  def creator_version_count(template)
+    template.link_to(user.creator_version_count, template.creator_versions_path(search: { updater_id: user.id }))
   end
 
   def forum_post_count(template)
